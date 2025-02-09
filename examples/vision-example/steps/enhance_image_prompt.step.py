@@ -41,5 +41,5 @@ async def handler(args, ctx):
 
   await ctx.emit({
     "type": 'generate-image',
-    "data": {"prompt": enhanced_prompt},
+    "data": {"prompt": enhanced_prompt, "original_prompt": prompt },
   })

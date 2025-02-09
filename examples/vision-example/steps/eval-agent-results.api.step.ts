@@ -7,27 +7,25 @@ const bodySchema = z.object({
 
 export const config: ApiRouteConfig = {
     type: 'api',
-    name: 'generate image api trigger',
-    description: 'generate an ai image given a prompt',
-    path: '/generate-image',
+    name: 'evaluate agent results',
+    description: 'evaluate the results of the agent',
+    path: '/evaluate-agent-results',
     method: 'POST',
-    emits: ['enhance-image-prompt'],
+    emits: ['eval-agent-results'],
     bodySchema: bodySchema,
     flows: ['generate-image'],
 }
 
 export const handler: StepHandler<typeof config> = async (req, { logger, emit }) => {
-    logger.info('initialized generate image flow')
+    logger.info('evaluate agent results')
 
     await emit({
-        type: 'enhance-image-prompt',
-        data: {
-            prompt: req.body.prompt,
-        },
+        type: 'eval-agent-results',
+        data: {},
     })
 
     return {
         status: 200,
-        body: { message: `generate image flow initialized` },
+        body: { message: `evaluate agent results` },
     }
 }
