@@ -2,7 +2,7 @@
 
 This project implements an automated task progression system for Trello boards using the Motia framework, enhanced with AI-powered task summaries. It streamlines the software development workflow by automatically moving cards between lists based on specific triggers and providing AI-generated summaries for code review.
 
-![System Flow Diagram](/docs/flow.png)
+![System Flow Diagram](./docs/flow.png)
 
 ## 🎯 Features
 
