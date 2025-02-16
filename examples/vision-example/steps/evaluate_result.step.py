@@ -1,6 +1,7 @@
 import ultraimport
 from vision_agent.lmm import AnthropicLMM
 import os
+import json
 
 download_image = ultraimport('__dir__/download_image.py', 'download_image')
 
@@ -44,23 +45,20 @@ Do not include any other text or explanation in your response - just the number.
         score = max(0, min(100, score))
         
         # Write score to a file in tmp directory with trace ID
-        score_file = f'{os.path.dirname(os.path.dirname(__file__))}/tmp/{ctx.trace_id}_score.txt'
+        score_file = f'{os.path.dirname(os.path.dirname(__file__))}/tmp/{ctx.trace_id}_report.txt'
         with open(score_file, 'a') as f:
-            f.write(f"\nScore: {score}\n\n")
+            report = {
+                "original_prompt": args.original_prompt,
+                "prompt": args.prompt,
+                "score": score,
+                "image_path": args.image
+            }
+            f.write(json.dumps(report, indent=2) + "\n")
         
         if score > 90:
-            ctx.logger.info('image is a good representation', score)
-            
-            # await ctx.emit({
-            #     "type": 'generate-image-result',
-            #     "data": {
-            #         "image": args.image,
-            #         "result": response,
-            #         "score": score
-            #     }
-            # })
+            ctx.logger.info('image is a good representation, do something with it', score)
         else:
-            ctx.logger.info('image is not a good representation, try again', score)
+            ctx.logger.info('image is not a good representation, try again or use a different prompt', score)
         
     except ValueError:
         ctx.logger.error('Invalid response from vision agent', raw_response)

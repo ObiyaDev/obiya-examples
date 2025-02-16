@@ -2,6 +2,7 @@
   "name": "my-motia-project",
   "description": "",
   "scripts": {
+    "generate:dataset": "ts-node generate-dataset.ts",
     "dev": "motia dev",
     "dev:debug": "motia dev --debug",
     "generate:config": "motia get-config --output ./"

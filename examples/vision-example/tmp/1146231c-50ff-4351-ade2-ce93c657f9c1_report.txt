@@ -1,0 +1,6 @@
+{
+  "original_prompt": "create an image of a couple backpacking through a trail in the easter sierras. use a black and white image style. sketch style.",
+  "prompt": "Create a stunning black and white sketch of a rugged couple trekking along a winding trail in the majestic Eastern Sierras. Capture the awe-inspiring mountain peaks towering above, their jagged silhouettes contrasting with the sun-dappled trees and rocky terrain. The couple should be rendered in a bold, expressive style, their backpacks and hiking gear accentuated with intricate hatching and crosshatching. Incorporate dynamic perspective, with the trail leading the eye towards the distant, hazy mountains. Use dramatic lighting and textured shading to convey the sense of adventure and wilderness.",
+  "score": 85.0,
+  "image_path": "/Users/rodrigomorales/Projects/motia/motia-examples/examples/vision-example/tmp/1146231c-50ff-4351-ade2-ce93c657f9c1.png"
+}

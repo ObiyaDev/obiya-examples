@@ -64,18 +64,6 @@ async function saveBase64Image(base64String: string, filePath: string): Promise<
   }
 }
 
-async function savePromptInfo(prompt: string, originalPrompt: string, filePath: string): Promise<void> {
-  try {
-    const promptInfo = {
-      prompt: prompt,
-      original_prompt: originalPrompt
-    }
-    await require('fs').promises.writeFile(filePath, JSON.stringify(promptInfo, null, 2));
-  } catch (error: unknown) {
-    throw new Error(`Failed to save prompt info: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
 export const handler: StepHandler<typeof config> = async (input, { traceId, emit, logger }) => {
   logger.info('generate an image using flux')
 
@@ -110,12 +98,6 @@ export const handler: StepHandler<typeof config> = async (input, { traceId, emit
     
 
     logger.info("Image saved to " + imagePath);
-
-    // Save prompt information to a text file
-    const promptFilePath = path.join(process.cwd(), 'tmp', `${traceId}.txt`);
-    await savePromptInfo(input.prompt, input.original_prompt, promptFilePath);
-    
-    logger.info("Prompt info saved to " + promptFilePath);
 
     await emit({
       type: 'eval-image-result',
