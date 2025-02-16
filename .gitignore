@@ -22,3 +22,10 @@ pnpm-lock.yaml
 */__pycache__/*
 *.py[cod]
 *.pyo
+
+# macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
