@@ -1,6 +1,6 @@
 {
-  "name": "my-motia-project",
-  "description": "",
+  "name": "google-gmail-workflow",
+  "description": "A workflow for Google Gmail",
   "scripts": {
     "dev": "motia dev",
     "dev:debug": "motia dev --debug",
