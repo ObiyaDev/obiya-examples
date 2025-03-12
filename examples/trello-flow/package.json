@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "commonjs",
   "scripts": {
-    "dev": "motia dev",
+    "dev": "NODE_ENV=development motia dev",
     "dev:debug": "motia dev --debug",
     "generate:config": "motia get-config --output ./",
     "test": "NODE_ENV=test jest",
