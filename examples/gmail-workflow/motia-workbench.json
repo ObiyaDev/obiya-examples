@@ -1,0 +1,80 @@
+{
+  "gmail-flow": {
+    "steps/analyze-email.step.py": {
+      "x": 481.2609021289569,
+      "y": 799.8959507662372
+    },
+    "steps/auto-responder.step.ts": {
+      "x": 94.58234276582252,
+      "y": 1109.3407506945664
+    },
+    "steps/daily-summary.step.ts": {
+      "x": 318.96515018157595,
+      "y": 134.49762363338988
+    },
+    "steps/fetch-email.step.ts": {
+      "x": 480.5,
+      "y": 632
+    },
+    "steps/gmail-auth.step.ts": {
+      "x": 820,
+      "y": 58
+    },
+    "steps/gmail-get-auth-url.step.ts": {
+      "x": 1230,
+      "y": 68
+    },
+    "steps/gmail-token-status.step.ts": {
+      "x": 1787,
+      "y": 17.797480807096377
+    },
+    "steps/gmail-watch.step.ts": {
+      "x": 1498,
+      "y": 68
+    },
+    "steps/gmail-webhook.step.ts": {
+      "x": 410,
+      "y": 374
+    },
+    "steps/noops/gmail-webhook-simulator.step.ts": {
+      "x": -122.10120649650784,
+      "y": 135.67495584589386
+    },
+    "steps/noops/google-auth-noops.step.ts": {
+      "x": 1178.1595872017188,
+      "y": 549.9212499730157
+    },
+    "steps/noops/human-review.step.ts": {
+      "x": 390.3608084783237,
+      "y": 1051.346312088437
+    },
+    "steps/organize-email.step.ts": {
+      "x": 820.5721410201845,
+      "y": 1117.9755567072107
+    },
+    "steps/api/gmail-get-auth-url.step.ts": {
+      "x": 1123.2336682640073,
+      "y": 144.74829385747896
+    },
+    "steps/api/gmail-auth.step.ts": {
+      "x": 821.0995361651217,
+      "y": -68.13826775439205
+    },
+    "steps/api/gmail-watch.step.ts": {
+      "x": 1694.0415650472407,
+      "y": 160.53102338726896
+    },
+    "steps/api/gmail-webhook.step.ts": {
+      "x": 386.148160906303,
+      "y": 365.2941041301467
+    },
+    "steps/api/gmail-token-status.step.ts": {
+      "x": 1379.975989831029,
+      "y": 156.59546900519388
+    },
+    "steps/api/gmail-auth-callback.step.ts": {
+      "x": 729.7900169482848,
+      "y": 139.04916367932137
+    }
+  }
+}
