@@ -1,0 +1,35 @@
+{
+  "name": "google-gmail-workflow",
+  "description": "A workflow for Google Gmail",
+  "scripts": {
+    "dev": "motia dev",
+    "dev:debug": "motia dev --debug",
+    "generate:config": "motia get-config --output ./",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "keywords": [
+    "motia"
+  ],
+  "dependencies": {
+    "@motiadev/core": "0.1.0-alpha.7",
+    "@motiadev/workbench": "0.1.0-alpha.7",
+    "axios": "^1.8.2",
+    "envalid": "^8.0.0",
+    "gmail-api-parse-message-ts": "^2.2.33",
+    "google-auth-library": "^9.15.1",
+    "googleapis": "^146.0.0",
+    "motia": "0.1.0-alpha.7",
+    "react": "^19.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}

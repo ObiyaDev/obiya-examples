@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.npm
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+coverage/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.cursorrules
+
+# Motia generated
+.motia/
+.idea/
+
+# Python cache files
+*/__pycache__/*
+*.py[cod]
+*.pyo
+
+# macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
