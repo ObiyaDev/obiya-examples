@@ -1,4 +1,4 @@
-import { EventConfig, StepHandler } from '@motiadev/core'
+import { EventConfig, StepHandler } from 'motia'
 import { z } from 'zod'
 import dotenv from 'dotenv'
 import {fal} from '@fal-ai/client'

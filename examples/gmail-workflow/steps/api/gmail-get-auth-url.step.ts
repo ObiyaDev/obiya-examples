@@ -1,4 +1,4 @@
-import {ApiRouteConfig, StepHandler} from '@motiadev/core';
+import {ApiRouteConfig, StepHandler} from 'motia';
 import { GoogleService } from '../../services/google.service';
 
 export const config: ApiRouteConfig = {
