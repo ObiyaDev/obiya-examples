@@ -36,7 +36,7 @@ A comprehensive agent for automating GitHub issue and pull request management us
 
 An intelligent Gmail agent that monitors, analyzes, and automatically responds to incoming emails.
 
-![Gmail Agent](examples/gmail-workflow/assets/gmail-workflow.png)
+![Gmail Agent](examples/gmail-workflow/docs/images/gmail-flow.png)
 
 **Key Features:**
 - Email classification and urgency detection
