@@ -17,7 +17,10 @@ Motia is a modern agent development platform that enables you to:
 
 A comprehensive agent for automating GitHub issue and pull request management using AI-powered classification and routing.
 
-![GitHub Integration Agent](examples/github-integration-workflow/docs/images/github-pr-management.png)
+<div style="display: flex; gap: 10px;">
+  <img src="examples/github-integration-workflow/docs/images/github-pr-management.png" width="49%" alt="GitHub PR Integration Agent" />
+  <img src="examples/github-integration-workflow/docs/images/github-issue-management.png" width="49%" alt="GitHub Issue Integration Agent" />
+</div>
 
 **Key Features:**
 - AI-powered issue and PR classification
