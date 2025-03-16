@@ -17,7 +17,7 @@ Motia is a modern agent development platform that enables you to:
 
 A comprehensive agent for automating GitHub issue and pull request management using AI-powered classification and routing.
 
-![GitHub Integration Agent](examples/github-integration-workflow/assets/github-integration.png)
+![GitHub Integration Agent](examples/github-integration-workflow/docs/images/github-pr-management.png)
 
 **Key Features:**
 - AI-powered issue and PR classification
@@ -65,7 +65,7 @@ Streamline development processes with an intelligent task progression agent for 
 
 A complete RAG agent implementation for building knowledge-based AI applications.
 
-![RAG Agent](examples/rag_example/assets/rag-example.png)
+![RAG Agent](examples/rag_example/docs/images/parse-embed-rag.png)
 
 **Key Features:**
 - Web page content extraction and parsing
@@ -81,7 +81,10 @@ A complete RAG agent implementation for building knowledge-based AI applications
 
 An agent that generates and evaluates AI images with feedback loops and quality metrics.
 
-![Vision Agent](examples/vision-example/assets/vision-example.png)
+<div style="display: flex; gap: 10px;">
+  <img src="examples/vision-example/docs/images/generate-image.png" width="49%" alt="Vision Agent" />
+  <img src="examples/vision-example/docs/images/eval-agent.png" width="49%" alt="Evaluation Results" />
+</div>
 
 **Key Features:**
 - Prompt enhancement with AI
