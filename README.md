@@ -49,7 +49,7 @@ An intelligent Gmail agent that monitors, analyzes, and automatically responds t
 
 Streamline development processes with an intelligent task progression agent for Trello boards.
 
-![Trello Agent](examples/trello-flow/assets/trello-manager.png)
+![Trello Agent](examples/trello-flow/docs/images/trello-manager.png)
 
 **Key Features:**
 - Automated card movement between lists
