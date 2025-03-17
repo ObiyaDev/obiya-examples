@@ -29,8 +29,8 @@ A powerful event-driven financial analysis workflow built with Motia that combin
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/finance-agent.git
-   cd finance-agent
+   git clone https://github.com/MotiaDev/motia-examples
+   cd examples/finance-agent
    ```
 
 2. Install dependencies:
