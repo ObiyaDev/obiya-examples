@@ -13,6 +13,22 @@ Motia is a modern agent development platform that enables you to:
 
 ## 🗂 Examples
 
+### Finance Agent
+
+A powerful event-driven financial analysis workflow built with Motia that combines web search, financial data, and AI analysis to provide comprehensive investment insights.
+
+![Finance Agent](examples/finance-agent/docs/finance-agent.png)
+
+**Key Features:**
+- Real-time Financial Analysis: Combines multiple data sources for comprehensive insights
+- AI-Powered Insights: Leverages OpenAI GPT-4 for intelligent market analysis
+- Web Search Integration: Aggregates latest market news and analysis
+- Financial Data Integration: Real-time stock and company information
+
+**Technologies:** TypeScript, Alpha Vantage API, SerperDev, OpenAI
+
+[View Example →](examples/finance-agent)
+
 ### GitHub Integration Agent
 
 A comprehensive agent for automating GitHub issue and pull request management using AI-powered classification and routing.
