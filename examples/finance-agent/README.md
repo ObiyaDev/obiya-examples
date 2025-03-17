@@ -120,30 +120,6 @@ Response:
      -d '{"query": "Latest information about AAPL and MSFT"}'
    ```
 
-## 🧪 Testing
-
-Run the test suite:
-```bash
-pnpm test
-```
-
-Run tests in watch mode:
-```bash
-pnpm test --watch
-```
-
-## 📦 Deployment
-
-1. Build the application:
-   ```bash
-   pnpm build
-   ```
-
-2. Start in production mode:
-   ```bash
-   pnpm start
-   ```
-
 ## 🤝 Contributing
 
 1. Fork the repository
