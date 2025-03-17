@@ -1,6 +1,6 @@
 {
-  "name": "my-motia-project",
-  "description": "",
+  "name": "finance-agent",
+  "description": "A finance agent that uses Motia to get financial data",
   "scripts": {
     "dev": "motia dev --verbose",
     "dev:debug": "motia dev --debug",
