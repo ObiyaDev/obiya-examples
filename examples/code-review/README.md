@@ -59,14 +59,22 @@ graph TD
 ```
 code-review/
 ├── steps/
-│   ├── reviewRequest.js
-│   ├── analyzeContext.js
-│   ├── suggest.js
-│   ├── reflect.js
-│   └── consider.js
-├── context.js
-├── reasoning.js
-├── utils.js
-├── index.js
-└── README.md
+│   ├── review/
+│   │   ├── analyze.step.ts
+│   │   ├── consider.step.ts
+│   │   ├── compose.step.ts
+│   │   ├── plan.step.ts
+│   │   ├── reflect.step.ts
+│   │   └── suggest.step.ts
+│   └── shared/
+│       ├── types/
+│       ├── utils/
+│       ├── context.ts
+│       ├── reasoning.ts
+│       └── index.ts
+├── CLAUDE.md
+├── jest.config.js
+├── package.json
+├── README.md
+└── tsconfig.json
 ```
