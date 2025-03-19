@@ -93,7 +93,7 @@ This document outlines a step-by-step plan to initialize a new Motia project for
 
     ```bash
     mkdir steps/review
-    touch steps/review/reviewRequest.api.step.ts steps/review/analyzeContext.step.ts steps/review/suggest.step.ts steps/review/reflect.step.ts steps/review/consider.step.ts steps/review/compose.step.ts steps/review/plan.step.ts
+    touch steps/review/reviewRequest.api.step.ts steps/review/analyze.step.ts steps/review/suggest.step.ts steps/review/reflect.step.ts steps/review/consider.step.ts steps/review/compose.step.ts steps/review/plan.step.ts
     ```
 
     Following the `<functionality>.<step-type>.ts` naming convention, the files are named clearly indicating their function and step type (api or event).
@@ -139,14 +139,14 @@ This document outlines a step-by-step plan to initialize a new Motia project for
         };
         ```
 
-    *   **steps/review/analyzeContext.step.ts (Event Step)**
+    *   **steps/review/analyze.step.ts (Event Step)**
 
         ```typescript
         import { EventConfig, StepHandler } from 'motia';
 
         export const config: EventConfig = {
           type: 'event',
-          name: 'AnalyzeContext',
+          name: 'Analyze',
           description: 'Analyzes the context for code review',
           subscribes: ['review.requested'],
           emits: ['review.problemFound', 'review.planPart'],
@@ -376,7 +376,7 @@ This script allows you to start the Motia Workbench and development environment 
 Now that you have the basic project setup and boilerplate code, you can start implementing the actual business logic within each step's handler function.
 
 *   **Implement TODOs**: Go through each step file and replace the `// TODO:` comments with your actual code for code review analysis, suggestion, reflection, etc. Ensure each step is focused on a single responsibility.
-*   **Write Unit Tests**: For each step, create a corresponding test file (e.g., `steps/review/analyzeContext.step.test.ts`) and write unit tests to verify the step's logic. Use the testing utilities provided by Motia (like `createTestContext`) to mock `emit`, `state`, and `logger`. Test both success and error paths for each step.
+*   **Write Unit Tests**: For each step, create a corresponding test file (e.g., `steps/review/analyze.step.test.ts`) and write unit tests to verify the step's logic. Use the testing utilities provided by Motia (like `createTestContext`) to mock `emit`, `state`, and `logger`. Test both success and error paths for each step.
 *   **Organize by Domain**: As you add more steps, keep organizing them by domain within the `steps` directory (e.g., `steps/review`, `steps/auth`, `steps/reporting`).
 *   **Use Consistent Naming**: Maintain consistent naming conventions for step files and topics.
 *   **Factor out Shared Code**: Identify any shared logic and factor it out into the `steps/shared` directory to avoid duplication.

@@ -1,6 +1,7 @@
-node_modules
-.motia
-dist
+node_modules/
+.motia/
+dist/
 *.log
 .env
-coverage
+coverage/
+.cursor/

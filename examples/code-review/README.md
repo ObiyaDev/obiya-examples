@@ -49,11 +49,12 @@ graph TD
 ```
 
 # Potential future improvements:
-1. Optional human-in-the-loop
-2. Create a higher order composition that uses this agent along with an implementation agent to handle gitops and automate the developer PR workflow
-3. Implement persistent (in-repo) memory for learning and documenting coding standards enforced during review phase, but not yet documented in codebase
-4. Optimize context management and compression
-5. Improve and optimize coroutines and prompts in reasoning steps
+1. External (webhook & api based) reflection step with timeout enforcement
+2. Optional human-in-the-loop reflection step (full automation)
+3. Create a higher order composition that uses this agent along with an implementation agent to handle gitops and automate the developer PR workflow
+4. Implement persistent (in-repo) memory for learning and documenting coding standards enforced during review phase, but not yet documented in codebase
+5. Optimize context management and compression
+6. Improve and optimize coroutines and prompts in reasoning steps
 
 # Project Structure
 ```
@@ -69,7 +70,6 @@ code-review/
 │   └── shared/
 │       ├── types/
 │       ├── utils/
-│       ├── context.ts
 │       ├── reasoning.ts
 │       └── index.ts
 ├── CLAUDE.md

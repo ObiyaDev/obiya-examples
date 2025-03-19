@@ -9,7 +9,7 @@ This guide covers the best practices for testing Motia workflows, steps, and eve
 
 ## Setting Up Testing
 
-Motia uses [Jest](mdc:code-review/https:/jestjs.io) as its testing framework. To set up testing:
+Motia uses [Jest](https://jestjs.io/) as its testing framework. To set up testing:
 
 1. Install dependencies:
 

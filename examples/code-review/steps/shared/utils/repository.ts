@@ -17,31 +17,107 @@ export interface RepoInfo {
 }
 
 /**
- * Parse repository URL into owner and repo name
- * @param repoUrl Repository URL (https or ssh format)
- * @returns Object containing owner and repo name
+ * Interface for parsed repository URL components
  */
-export function parseRepoUrl(repoUrl: string): { owner: string; repo: string } {
-  let match;
-  
-  // Handle https://github.com/owner/repo format
-  match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/\.]+)/);
-  if (match) {
-    return { owner: match[1], repo: match[2] };
+export interface ParsedRepo {
+  protocol: string;
+  host: string;
+  owner: string;
+  repo: string;
+}
+
+/**
+ * Parse repository URL into its components
+ * 
+ * Handles multiple repository formats:
+ * - https://github.com/owner/repo.git
+ * - gh://owner/repo
+ * - ssh://git@github.com/owner/repo.git
+ * - git@github.com:owner/repo.git
+ * - file://~/my-project/.git
+ * - github.com/owner/repo
+ * - owner/repo
+ * - /absolute/path/to/repo
+ * 
+ * @param repoUrl Repository URL or identifier
+ * @returns Object containing protocol, host, owner and repo name
+ */
+export function parseRepoUrl(repoUrl: string): ParsedRepo {
+  // Handle absolute file paths
+  if (repoUrl.startsWith('/')) {
+    return {
+      protocol: 'file',
+      host: '',
+      owner: '',
+      repo: repoUrl
+    };
   }
   
-  // Handle git@github.com:owner/repo.git format
-  match = repoUrl.match(/github\.com:([^\/]+)\/([^\/\.]+)\.git/);
-  if (match) {
-    return { owner: match[1], repo: match[2] };
+  // Handle file paths with tilde (home directory)
+  if (repoUrl.startsWith('~/')) {
+    return {
+      protocol: 'file',
+      host: '',
+      owner: '',
+      repo: repoUrl
+    };
   }
   
-  // Handle simple owner/repo format
-  match = repoUrl.match(/^([^\/]+)\/([^\/]+)$/);
-  if (match) {
-    return { owner: match[1], repo: match[2] };
+  // Check if it has an explicit protocol
+  const protocolMatch = repoUrl.match(/^([a-zA-Z]+):\/\//);
+  let protocol = protocolMatch ? protocolMatch[1] : '';
+  
+  // Remove protocol for further parsing
+  const withoutProtocol = protocolMatch ? repoUrl.substring(protocolMatch[0].length) : repoUrl;
+  
+  // Parse SSH format like git@github.com:owner/repo.git
+  if (!protocol && withoutProtocol.includes('@') && withoutProtocol.includes(':')) {
+    const sshMatch = withoutProtocol.match(/^([^@]+)@([^:]+):(.+)$/);
+    if (sshMatch) {
+      const [, , host, path] = sshMatch;
+      const pathParts = path.replace(/\.git$/, '').split('/');
+      const owner = pathParts[0] || '';
+      const repo = pathParts[1] || '';
+      return { protocol: 'ssh', host, owner, repo };
+    }
   }
   
+  // Handle different patterns
+  const parts = withoutProtocol.split('/').filter(Boolean);
+  
+  // Case: owner/repo (e.g., "buger/probe")
+  if (parts.length === 2 && !parts[0].includes('.')) {
+    const [owner, repoWithGit] = parts;
+    const repo = repoWithGit.replace(/\.git$/, '');
+    
+    // For now, default to GitHub for owner/repo format
+    return {
+      protocol: protocol || 'https',
+      host: 'github.com',
+      owner,
+      repo
+    };
+  }
+  
+  // Case: host/owner/repo (e.g., "github.com/buger/probe")
+  if (parts.length >= 3) {
+    const host = parts[0];
+    const owner = parts[1];
+    const repo = parts[2].replace(/\.git$/, '');
+    
+    // Handle GitHub specifically
+    if (host === 'github.com') {
+      // Check if GitHub token is present to prefer gh:// protocol
+      const hasGitHubToken = Boolean(process.env.GITHUB_TOKEN);
+      protocol = hasGitHubToken ? 'gh' : (protocol || 'https');
+    } else {
+      protocol = protocol || 'https';
+    }
+    
+    return { protocol, host, owner, repo };
+  }
+  
+  // Handle unsupported formats
   throw new Error(`Could not parse repository URL: ${repoUrl}`);
 }
 
