@@ -8,7 +8,9 @@ export const nodeSchema = z.object({
   children: z.array(z.string()),
   visits: z.number(),
   value: z.number(),
-})
+  state: z.string().optional(),
+  isTerminal: z.boolean().optional()
+});
 export type Node = z.infer<typeof nodeSchema>;
 
 export async function selectNode(nodes: Record<string, Node>, rootId: string, currentNodeId: string, maxIterations: number, currentIteration: number, explorationConstant: number, maxDepth: number) {
