@@ -125,3 +125,57 @@ export async function coerce<T extends z.ZodSchema>(prompt: string, schema: T): 
   `);
   return schema.parse(response.result);
 }
+
+// Add a new schema for simulation results
+export const simulationResultSchema = z.object({
+  nodeId: z.string().describe('the ID of the node being evaluated'),
+  value: z.number().describe('the score of the evaluation, between 0 and 1'),
+  explanation: z.string().describe('explanation of why this score was assigned')
+});
+export type SimulationResult = z.infer<typeof simulationResultSchema>;
+
+/**
+ * Evaluates the quality of reasoning paths from expanded nodes
+ * Used in the simulation phase of MCTS to quickly assess the potential of different paths
+ * @param parentState The state of the parent node from which expansion occurred
+ * @param expandedStates Array of expanded reasoning states to evaluate
+ * @returns A simulation result with value score
+ */
+export async function evaluateReasoning(parentState: string, expandedStates: string[]): Promise<SimulationResult> {
+  if (expandedStates.length === 0) {
+    throw new Error('No expanded states to evaluate');
+  }
+
+  const bestStateIndex = Math.floor(Math.random() * expandedStates.length);
+  const selectedState = expandedStates[bestStateIndex];
+  
+  const prompt = `
+    You are an expert evaluator of software development reasoning.
+    I'll show you a reasoning path consisting of an initial state and a possible next step.
+    Rate how promising this reasoning path is for solving a software development problem.
+    
+    Initial reasoning state:
+    ${parentState}
+    
+    Possible next step in reasoning:
+    ${selectedState}
+    
+    Evaluate the quality of this reasoning path on a scale from 0.0 to 1.0, where:
+    - 0.0 means the reasoning is completely flawed or irrelevant
+    - 0.5 means the reasoning is somewhat reasonable but has issues
+    - 1.0 means the reasoning is excellent and very promising
+    
+    Provide:
+    1. A numerical score between 0.0 and 1.0
+    2. A brief explanation of why you assigned this score
+  `;
+
+  // Get result from Claude
+  const result = await coerce(prompt, simulationResultSchema);
+  
+  return {
+    nodeId: expandedStates[bestStateIndex],
+    value: result.value,
+    explanation: result.explanation
+  };
+}
