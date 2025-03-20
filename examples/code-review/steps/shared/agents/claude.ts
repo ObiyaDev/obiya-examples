@@ -110,7 +110,7 @@ const claudeCodeResponseSchema = z.object({
 
 // Run Claude Code agent over CLI
 export async function cli(prompt: string) {
-  const response = await execSync(`claude -p --json ${prompt}`);
+  const response = execSync(`claude -p --json ${prompt}`);
   return claudeCodeResponseSchema.parse(JSON.parse(response.toString()));
 }
 
