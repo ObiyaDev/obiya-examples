@@ -1,19 +1,21 @@
+import { Commits } from '../shared/utils/repository';
 import { handler, config } from './reviewRequest.api.step';
-import { parseRepoUrl } from '../shared/utils/repository';
 
 // Mock the shared repository module
 jest.mock('../shared/utils/repository', () => ({
-  parseRepoUrl: jest.fn().mockImplementation((repoUrl) => {
-    if (repoUrl === 'testuser/testrepo') {
-      return {
-        protocol: 'https',
-        host: 'github.com',
-        owner: 'testuser',
-        repo: 'testrepo'
+  Commits: {
+    create: jest.fn().mockImplementation((repoUrl) => {
+      if (repoUrl === 'testuser/testrepo') {
+        return {
+          protocol: 'https',
+          host: 'github.com',
+          owner: 'testuser',
+          repo: 'testrepo'
       };
     }
     throw new Error('Invalid repository format');
-  })
+    })
+  }
 }));
 
 // Mock the ApiRequest type from Motia
@@ -180,7 +182,7 @@ describe('Review Request API Step', () => {
     // Arrange
     const context = createTestContext();
     // Reset the mock to make it throw for this test
-    (parseRepoUrl as jest.Mock).mockImplementationOnce(() => {
+    (Commits.create as jest.Mock).mockImplementationOnce(() => {
       throw new Error('Invalid repository format');
     });
     

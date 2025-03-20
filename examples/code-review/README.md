@@ -31,6 +31,49 @@ Brief: Collects local context about code branch to generate an array of plan par
     - Emits: Plan review.done (Plan.md)
     - Subscribes: Plan review.planComposed
 
+
+### Step Flow
+```mermaid
+flowchart TD
+    A[Initialize MCTS Context] --> B[Start Iteration]
+    B --> C[Selection: Find Leaf Node]
+    C --> D[Expansion: Add Child Nodes]
+    D --> E[Simulation: Evaluate Path]
+    E --> F[Backpropagation: Update Statistics]
+    F --> G{Max Iterations?}
+    G -->|No| B
+    G -->|Yes| H[Select Best Move]
+    
+    subgraph "Selection Phase"
+    C --> C1[Calculate UCB for Each Child]
+    C1 --> C2[Choose Node with Highest UCB]
+    C2 --> C3{Has Children?}
+    C3 -->|Yes| C1
+    C3 -->|No| D
+    end
+    
+    subgraph "Expansion Phase"
+    D --> D1[Query LLM for Possible Next Steps]
+    D1 --> D2[Create Child Nodes]
+    D2 --> D3[Add Children to Parent]
+    end
+    
+    subgraph "Simulation Phase"
+    E --> E1[Select Random Child]
+    E1 --> E2[Query LLM to Evaluate Path]
+    E2 --> E3[Extract Value & Check Terminal]
+    end
+    
+    subgraph "Backpropagation Phase"
+    F --> F1[Update Node Visits]
+    F1 --> F2[Update Node Value]
+    F2 --> F3[Move to Parent Node]
+    F3 --> F4{Is Root?}
+    F4 -->|No| F1
+    F4 -->|Yes| G
+    end
+```
+
 ### Flow
 ```mermaid
 graph TD

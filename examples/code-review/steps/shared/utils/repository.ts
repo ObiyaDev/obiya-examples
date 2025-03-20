@@ -1,239 +1,131 @@
-import axios from 'axios';
 import * as path from 'path';
 import * as fs from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { execSync } from 'child_process';
+import { MCTSControllerInput } from '../../code-review/controller.step';
+import { InternalStateManager } from '@motiadev/core';
 
-const execAsync = promisify(exec);
-
-/**
- * Interface for repository information
- */
-export interface RepoInfo {
-  owner: string;
-  repo: string;
-  url: string;
-  branch: string;
+interface Remote {
+  clone(path: string): Promise<void>;
+  fetch(): Promise<void>;
+  checkout(branch: string): Promise<void>;
 }
 
-/**
- * Interface for parsed repository URL components
- */
-export interface ParsedRepo {
-  protocol: string;
-  host: string;
-  owner: string;
-  repo: string;
+class OctokitRemote implements Remote {
+  constructor(public hostname: string, public repo: string) { }
+  clone(path: string): Promise<void> { return Promise.resolve(); }
+  fetch(): Promise<void> { return Promise.resolve(); }
+  checkout(branch: string): Promise<void> { return Promise.resolve(); }
 }
 
-/**
- * Parse repository URL into its components
- * 
- * Handles multiple repository formats:
- * - https://github.com/owner/repo.git
- * - gh://owner/repo
- * - ssh://git@github.com/owner/repo.git
- * - git@github.com:owner/repo.git
- * - file://~/my-project/.git
- * - github.com/owner/repo
- * - owner/repo
- * - /absolute/path/to/repo
- * 
- * @param repoUrl Repository URL or identifier
- * @returns Object containing protocol, host, owner and repo name
- */
-export function parseRepoUrl(repoUrl: string): ParsedRepo {
-  // Handle absolute file paths
-  if (repoUrl.startsWith('/')) {
-    return {
-      protocol: 'file',
-      host: '',
-      owner: '',
-      repo: repoUrl
-    };
-  }
-  
-  // Handle file paths with tilde (home directory)
-  if (repoUrl.startsWith('~/')) {
-    return {
-      protocol: 'file',
-      host: '',
-      owner: '',
-      repo: repoUrl
-    };
-  }
-  
-  // Check if it has an explicit protocol
-  const protocolMatch = repoUrl.match(/^([a-zA-Z]+):\/\//);
-  let protocol = protocolMatch ? protocolMatch[1] : '';
-  
-  // Remove protocol for further parsing
-  const withoutProtocol = protocolMatch ? repoUrl.substring(protocolMatch[0].length) : repoUrl;
-  
-  // Parse SSH format like git@github.com:owner/repo.git
-  if (!protocol && withoutProtocol.includes('@') && withoutProtocol.includes(':')) {
-    const sshMatch = withoutProtocol.match(/^([^@]+)@([^:]+):(.+)$/);
-    if (sshMatch) {
-      const [, , host, path] = sshMatch;
-      const pathParts = path.replace(/\.git$/, '').split('/');
-      const owner = pathParts[0] || '';
-      const repo = pathParts[1] || '';
-      return { protocol: 'ssh', host, owner, repo };
-    }
-  }
-  
-  // Handle different patterns
-  const parts = withoutProtocol.split('/').filter(Boolean);
-  
-  // Case: owner/repo (e.g., "buger/probe")
-  if (parts.length === 2 && !parts[0].includes('.')) {
-    const [owner, repoWithGit] = parts;
-    const repo = repoWithGit.replace(/\.git$/, '');
-    
-    // For now, default to GitHub for owner/repo format
-    return {
-      protocol: protocol || 'https',
-      host: 'github.com',
-      owner,
-      repo
-    };
-  }
-  
-  // Case: host/owner/repo (e.g., "github.com/buger/probe")
-  if (parts.length >= 3) {
-    const host = parts[0];
-    const owner = parts[1];
-    const repo = parts[2].replace(/\.git$/, '');
-    
-    // Handle GitHub specifically
-    if (host === 'github.com') {
-      // Check if GitHub token is present to prefer gh:// protocol
-      const hasGitHubToken = Boolean(process.env.GITHUB_TOKEN);
-      protocol = hasGitHubToken ? 'gh' : (protocol || 'https');
+class GitRemote implements Remote {
+  constructor(public hostname: string, public repo: string, public user: string | undefined) { }
+  clone(path: string): Promise<void> { return Promise.resolve(); }
+  fetch(): Promise<void> { return Promise.resolve(); }
+  checkout(branch: string): Promise<void> { return Promise.resolve(); }
+}
+
+export class GitInterface {
+  public url: URL;
+  private remote: Remote | undefined;
+  private fileSystemPath: string;
+
+  private constructor(repoUrl: string) {
+    this.url = new URL(repoUrl);
+    this.fileSystemPath = path.join(process.cwd(), this.url.pathname);
+
+    if (this.url.protocol && this.url.protocol !== 'file' && !this.url.pathname) {
+      throw new Error('A remote repository must have a repo name');
     } else {
-      protocol = protocol || 'https';
+      this.fileSystemPath = path.join(process.cwd(), this.url.pathname.replace(/\.git$/, ''));
+      if (this.url.protocol === 'gh') {
+        const host = this.url.hostname || 'github.com';
+        this.remote = new OctokitRemote(host, this.url.pathname);
+      } else {
+        const hostname = this.url.hostname || 'localhost';
+        const repoUrl = this.url.pathname.replace(/\/$/, '');
+        this.remote = new GitRemote(hostname, repoUrl, this.url.username);
+      }
     }
-    
-    return { protocol, host, owner, repo };
   }
-  
-  // Handle unsupported formats
-  throw new Error(`Could not parse repository URL: ${repoUrl}`);
+
+  static async create(repoUrl: string, branch: string) {
+    const git = new GitInterface(repoUrl);
+    if (git.remote) {
+      if (!fs.existsSync(git.fileSystemPath)) {
+        await git.remote.clone(git.fileSystemPath);
+      }
+      await git.remote.fetch();
+      await git.remote.checkout(branch);
+    }
+    if (!fs.existsSync(git.fileSystemPath)) {
+      throw new Error('Repository does not exist');
+    }
+    return git;
+  }
+
+  /**
+   * Get the diff between two branches or commits
+   * @param repoDir Path to local repository
+   * @param base Base branch or commit
+   * @param head Head branch or commit
+   * @returns Git diff output
+   */
+
+  public getDiff(base: string, head: string): string {
+    return execSync(`git diff ${base}..${head}`, { cwd: this.fileSystemPath }).toString();
+  }
+  public getMessages(base: string, head: string): string {
+    return execSync(`git log ${base}..${head} --pretty=format:"%h %s"`, { cwd: this.fileSystemPath }).toString();
+  }
+
+  public resolveCommit(commit: string | undefined): string {
+    if (!commit) {
+      // If no commit is provided, get the first commit on this branch
+      commit = execSync(`git rev-list --max-parents=0 HEAD`, { cwd: this.fileSystemPath }).toString();
+    }
+    return execSync(`git rev-parse ${commit}`, { cwd: this.fileSystemPath }).toString();
+  }
+
+  public getFiles(base: string, head: string): string {
+    return execSync(`git diff --name-only ${base}..${head}`, { cwd: this.fileSystemPath }).toString();
+  }
+
 }
 
-/**
- * Clone a repository to a local directory
- * @param repoUrl Repository URL
- * @param branch Branch to clone
- * @param targetDir Target directory to clone into
- * @returns Path to the cloned repository
- */
-export async function cloneRepository(
-  repoUrl: string,
-  branch: string = 'main',
-  targetDir: string = './temp'
-): Promise<string> {
-  try {
-    // Create target directory if it doesn't exist
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
-    }
-    
-    const { owner, repo } = parseRepoUrl(repoUrl);
-    const repoDir = path.join(targetDir, repo);
-    
-    // Clone the repository
-    await execAsync(`git clone --branch ${branch} ${repoUrl} ${repoDir}`);
-    
-    return repoDir;
-  } catch (error) {
-    throw new Error(`Failed to clone repository: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+export class Commits {
+  public diff: string;
+  public messages: string;
+  public files: string;
+  public history: {
+    diff: string;
+    messages: string;
+    files: string;
+  };
 
-/**
- * Fetch repository file content using GitHub API
- * @param owner Repository owner
- * @param repo Repository name
- * @param path File path
- * @param branch Branch name
- * @param token GitHub access token (optional)
- * @returns File content
- */
-export async function fetchFileContent(
-  owner: string,
-  repo: string,
-  filePath: string,
-  branch: string = 'main',
-  token?: string
-): Promise<string> {
-  try {
-    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`;
-    
-    const headers: Record<string, string> = {
-      'Accept': 'application/vnd.github.v3.raw'
+  private constructor(
+    public repoUrl: string, 
+    public branch: string, 
+    public reviewStartCommit: string, 
+    public reviewEndCommit: string, 
+    public git: GitInterface
+  ) {
+    this.diff = this.git.getDiff(this.reviewStartCommit, this.reviewEndCommit);
+    this.messages = this.git.getMessages(this.reviewStartCommit, this.reviewEndCommit);
+    this.files = this.git.getFiles(this.reviewStartCommit, this.reviewEndCommit);
+    this.history = {
+      diff: this.diff,
+      messages: this.messages,
+      files: this.files,
     };
-    
-    if (token) {
-      headers['Authorization'] = `token ${token}`;
+  }
+
+  static async create(traceId: string, state: InternalStateManager, input: MCTSControllerInput) {
+    const git = await GitInterface.create(input.repoUrl, input.branch);
+    const reviewStartCommit = git.resolveCommit(input.reviewStartCommit);
+    const reviewEndCommit = git.resolveCommit(input.reviewEndCommit);
+    if (!reviewStartCommit || !reviewEndCommit) {
+      throw new Error('Invalid review start or end commit');
     }
-    
-    const response = await axios.get(url, { headers });
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      throw new Error(`File not found: ${filePath}`);
-    }
-    throw new Error(`Failed to fetch file content: ${error instanceof Error ? error.message : String(error)}`);
+    return new Commits(input.repoUrl, input.branch, reviewStartCommit, reviewEndCommit, git);
   }
 }
-
-/**
- * Get a list of files in a repository
- * @param repoDir Path to local repository
- * @param extensions File extensions to filter by (optional)
- * @returns Array of file paths
- */
-export async function listRepositoryFiles(
-  repoDir: string,
-  extensions?: string[]
-): Promise<string[]> {
-  try {
-    // Use git to list all files tracked by git
-    const { stdout } = await execAsync('git ls-files', { cwd: repoDir });
-    
-    let files = stdout.split('\n').filter(Boolean);
-    
-    // Filter by extensions if provided
-    if (extensions && extensions.length > 0) {
-      files = files.filter(file => {
-        const ext = path.extname(file).toLowerCase();
-        return extensions.includes(ext);
-      });
-    }
-    
-    return files;
-  } catch (error) {
-    throw new Error(`Failed to list repository files: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-/**
- * Get the diff between two branches or commits
- * @param repoDir Path to local repository
- * @param base Base branch or commit
- * @param head Head branch or commit
- * @returns Git diff output
- */
-export async function getDiff(
-  repoDir: string,
-  base: string,
-  head: string = 'HEAD'
-): Promise<string> {
-  try {
-    const { stdout } = await execAsync(`git diff ${base}..${head}`, { cwd: repoDir });
-    return stdout;
-  } catch (error) {
-    throw new Error(`Failed to get diff: ${error instanceof Error ? error.message : String(error)}`);
-  }
-} 

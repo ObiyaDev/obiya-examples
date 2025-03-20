@@ -12,8 +12,9 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/claude-code": "^0.2.52",
     "axios": "^1.6.2",
     "markdown-it": "^13.0.2",
     "motia": "^0.1.0-beta.10",
