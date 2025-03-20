@@ -1,6 +1,6 @@
 // 5. SelectBestMove activity
 import { z } from 'zod';
-import { EventConfig, StepHandler } from '@motiadev/core';
+import { EventConfig, StepHandler } from 'motia';
 
 const selectBestMoveInputSchema = z.object({
   nodes: z.record(z.string(), z.object({
@@ -21,7 +21,7 @@ const selectBestMoveInputSchema = z.object({
 
 export type SelectBestMoveInput = z.infer<typeof selectBestMoveInputSchema>;
 
-export const selectBestMoveConfig: EventConfig = {
+export const config: EventConfig = {
   type: 'event',
   name: 'SelectBestMove',
   description: 'Selects the best reasoning path after MCTS iterations',
@@ -31,7 +31,7 @@ export const selectBestMoveConfig: EventConfig = {
   input: selectBestMoveInputSchema
 };
 
-export const handler: StepHandler<typeof selectBestMoveConfig> = async (input: SelectBestMoveInput, { emit, logger, state, traceId }) => {
+export const handler: StepHandler<typeof config> = async (input: SelectBestMoveInput, { emit, logger, state, traceId }) => {
   const bestNode = findBestNode(input.nodes, input.rootId);
   await emit({
     topic: 'code-review.reasoning.completed',

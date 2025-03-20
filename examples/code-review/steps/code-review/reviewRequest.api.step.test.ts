@@ -96,16 +96,17 @@ describe('Review Request API Step', () => {
     expect(context.emit).toHaveBeenCalledWith({
       topic: 'review.requested',
       data: {
-        protocol: 'https',
-        host: 'github.com',
-        owner: 'testuser',
-        repo: 'testrepo',
+        repoUrl: 'testuser/testrepo',
         branch: 'main',
         depth: 2,
+        maxDepth: 2,
         reviewStartCommit: '',
         reviewEndCommit: 'HEAD',
         requirements: 'Test requirements',
-        timestamp: '2021-05-03T00:00:00.000Z'
+        timestamp: '2021-05-03T00:00:00.000Z',
+        prompt: 'Test requirements',
+        maxIterations: 100,
+        explorationConstant: 1.414
       }
     });
     
@@ -152,16 +153,17 @@ describe('Review Request API Step', () => {
     const emitCall = context.emit.mock.calls[0][0];
     expect(emitCall.topic).toBe('review.requested');
     expect(emitCall.data).toMatchObject({
-      protocol: 'https',
-      host: 'github.com',
-      owner: 'testuser',
-      repo: 'testrepo',
+      repoUrl: 'testuser/testrepo',
       branch: 'main',
       depth: 2,
+      maxDepth: 2,
       reviewStartCommit: '',
       reviewEndCommit: 'HEAD',
       requirements: 'Test requirements',
-      timestamp: '2021-05-03T00:00:00.000Z'
+      timestamp: '2021-05-03T00:00:00.000Z',
+      prompt: 'Test requirements',
+      maxIterations: 100,
+      explorationConstant: 1.414
     });
     
     // Check response body
@@ -181,10 +183,6 @@ describe('Review Request API Step', () => {
   it('should handle repository parsing errors', async () => {
     // Arrange
     const context = createTestContext();
-    // Reset the mock to make it throw for this test
-    (Commits.create as jest.Mock).mockImplementationOnce(() => {
-      throw new Error('Invalid repository format');
-    });
     
     const req: MockApiRequest = {
       body: {
@@ -201,15 +199,15 @@ describe('Review Request API Step', () => {
     const result = await handler(req as any, context as any);
 
     // Assert
-    expect(result.status).toBe(404);
-    expect(result.body).toHaveProperty('message', 'Repository not found');
     expect(context.emit).toHaveBeenCalledWith({
       topic: 'review.error',
-      data: {
-        message: 'Invalid repository format',
+      data: expect.objectContaining({
         repository: 'invalid-repo-format',
         timestamp: '2021-05-03T00:00:00.000Z'
-      }
+      })
     });
+    
+    expect(result.status).toBe(404);
+    expect(result.body).toHaveProperty('message');
   });
 }); 

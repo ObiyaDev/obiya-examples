@@ -1,6 +1,6 @@
 // 4. Backpropagate activity
 import { z } from 'zod';
-import { EventConfig, StepHandler } from '@motiadev/core';
+import { EventConfig, StepHandler } from 'motia';
 
 const backpropagateInputSchema = z.object({
   nodes: z.record(z.string(), z.object({
@@ -25,7 +25,7 @@ const backpropagateInputSchema = z.object({
 
 export type BackpropagateInput = z.infer<typeof backpropagateInputSchema>;
 
-export const backpropagateConfig: EventConfig = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Backpropagate',
   description: 'Updates node statistics based on simulation results',
@@ -35,7 +35,7 @@ export const backpropagateConfig: EventConfig = {
   input: backpropagateInputSchema
 };
 
-export const handler: StepHandler<typeof backpropagateConfig> = async (input: BackpropagateInput, { emit, logger, state, traceId }) => {
+export const handler: StepHandler<typeof config> = async (input: BackpropagateInput, { emit, logger, state, traceId }) => {
   const { nodes, rootId, simulationResult } = input;
   const { nodeId, value } = simulationResult;
 

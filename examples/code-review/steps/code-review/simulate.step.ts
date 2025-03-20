@@ -1,6 +1,6 @@
 // 3. Simulate activity
 import { z } from 'zod';
-import { EventConfig, StepHandler } from '@motiadev/core';
+import { EventConfig, StepHandler } from 'motia';
 
 const simulateInputSchema = z.object({
   nodes: z.record(z.string(), z.object({
@@ -22,7 +22,7 @@ const simulateInputSchema = z.object({
 
 export type SimulateInput = z.infer<typeof simulateInputSchema>;
 
-export const simulateConfig: EventConfig = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Simulate',
   description: 'Simulates reasoning path outcome using LLM evaluation',
@@ -32,7 +32,7 @@ export const simulateConfig: EventConfig = {
   input: simulateInputSchema
 };
 
-export const handler: StepHandler<typeof simulateConfig> = async (input: SimulateInput, { emit, logger, state, traceId }) => {
+export const handler: StepHandler<typeof config> = async (input: SimulateInput, { emit, logger, state, traceId }) => {
   const { nodes, rootId, expandedNodeIds } = input;
   const currentNode = nodes[rootId];
 
@@ -41,11 +41,19 @@ export const handler: StepHandler<typeof simulateConfig> = async (input: Simulat
 
   await emit({
     topic: 'mcts.simulation.completed',
-    data: { nodeId: currentNode.id, value: simulationResult.value }
+    data: {
+      nodes,
+      rootId,
+      simulationResult,
+      maxIterations: input.maxIterations,
+      currentIteration: input.currentIteration,
+      explorationConstant: input.explorationConstant,
+      maxDepth: input.maxDepth
+    }
   });
 };
 
 async function simulateReasoning(state: string, expandedNodeIds: string[]) {
   // Implement actual simulation logic here
-  return { value: Math.random() };
+  return { nodeId: expandedNodeIds[0] || "root", value: Math.random() };
 }

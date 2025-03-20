@@ -1,6 +1,6 @@
 // 1. SelectNode activity
 import { z } from 'zod';
-import { EventConfig, StepHandler } from '@motiadev/core';
+import { EventConfig, StepHandler } from 'motia';
 import { selectNode, nodeSchema } from '../shared/agents/claude';
 
 const selectNodeInputSchema = z.object({
@@ -14,7 +14,7 @@ const selectNodeInputSchema = z.object({
 });
 export type SelectNodeInput = z.infer<typeof selectNodeInputSchema>;
 
-export const selectNodeConfig: EventConfig = {
+export const config: EventConfig = {
   type: 'event',
   name: 'SelectNode',
   description: 'Selects a node in the MCTS tree using UCB1 formula',
@@ -24,14 +24,22 @@ export const selectNodeConfig: EventConfig = {
   input: selectNodeInputSchema
 };
 
-export const handler: StepHandler<typeof selectNodeConfig> = async (input: SelectNodeInput, { emit, logger, state, traceId }) => {
+export const handler: StepHandler<typeof config> = async (input: SelectNodeInput, { emit, logger, state, traceId }) => {
   const { nodes, rootId, currentNodeId, maxIterations, currentIteration, explorationConstant, maxDepth } = input;
 
   // Select the node with the highest UCB1 value
-  const selectedNode = selectNode(nodes, rootId, currentNodeId, maxIterations, currentIteration, explorationConstant, maxDepth);
+  const selectedNode = await selectNode(nodes, rootId, currentNodeId, maxIterations, currentIteration, explorationConstant, maxDepth);
 
   await emit({
     topic: 'mcts.node.selected',
-    data: { node: selectedNode }
+    data: { 
+      nodes,
+      rootId,
+      selectedNodeId: selectedNode.id,
+      maxIterations,
+      currentIteration,
+      explorationConstant,
+      maxDepth
+    }
   });
 };

@@ -1,7 +1,8 @@
 // 2. ExpandNode activity
 import { z } from 'zod';
-import { EventConfig, StepHandler } from '@motiadev/core';
+import { EventConfig, StepHandler } from 'motia';
 import { expandNode } from '../shared/agents/claude';
+import * as crypto from 'crypto';
 
 const expandNodeInputSchema = z.object({
   nodes: z.record(z.string(), z.object({
@@ -23,7 +24,7 @@ const expandNodeInputSchema = z.object({
 
 export type ExpandNodeInput = z.infer<typeof expandNodeInputSchema>;
 
-export const expandNodeConfig: EventConfig = {
+export const config: EventConfig = {
   type: 'event',
   name: 'ExpandNode',
   description: 'Expands a selected node by generating possible reasoning steps',
@@ -33,7 +34,7 @@ export const expandNodeConfig: EventConfig = {
   input: expandNodeInputSchema
 };
 
-export const handler: StepHandler<typeof expandNodeConfig> = async (input: ExpandNodeInput, { emit, logger, state, traceId }) => {
+export const handler: StepHandler<typeof config> = async (input: ExpandNodeInput, { emit, logger, state, traceId }) => {
   const { nodes, rootId, selectedNodeId } = input;
   const currentNode = nodes[selectedNodeId];
 

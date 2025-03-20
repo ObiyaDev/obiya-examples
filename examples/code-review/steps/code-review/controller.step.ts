@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EventConfig, StepHandler } from '@motiadev/core';
+import { EventConfig, StepHandler } from 'motia';
 import { Commits } from '../shared/utils/repository';
 import { evaluateCommits } from '../shared/agents/claude';
 
@@ -16,7 +16,7 @@ const mctsControllerInputSchema = z.object({
 });
 export type MCTSControllerInput = z.infer<typeof mctsControllerInputSchema>;
 
-export const mctsControllerConfig: EventConfig = {
+export const config: EventConfig = {
   type: 'event',
   name: 'MCTSController',
   description: 'Controls the MCTS process for code review reasoning',
@@ -26,7 +26,7 @@ export const mctsControllerConfig: EventConfig = {
   input: mctsControllerInputSchema
 };
 
-export const handler: StepHandler<typeof mctsControllerConfig> = async (input: MCTSControllerInput, { emit, logger, state, traceId }) => {
+export const handler: StepHandler<typeof config> = async (input: MCTSControllerInput, { emit, logger, state, traceId }) => {
     logger.info('Analyzing review context', {
       ...input,
       requirements: input.requirements.length > 20
@@ -34,19 +34,30 @@ export const handler: StepHandler<typeof mctsControllerConfig> = async (input: M
         : input.requirements
     });
    
-    const commits = await Commits.create(traceId, state, input);
-    const evaluation = await evaluateCommits(commits, input.prompt);
-  
-    if (evaluation.score > 0.9 || input.maxIterations === 0) {
+    try {
+      const commits = await Commits.create(traceId, state, input);
+      const evaluation = await evaluateCommits(commits, input.prompt);
+    
+      if (evaluation.score > 0.9 || input.maxIterations === 0) {
+        await emit({
+          topic: 'mcts.iterations.completed',
+          data: evaluation
+        });
+        logger.info('Context analysis completed');
+      } else {
+        await emit({
+          topic: 'mcts.iteration.started',
+          data: evaluation
+        });
+      }
+    } catch (error) {
+      logger.error('Error in controller step', error);
       await emit({
-        topic: 'mcts.iterations.completed',
-        data: evaluation
-      });
-      logger.info('Context analysis completed');
-    } else {
-      await emit({
-        topic: 'mcts.iteration.started',
-        data: evaluation
+        topic: 'review.error',
+        data: {
+          message: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString()
+        }
       });
     }
 };

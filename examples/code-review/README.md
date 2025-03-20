@@ -74,23 +74,6 @@ flowchart TD
     end
 ```
 
-### Flow
-```mermaid
-graph TD
-    Review[🔍 Phase: Review
-     Outputs suggested edits plan with dev collaboration and recursive logic steps]
-    Code[📋 Code] --> Review
-    Requirements[📋 Requirements] --> Review
-    Commit[📋 Commit Log] --> Review
-    Review -- Context --> Analyze[🧠 Step: Analyze] -- depth > 0 --> Suggest[💡 Step: Suggest] --> Reflect[🤔 Step: Reflect] -- Argue --> Consider[⚖️ Step: Consider] -- Counter --> Reflect
-    Analyze -- PlanPart\[\] --> Review
-    Reflect -- Accept (depth -1) --> Analyze
-    Reflect -.-> User[👨 User] -.-> Reflect
-    Consider --> Drop>🗑️ Drop]
-    Analyze -- depth == 0 --> PlanPart[🧩 Plan Part]
-    Reflect -- Reject --> Drop
-```
-
 # Potential future improvements:
 1. External (webhook & api based) reflection step with timeout enforcement
 2. Optional human-in-the-loop reflection step (full automation)
@@ -103,21 +86,27 @@ graph TD
 ```
 code-review/
 ├── steps/
-│   ├── review/
-│   │   ├── analyze.step.ts
-│   │   ├── consider.step.ts
-│   │   ├── compose.step.ts
-│   │   ├── plan.step.ts
-│   │   ├── reflect.step.ts
-│   │   └── suggest.step.ts
-│   └── shared/
-│       ├── types/
-│       ├── utils/
-│       ├── reasoning.ts
-│       └── index.ts
+│   └── code-review/
 ├── CLAUDE.md
 ├── jest.config.js
 ├── package.json
 ├── README.md
 └── tsconfig.json
 ```
+
+next steps - 
+
+    guide agents through implementation of the core loop, with an oversimplified simulation step
+    complete example documentation and submission guidelines
+    commit & submit v1
+    test with developers in my network (3 waiting)
+    improvement roadmap
+        implement secondary flows for simulation steps
+        external (webhook/api) integration for simulation reflection (e.g. IDE plugin, web portal, third party service)
+        branch repository for each simulation and actually test it while traversing
+            greedy-first return if we find a working solution?
+        make human-in-the-loop optional
+        compose into a higher-order flow for handling code-review flows and issue handling flows
+        persistent (in-repo) memory for learning and documenting coding standards enforced during review phases, but not yet documented
+        optimize context management
+        improve coroutines and prompts for reasoning steps
