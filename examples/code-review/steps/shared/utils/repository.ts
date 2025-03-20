@@ -29,7 +29,7 @@ export class GitInterface {
   private remote: Remote | undefined;
   private fileSystemPath: string;
 
-  private constructor(repoUrl: string) {
+  private constructor(repoUrl: string, dummy: boolean = false) {
     this.url = new URL(repoUrl);
     this.fileSystemPath = path.join(process.cwd(), this.url.pathname);
 
@@ -39,13 +39,22 @@ export class GitInterface {
       this.fileSystemPath = path.join(process.cwd(), this.url.pathname.replace(/\.git$/, ''));
       if (this.url.protocol === 'gh') {
         const host = this.url.hostname || 'github.com';
-        this.remote = new OctokitRemote(host, this.url.pathname);
+        if (!dummy) {
+          this.remote = new OctokitRemote(host, this.url.pathname);
+        }
       } else {
         const hostname = this.url.hostname || 'localhost';
         const repoUrl = this.url.pathname.replace(/\/$/, '');
-        this.remote = new GitRemote(hostname, repoUrl, this.url.username);
+        if (!dummy) {
+          this.remote = new GitRemote(hostname, repoUrl, this.url.username);
+        }
       }
     }
+  }
+
+  static parseRepoUrl(repoUrl: string) {
+    const git = new GitInterface(repoUrl, true);
+    return git.url;
   }
 
   static async create(repoUrl: string, branch: string) {

@@ -11,9 +11,20 @@ jest.mock('../shared/utils/repository', () => ({
           host: 'github.com',
           owner: 'testuser',
           repo: 'testrepo'
-      };
-    }
-    throw new Error('Invalid repository format');
+        };
+      }
+      throw new Error('Invalid repository format');
+    })
+  },
+  GitInterface: {
+    parseRepoUrl: jest.fn().mockImplementation((repoUrl) => {
+      if (repoUrl === 'testuser/testrepo') {
+        return new URL('https://github.com/testuser/testrepo');
+      }
+      if (repoUrl === 'invalid-repo-format' || repoUrl === "i'm not : a valid | repository URL!!!") {
+        throw new Error('Invalid repository format');
+      }
+      return new URL(`https://github.com/${repoUrl}`);
     })
   }
 }));
@@ -61,6 +72,11 @@ describe('Review Request API Step', () => {
     // Restore original Date functionality
     Date.now = originalDateNow;
     Date.prototype.toISOString = originalDateToISOString;
+  });
+
+  // Reset mocks between tests
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should have proper configuration', () => {
@@ -186,7 +202,7 @@ describe('Review Request API Step', () => {
     
     const req: MockApiRequest = {
       body: {
-        repository: 'invalid-repo-format',
+        repository: 'i\'m not : a valid | repository URL!!!',
         branch: 'main',
         requirements: 'Test requirements'
       },
@@ -202,7 +218,8 @@ describe('Review Request API Step', () => {
     expect(context.emit).toHaveBeenCalledWith({
       topic: 'review.error',
       data: expect.objectContaining({
-        repository: 'invalid-repo-format',
+        repository: "i'm not : a valid | repository URL!!!",
+        message: 'Invalid repository format',
         timestamp: '2021-05-03T00:00:00.000Z'
       })
     });

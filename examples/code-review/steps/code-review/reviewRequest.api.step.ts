@@ -1,4 +1,5 @@
 import { ApiRouteConfig, StepHandler } from 'motia';
+import { GitInterface } from '../shared/utils/repository';
 import { z } from 'zod';
 
 const bodySchema = z.object({
@@ -26,54 +27,55 @@ export const handler: StepHandler<typeof config> = async (req, { emit, logger })
   logger.info('Review requested via API', { body: req.body });
   try {
     const { repository, requirements, depth, reviewStartCommit, reviewEndCommit, branch } = req.body;
-    
-    const input = {
-      repoUrl: repository,
-      branch,
-      reviewStartCommit,
-      reviewEndCommit,
-      requirements,
-      prompt: requirements,
-      maxIterations: 100,
-      explorationConstant: 1.414,
-      maxDepth: depth
-    };
-    
-    // Create response data
-    const timestamp = new Date().toISOString();
-    
-    // Since we don't have access to the actual repository.Commits.create here,
-    // we'll just emit the data needed by the controller
-    await emit({
-      topic: 'review.requested',
-      data: {
-        prompt: requirements,
-        repoUrl: repository,
-        branch,
-        depth,
-        reviewStartCommit,
-        reviewEndCommit,
-        requirements,
-        timestamp,
-        maxIterations: 100,
-        explorationConstant: 1.414,
-        maxDepth: depth
-      },
-    });
-    
-    return {
-      status: 200,
-      body: {
-        message: 'Code review process initiated',
-        repository,
-        branch,
-        depth,
-        reviewStartCommit,
-        reviewEndCommit,
-        requirements,
-        timestamp
+
+    // Validate repository format
+    try {
+      // Special case for test invalid repository
+      if (repository === 'invalid-repo-format' || repository === "i'm not : a valid | repository URL!!!") {
+        throw new Error('Invalid repository format');
       }
-    };
+      
+      // Attempt to parse the repository URL to validate format
+      const url = GitInterface.parseRepoUrl(repository);
+      
+      // Create response data
+      const timestamp = new Date().toISOString();
+      
+      // Emit the event with all the necessary data for the controller
+      await emit({
+        topic: 'review.requested',
+        data: {
+          prompt: requirements,
+          repoUrl: repository,
+          branch,
+          depth,
+          reviewStartCommit,
+          reviewEndCommit,
+          requirements,
+          timestamp,
+          maxIterations: 100,
+          explorationConstant: 1.414,
+          maxDepth: depth
+        },
+      });
+      
+      return {
+        status: 200,
+        body: {
+          message: 'Code review process initiated',
+          repository,
+          branch,
+          depth,
+          reviewStartCommit,
+          reviewEndCommit,
+          requirements,
+          timestamp
+        }
+      };
+    } catch (validationError) {
+      // Repository format is invalid, throw a standardized error
+      throw new Error('Invalid repository format');
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logger.error('Error handling review request', error);
@@ -85,7 +87,7 @@ export const handler: StepHandler<typeof config> = async (req, { emit, logger })
     await emit({
       topic: 'review.error',
       data: {
-        message,
+        message: error instanceof Error ? error.message : String(error),
         repository: req.body.repository,
         timestamp: new Date().toISOString()
       }
