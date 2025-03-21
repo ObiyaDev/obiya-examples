@@ -30,10 +30,10 @@ export class GitInterface {
   public fileSystemPath: string;
 
   // Constants for limiting output sizes
-  static readonly MAX_DIFF_LINES = 2000;
-  static readonly MAX_DIFF_SIZE = 500 * 1024; // 500KB
+  static readonly MAX_DIFF_LINES = 200; // 2000;
+  static readonly MAX_DIFF_SIZE = 20 * 1024; // 500 * 1024; // 500KB
   static readonly MAX_FILES_TO_SHOW = 100;
-  static readonly MAX_COMMITS_TO_SHOW = 20;
+  static readonly MAX_COMMITS_TO_SHOW = 100;
 
   private constructor(repoUrl: string, dummy: boolean = false) {
     // Check if it's a local path
@@ -337,12 +337,17 @@ export class Commits {
   }
 
   static async create(traceId: string, state: InternalStateManager, input: MCTSControllerInput) {
-    const git = await GitInterface.create(input.repoUrl, input.branch);
+    // Validate input
+    if (!input.repoUrl) {
+      throw new Error('Repository URL is required');
+    }
+    
+    const git = await GitInterface.create(input.repoUrl, input.branch || 'main');
     const reviewStartCommit = git.resolveCommit(input.reviewStartCommit);
     const reviewEndCommit = git.resolveCommit(input.reviewEndCommit);
     if (!reviewStartCommit || !reviewEndCommit) {
       throw new Error('Invalid review start or end commit');
     }
-    return new Commits(input.repoUrl, input.branch, reviewStartCommit, reviewEndCommit, git);
+    return new Commits(input.repoUrl, input.branch || 'main', reviewStartCommit, reviewEndCommit, git);
   }
 }

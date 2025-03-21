@@ -5,18 +5,28 @@
 The Code Review Agent can be run in three different ways:
 
 ```bash
-# 1. Run with Motia event system (requires motia server)
 npm run dev             # Start Motia server in one terminal
 npm run review          # Run the code review in another terminal
-
-# 2. Run the test version (doesn't require motia server)
-npm run test-review     # Quick test of the workflow with mock data
-
-# 3. Run the standalone version (recommended)
-npm run standalone-review  # Analyze repo and generate full report
 ```
 
 All commands will output a Review.md file in the project directory with a comprehensive code analysis.
+
+NOTE: this version has disabled cycles for Claude until I can implement a cheaper model. The recursive expansions can easily eat $5 of Claude credits per report (or exponentially higher with greater depths and larger codebases).
+
+As a result, you'll see a false positive error when you run "npm run review":
+```
+Waiting for review to be generated at: examples/code-review/Review.md
+
+Detected errors in the review process:
+- Claude response is not valid JSON: Unexpected end of JSON input
+- Check file: /tmp/claude-prompts/output-7d83113c-821c-40cd-9455-5cbdc78a2175.json
+
+Review process encountered errors. See logs for details.
+The workflow might still be running in the background.
+Check examples/code-review/Review.md later to see if it completes.
+```
+This can be ignored. If you watch the Motia server terminal, you'll see the review process running until it outputs the Review.md file. The Review.md file will contain some artifacts that make it obvious the expansion was cut short, but will provide a one-shot review.
+
 
 ### Command-line Options
 
@@ -143,3 +153,26 @@ code-review/
 6. Improve and optimize coroutines and prompts in reasoning steps
 7. Integrate with GitHub/GitLab APIs for PR-based reviews
 8. Add support for more granular code analysis (function/class level)
+
+## Fallback Mechanism
+
+The code review system includes robust fallback mechanisms for when Claude is unavailable:
+
+1. **Direct CLI Detection**: The API step checks if Claude CLI is installed and generates a fallback review if not
+2. **JSON Parsing Robustness**: The Claude JSON parser handles various response formats and malformed JSON
+3. **Error Handler Fallbacks**: The error handler step generates contextual fallbacks based on the nature of errors
+4. **Standalone Fallback**: A dedicated script (`generate-fallback-review.js`) can be run independently:
+
+```bash
+# Manual fallback generation
+node generate-fallback-review.js [output-path] "Review requirements"
+
+# Using npm script
+npm run fallback-review -- "Review requirements" [output-path]
+```
+
+The fallback review includes:
+- Basic code structure analysis
+- Security review (if security-related requirements are detected)
+- Recommendations for common issues
+- Clear indication that it's a fallback report
