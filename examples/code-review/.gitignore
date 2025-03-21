@@ -7,3 +7,4 @@ coverage/
 .cursor/
 .bak/
 Review.md
+__pycache__/
