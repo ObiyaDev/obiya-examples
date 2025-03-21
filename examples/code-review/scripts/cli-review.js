@@ -114,22 +114,33 @@ async function main() {
     
     console.log('Review configuration:', JSON.stringify(payload, null, 2));
     
-    // Save payload to a temporary file to avoid command line escaping issues
-    const tempFile = path.join(process.cwd(), '.temp-payload.json');
-    fs.writeFileSync(tempFile, JSON.stringify(payload));
+    // Prepare the payload
+    const payloadStr = JSON.stringify(payload);
     
-    // Emit the event using motia CLI with the file contents
+    // Emit the event using motia CLI
     console.log('Emitting review.requested event...');
-    execSync(`npx motia emit --topic review.requested --from-file ${tempFile}`, {
-      stdio: 'inherit'
-    });
     
-    // Clean up temp file
-    fs.unlinkSync(tempFile);
-    
-    console.log('Review request emitted. Motia workflow has been initiated.');
-    console.log(`The review will be written to: ${payload.outputPath}`);
-    console.log('Please wait for the workflow to complete...');
+    try {
+      // Use child_process.spawn instead of execSync to avoid shell quoting issues
+      const { spawnSync } = require('child_process');
+      
+      // Use the --message parameter with the JSON payload
+      const result = spawnSync('npx', ['motia', 'emit', '--topic', 'review.requested', '--message', payloadStr], {
+        stdio: 'inherit'
+      });
+      
+      if (result.status === 0) {
+        console.log('Review request emitted successfully.');
+        console.log('Motia workflow has been initiated.');
+        console.log(`The review will be written to: ${payload.outputPath}`);
+        console.log('Please wait for the workflow to complete...');
+      } else {
+        throw new Error(`Command failed with exit code ${result.status}`);
+      }
+    } catch (error) {
+      console.error('Error emitting review event:', error.message);
+      throw new Error('Could not emit the review event');
+    }
     
     // Poll for the output file to be created
     console.log('Waiting for the review to be generated...');
