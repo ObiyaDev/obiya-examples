@@ -8,13 +8,24 @@ import { config as apiConfig } from './reviewRequest.api.step';
 const events: Record<string, any[]> = {};
 
 // Create a promise map for waiting on events
-const eventPromises: Record<string, { resolve: Function, promise: Promise<any> }> = {};
+interface EnhancedPromise<T> extends Promise<T> {
+  cancel: () => void;
+}
+
+const eventPromises: Record<string, { resolve: Function, promise: EnhancedPromise<any> }> = {};
+
+// Helper function to create an EnhancedPromise from a value
+function createEnhancedPromise<T>(value: T): EnhancedPromise<T> {
+  const promise = Promise.resolve(value) as EnhancedPromise<T>;
+  promise.cancel = () => {}; // No-op for already resolved promises
+  return promise;
+}
 
 // Function to wait for a specific event to be emitted
-function waitForEvent(topic: string, timeout = 5000): Promise<any> {
+function waitForEvent(topic: string, timeoutMs = 5000): EnhancedPromise<any> {
   // If the event already happened, resolve immediately
   if (events[topic] && events[topic].length > 0) {
-    return Promise.resolve(events[topic][events[topic].length - 1]);
+    return createEnhancedPromise(events[topic][events[topic].length - 1]);
   }
   
   // If we already have a promise for this event, return it
@@ -24,21 +35,33 @@ function waitForEvent(topic: string, timeout = 5000): Promise<any> {
   
   // Create a new promise for this event
   let resolvePromise: Function;
+  let rejectPromise: Function;
+  let timeoutRef: NodeJS.Timeout;
+  
   const promise = new Promise((resolve, reject) => {
     resolvePromise = resolve;
+    rejectPromise = reject;
     
     // Add timeout
-    setTimeout(() => {
+    timeoutRef = setTimeout(() => {
+      delete eventPromises[topic]; // Clean up
       reject(new Error(`Timeout waiting for event: ${topic}`));
-    }, timeout);
+    }, timeoutMs);
   });
   
-  eventPromises[topic] = { 
-    resolve: resolvePromise!, 
-    promise 
+  // Add a way to cancel the timeout to avoid memory leaks
+  const enhancedPromise = promise as EnhancedPromise<any>;
+  enhancedPromise.cancel = () => {
+    if (timeoutRef) clearTimeout(timeoutRef);
+    delete eventPromises[topic];
   };
   
-  return promise;
+  eventPromises[topic] = { 
+    resolve: resolvePromise!,
+    promise: enhancedPromise
+  };
+  
+  return enhancedPromise;
 }
 
 // Create mock context for tracking flow through the steps
@@ -63,14 +86,25 @@ const createTestContext = () => ({
       eventPromises[event.topic].resolve(event.data);
     }
     
-    // Process the event asynchronously to avoid deep recursion
-    setTimeout(() => {
-      processEvent(event.topic, event.data).catch(err => {
-        console.error(`Error processing event ${event.topic}:`, err);
-      });
-    }, 0);
+    // Store timeout reference so we can clean it up if needed
+    let timeoutRef: NodeJS.Timeout | null = null;
     
-    return Promise.resolve();
+    // Process the event asynchronously to avoid deep recursion
+    const p = new Promise<void>((resolve) => {
+      timeoutRef = setTimeout(() => {
+        processEvent(event.topic, event.data)
+          .catch(err => console.error(`Error processing event ${event.topic}:`, err))
+          .finally(() => resolve());
+      }, 0);
+      
+      // Add unref to the timeout to allow Jest to exit properly
+      if (timeoutRef) {
+        // Tell Node.js that this timer shouldn't keep the event loop running
+        timeoutRef.unref();
+      }
+    });
+    
+    return p;
   }),
   logger: {
     info: jest.fn(),
@@ -314,27 +348,40 @@ describe('Integration Tests', () => {
     // Verify events were emitted and processed
     expect(events['review.requested']).toBeDefined();
     
+    // Initialize timer references that we'll need to clean up
+    let checkInterval: NodeJS.Timeout | null = null;
+    let hardTimeout: NodeJS.Timeout | null = null;
+    let eventPromise: EnhancedPromise<any> | null = null;
+    
     try {
+      // Get the enhanced promise for the report generated event
+      eventPromise = waitForEvent('code-review.report.generated');
+      
       // Set a timeout on the promise to prevent the test from hanging
       const reportPromise = Promise.race([
-        waitForEvent('code-review.report.generated'),
+        eventPromise,
         // If we don't get the report generated event, 
         // consider the test complete when we hit max events
         new Promise<any>(resolve => {
-          const checkInterval = setInterval(() => {
+          checkInterval = setInterval(() => {
             if (eventCounter >= MAX_EVENTS) {
-              clearInterval(checkInterval);
+              if (checkInterval) clearInterval(checkInterval);
+              if (hardTimeout) clearTimeout(hardTimeout);
               console.log('Max events reached, resolving test');
               resolve({ forced: true });
             }
           }, 500);
           
           // Also set a hard timeout
-          setTimeout(() => {
-            clearInterval(checkInterval);
+          hardTimeout = setTimeout(() => {
+            if (checkInterval) clearInterval(checkInterval);
             console.log('Test timeout reached, resolving test');
             resolve({ timeout: true });
           }, 5000);
+          
+          // Make sure these timers don't keep Jest from exiting
+          if (checkInterval) checkInterval.unref();
+          if (hardTimeout) hardTimeout.unref();
         })
       ]);
       
@@ -354,6 +401,17 @@ describe('Integration Tests', () => {
     } catch (error) {
       console.error('Test failed with error:', error);
       throw error;
+    } finally {
+      // Clean up any lingering timers
+      if (checkInterval) clearInterval(checkInterval);
+      if (hardTimeout) clearTimeout(hardTimeout);
+      if (eventPromise) eventPromise.cancel();
+      
+      // Clean up any pending event promises
+      Object.keys(eventPromises).forEach(key => {
+        eventPromises[key].promise.cancel();
+        delete eventPromises[key];
+      });
     }
   });
 }); 
