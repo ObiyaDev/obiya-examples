@@ -80,7 +80,7 @@ export const handler: StepHandler<typeof config> = async (input: SimulateInput, 
     });
     
     // Use Claude to evaluate the reasoning paths and assign a value
-    const simulationResult = await evaluateReasoning(rootState, expandedStates);
+    const simulationResult = await evaluateReasoning(rootState, expandedStates, expandedNodeIds);
     
     logger.info('Simulation completed', {
       selectedNodeId: simulationResult.nodeId,

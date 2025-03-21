@@ -27,37 +27,77 @@ export const config: EventConfig = {
 };
 
 export const handler: StepHandler<typeof config> = async (input: MCTSControllerInput, { emit, logger, state, traceId }) => {
-    logger.info('Analyzing review context', {
-      ...input,
-      requirements: input.requirements.length > 20
-        ? `${input.requirements.slice(0, 20)}...`
-        : input.requirements
-    });
-   
-    try {
-      const commits = await Commits.create(traceId, state, input);
-      const evaluation = await evaluateCommits(commits, input.prompt);
-    
-      if (evaluation.score > 0.9 || input.maxIterations === 0) {
-        await emit({
-          topic: 'mcts.iterations.completed',
-          data: evaluation
-        });
-        logger.info('Context analysis completed');
-      } else {
-        await emit({
-          topic: 'mcts.iteration.started',
-          data: evaluation
-        });
+  console.log('Controller received event with input:', JSON.stringify({
+    ...input,
+    requirements: input.requirements ? 
+      (input.requirements.length > 20 ? `${input.requirements.slice(0, 20)}...` : input.requirements) : undefined
+  }, null, 2));
+  
+  logger.info('Analyzing review context', {
+    ...input,
+    requirements: input.requirements && input.requirements.length > 20
+      ? `${input.requirements.slice(0, 20)}...`
+      : input.requirements
+  });
+ 
+  try {
+    const commits = await Commits.create(traceId, state, input);
+    const evaluation = await evaluateCommits(commits, input.prompt);
+
+    // Define a unique root node ID
+    const rootId = `root-${Date.now()}`;
+
+    // For the first iteration, initialize the MCTS tree structure
+    const nodes: Record<string, any> = {
+      [rootId]: {
+        id: rootId,
+        parent: null,
+        children: [],
+        visits: 1,
+        value: 0,
+        state: evaluation.summary,
+        isTerminal: false
       }
-    } catch (error) {
-      logger.error('Error in controller step', error);
+    };
+  
+    if (evaluation.score > 0.9 || input.maxIterations === 0) {
+      // If the score is already high or no iterations requested, complete immediately
       await emit({
-        topic: 'review.error',
+        topic: 'mcts.iterations.completed',
         data: {
-          message: error instanceof Error ? error.message : String(error),
-          timestamp: new Date().toISOString()
+          nodes,
+          rootId,
+          currentIteration: 0,
+          maxIterations: input.maxIterations,
+          explorationConstant: input.explorationConstant,
+          maxDepth: input.maxDepth
         }
       });
+      logger.info('Context analysis completed without iterations');
+    } else {
+      // Start the MCTS process
+      await emit({
+        topic: 'mcts.iteration.started',
+        data: {
+          nodes,
+          rootId,
+          currentNodeId: rootId,
+          currentIteration: 0,
+          maxIterations: input.maxIterations,
+          explorationConstant: input.explorationConstant,
+          maxDepth: input.maxDepth
+        }
+      });
+      logger.info('MCTS process started');
     }
+  } catch (error) {
+    logger.error('Error in controller step', error);
+    await emit({
+      topic: 'review.error',
+      data: {
+        message: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
 };

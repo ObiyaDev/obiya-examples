@@ -139,9 +139,14 @@ export type SimulationResult = z.infer<typeof simulationResultSchema>;
  * Used in the simulation phase of MCTS to quickly assess the potential of different paths
  * @param parentState The state of the parent node from which expansion occurred
  * @param expandedStates Array of expanded reasoning states to evaluate
+ * @param expandedNodeIds Array of node IDs corresponding to the expanded states
  * @returns A simulation result with value score
  */
-export async function evaluateReasoning(parentState: string, expandedStates: string[]): Promise<SimulationResult> {
+export async function evaluateReasoning(
+  parentState: string, 
+  expandedStates: string[], 
+  expandedNodeIds?: string[]
+): Promise<SimulationResult> {
   if (expandedStates.length === 0) {
     throw new Error('No expanded states to evaluate');
   }
@@ -173,8 +178,13 @@ export async function evaluateReasoning(parentState: string, expandedStates: str
   // Get result from Claude
   const result = await coerce(prompt, simulationResultSchema);
   
+  // Use the expanded node ID if provided, otherwise use the state itself
+  const nodeId = expandedNodeIds && expandedNodeIds.length > bestStateIndex 
+    ? expandedNodeIds[bestStateIndex] 
+    : expandedStates[bestStateIndex];
+  
   return {
-    nodeId: expandedStates[bestStateIndex],
+    nodeId,
     value: result.value,
     explanation: result.explanation
   };

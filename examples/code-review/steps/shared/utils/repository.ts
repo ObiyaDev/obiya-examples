@@ -72,19 +72,49 @@ export class GitInterface {
     return git;
   }
 
+  // Add a constant for max diff size to prevent excessive memory usage
+  private static readonly MAX_DIFF_SIZE = 1 * 1024 * 1024; // 1MB max diff size
+
   /**
-   * Get the diff between two branches or commits
+   * Get the diff between two branches or commits with size limits
    * @param repoDir Path to local repository
    * @param base Base branch or commit
    * @param head Head branch or commit
-   * @returns Git diff output
+   * @returns Git diff output, truncated if it exceeds max size
    */
-
   public getDiff(base: string, head: string): string {
-    return execSync(`git diff ${base}..${head}`, { cwd: this.fileSystemPath }).toString();
+    const fullDiff = execSync(`git diff ${base}..${head}`, { cwd: this.fileSystemPath }).toString();
+    
+    // If diff is too large, truncate it and add a warning
+    if (fullDiff.length > GitInterface.MAX_DIFF_SIZE) {
+      const truncatedDiff = fullDiff.substring(0, GitInterface.MAX_DIFF_SIZE);
+      return truncatedDiff + `\n\n[WARNING: Diff truncated because it exceeded ${GitInterface.MAX_DIFF_SIZE / 1024}KB. Only showing first ${GitInterface.MAX_DIFF_SIZE / 1024}KB of changes.]\n`;
+    }
+    
+    return fullDiff;
   }
+
+  /**
+   * Get commit messages between two commits with size limits
+   * @param base Base branch or commit
+   * @param head Head branch or commit
+   * @returns Git log output with a limit on the number of commits
+   */
   public getMessages(base: string, head: string): string {
-    return execSync(`git log ${base}..${head} --pretty=format:"%h %s"`, { cwd: this.fileSystemPath }).toString();
+    // Limit to the latest 20 commits if not otherwise specified
+    const commitLimit = 20; 
+    return execSync(`git log ${base}..${head} --pretty=format:"%h %s" --max-count=${commitLimit}`, { cwd: this.fileSystemPath }).toString();
+  }
+
+  /**
+   * Get the list of files changed between commits with size limits
+   * @param base Base branch or commit
+   * @param head Head branch or commit
+   * @returns List of changed files, truncated if too many
+   */
+  public getFiles(base: string, head: string): string {
+    const fileLimit = 100; // Limit to 100 files
+    return execSync(`git diff --name-only ${base}..${head} | head -n ${fileLimit}`, { cwd: this.fileSystemPath }).toString();
   }
 
   public resolveCommit(commit: string | undefined): string {
@@ -94,11 +124,6 @@ export class GitInterface {
     }
     return execSync(`git rev-parse ${commit}`, { cwd: this.fileSystemPath }).toString();
   }
-
-  public getFiles(base: string, head: string): string {
-    return execSync(`git diff --name-only ${base}..${head}`, { cwd: this.fileSystemPath }).toString();
-  }
-
 }
 
 export class Commits {

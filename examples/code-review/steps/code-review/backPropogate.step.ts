@@ -20,19 +20,24 @@ export const config: EventConfig = {
   name: 'Backpropagate',
   description: 'Updates node statistics based on simulation results',
   subscribes: ['mcts.simulation.completed'],
-  emits: ['mcts.backpropagation.completed'],
+  emits: ['mcts.backpropagation.completed', 'mcts.iteration.started', 'mcts.iterations.completed'],
   flows: ['code-review-flow'],
   input: backpropagateInputSchema
 };
 
 export const handler: StepHandler<typeof config> = async (input: BackpropagateInput, { emit, logger, state, traceId }) => {
   try {
+    console.log('Backpropagation handler received input:', JSON.stringify(input, null, 2).substring(0, 300) + '...');
+    
     const { nodes, rootId, simulationResult, maxIterations, currentIteration, explorationConstant, maxDepth } = input;
     const { nodeId, value } = simulationResult;
+    
+    console.log('Processing simulationResult:', JSON.stringify(simulationResult, null, 2));
     
     // Validate the node exists
     if (!nodes[nodeId]) {
       logger.error('Simulation node not found in tree', { nodeId });
+      console.log('ERROR: Node not found in tree:', nodeId);
       return;
     }
     
@@ -58,6 +63,7 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
       // Validate parent node exists
       if (!currentNode) {
         logger.error('Parent node not found in tree', { nodeId: currentNodeId });
+        console.log('ERROR: Parent node not found:', currentNodeId);
         return;
       }
       
@@ -76,32 +82,73 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
       maxIterations
     });
     
-    // Check if we've reached the max iterations
-    const isComplete = currentIteration >= maxIterations;
-    const nextIteration = currentIteration + 1;
+    console.log('Backpropagation path:', backpropagationPath);
     
-    if (isComplete) {
-      logger.info('MCTS process completed', {
-        totalIterations: currentIteration,
-        rootNodeVisits: nodes[rootId].visits,
-        rootNodeValue: nodes[rootId].value
-      });
-    }
-    
-    // Emit updated state for next iteration or completion
+    // Emit backpropagation completed event to trigger controller
+    console.log('Emitting mcts.backpropagation.completed event');
     await emit({
       topic: 'mcts.backpropagation.completed',
       data: {
         nodes,
         rootId,
         maxIterations,
-        currentIteration: nextIteration,
+        currentIteration,
         explorationConstant,
-        maxDepth,
-        isComplete
+        maxDepth
       }
     });
+    console.log('Emitted mcts.backpropagation.completed event');
+    
+    // Check if we've reached the max iterations
+    const nextIteration = currentIteration + 1;
+    const isComplete = nextIteration >= maxIterations;
+    
+    if (isComplete) {
+      console.log('Max iterations reached, emitting mcts.iterations.completed');
+      logger.info('MCTS process completed', {
+        totalIterations: nextIteration,
+        rootNodeVisits: nodes[rootId].visits,
+        rootNodeValue: nodes[rootId].value
+      });
+      
+      // Emit the tree for final move selection
+      await emit({
+        topic: 'mcts.iterations.completed',
+        data: {
+          nodes,
+          rootId,
+          maxIterations,
+          currentIteration: nextIteration,
+          explorationConstant,
+          maxDepth,
+          isComplete: true
+        }
+      });
+      console.log('Emitted mcts.iterations.completed event');
+    } else {
+      console.log('Starting next iteration, emitting mcts.iteration.started');
+      // Emit the updated tree for the next iteration
+      await emit({
+        topic: 'mcts.iteration.started',
+        data: {
+          nodes,
+          rootId,
+          currentNodeId: rootId, // Start again from the root for the next iteration
+          maxIterations,
+          currentIteration: nextIteration,
+          explorationConstant,
+          maxDepth
+        }
+      });
+      console.log('Emitted mcts.iteration.started event');
+      
+      logger.info('Starting next MCTS iteration', {
+        iteration: nextIteration,
+        maxIterations
+      });
+    }
   } catch (error) {
+    console.log('ERROR in backpropagation step:', error);
     logger.error('Error during backpropagation', error);
   }
 };  
