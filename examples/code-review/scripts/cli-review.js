@@ -120,7 +120,8 @@ async function main() {
     
     // Emit the event using motia CLI with the file contents
     console.log('Emitting review.requested event...');
-    execSync(`npx motia emit --topic review.requested --from-file ${tempFile}`, {
+    const payloadContent = fs.readFileSync(tempFile, 'utf8');
+    execSync(`npx motia emit --topic review.requested --message '${payloadContent}'`, {
       stdio: 'inherit'
     });
     

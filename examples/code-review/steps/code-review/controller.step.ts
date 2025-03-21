@@ -22,7 +22,7 @@ export const config: EventConfig = {
   name: 'MCTSController',
   description: 'Controls the MCTS process for code review reasoning',
   subscribes: ['review.requested', 'mcts.backpropagation.completed'],
-  emits: ['mcts.iteration.started', 'mcts.iterations.completed'],
+  emits: ['mcts.iteration.started', 'mcts.iterations.completed', 'review.error'],
   flows: ['code-review-flow'],
   input: mctsControllerInputSchema
 };
@@ -40,6 +40,9 @@ export const handler: StepHandler<typeof config> = async (input: MCTSControllerI
       ? `${input.requirements.slice(0, 20)}...`
       : input.requirements
   });
+
+  // Store requirements in state for error handling
+  await state.set(traceId, 'requirements', input.requirements);
  
   try {
     const commits = await Commits.create(traceId, state, input);
@@ -99,7 +102,9 @@ export const handler: StepHandler<typeof config> = async (input: MCTSControllerI
       topic: 'review.error',
       data: {
         message: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        repository: input.repoUrl,
+        outputPath: input.outputPath
       }
     });
   }

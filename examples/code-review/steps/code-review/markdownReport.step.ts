@@ -21,7 +21,15 @@ const markdownReportInputSchema = z.object({
     childrenCount: z.number()
   }),
   allNodes: z.record(z.string(), z.any()),
-  outputPath: z.string().optional()
+  outputPath: z.string().optional(),
+  
+  // Additional fields for enhanced reporting
+  requirements: z.string().optional(),
+  repository: z.string().optional(),
+  branch: z.string().optional(),
+  totalCommits: z.number().optional(),
+  commitsAnalyzed: z.number().optional(),
+  analyzedCommits: z.array(z.string()).optional()
 });
 
 export type MarkdownReportInput = z.infer<typeof markdownReportInputSchema>;
@@ -40,8 +48,15 @@ export const handler: StepHandler<typeof config> = async (input: MarkdownReportI
   try {
     const { selectedNodeId, state: reasoningState, reasoning, stats, allNodes, outputPath } = input;
     
+    // Check for mocks or authentication failure indicators
+    let isMock = false;
+    if (reasoningState && reasoningState.includes('MOCK RESPONSE')) {
+      isMock = true;
+      logger.warn('Detected mock response in reasoning state - Claude authentication may have failed');
+    }
+    
     // Generate markdown report
-    const markdown = generateMarkdownReport(input);
+    const markdown = generateMarkdownReport(input, isMock);
     
     // Determine output path
     const filePath = outputPath || path.join(process.cwd(), 'code-review-report.md');
@@ -61,32 +76,99 @@ export const handler: StepHandler<typeof config> = async (input: MarkdownReportI
     });
   } catch (error) {
     logger.error('Error generating markdown report', error);
+    
+    // Try to create a minimal report when errors occur
+    try {
+      const filePath = input.outputPath || path.join(process.cwd(), 'code-review-report.md');
+      const timestamp = new Date().toISOString();
+      
+      const fallbackMarkdown = `# Code Review Analysis - ${timestamp}
+
+## ⚠️ Error Report ⚠️
+
+An error occurred during the code review process. This may be due to:
+- Authentication issues with Claude API
+- Problems accessing the repository
+- Other system errors
+
+### Error Details
+${error instanceof Error ? error.message : String(error)}
+
+### Requirements
+${state && await state.get(traceId, 'requirements') || 'No requirements available'}
+`;
+      
+      fs.writeFileSync(filePath, fallbackMarkdown);
+      logger.info('Generated fallback markdown report due to error', { filePath });
+      
+      await emit({
+        topic: 'code-review.report.generated',
+        data: {
+          filepath: filePath,
+          content: fallbackMarkdown
+        }
+      });
+    } catch (reportError) {
+      logger.error('Failed to create even a fallback report', reportError);
+    }
   }
 };
 
 /**
  * Generate a markdown report from the review results
  */
-function generateMarkdownReport(input: MarkdownReportInput): string {
+function generateMarkdownReport(input: MarkdownReportInput, isMock: boolean = false): string {
   const { selectedNodeId, state: reasoningState, reasoning, stats, allNodes } = input;
   
-  let markdown = `# Code Review Analysis\n\n`;
+  const timestamp = new Date().toISOString();
+  let markdown = `# Code Review Analysis - ${timestamp}\n\n`;
+  
+  // Add warning if mock data was used
+  if (isMock) {
+    markdown += `## ⚠️ Warning\n\nThis report was generated with mock data because Claude AI authentication failed.\n\n`;
+  }
+  
+  // Add requirements section if available
+  if (input.requirements) {
+    markdown += `## Requirements\n${input.requirements}\n\n`;
+  }
+  
+  // Add repository information if available
+  if (input.repository) {
+    markdown += `## Repository Information\n`;
+    markdown += `- Repository: ${input.repository}\n`;
+    if (input.branch) markdown += `- Branch: ${input.branch}\n`;
+    if (input.commitsAnalyzed) markdown += `- Total Commits: ${input.totalCommits || 'Unknown'}\n`;
+    if (input.commitsAnalyzed) markdown += `- Commits Analyzed: ${input.commitsAnalyzed}\n`;
+    markdown += `\n`;
+  }
+  
+  // Add analyzed commits if available
+  if (input.analyzedCommits && input.analyzedCommits.length > 0) {
+    markdown += `## Analyzed Commits\n`;
+    input.analyzedCommits.forEach(commit => {
+      markdown += `- ${commit}\n`;
+    });
+    markdown += `\n`;
+  }
   
   // Add summary
-  markdown += `## Summary\n\n${reasoning}\n\n`;
+  markdown += `## Summary\n\n${reasoning || 'No summary available'}\n\n`;
   
   // Add statistics
   markdown += `## Statistics\n\n`;
-  markdown += `- Visits: ${stats.visits}\n`;
-  markdown += `- Value: ${stats.value}\n`;
-  markdown += `- Total visits in analysis: ${stats.totalVisits}\n`;
-  markdown += `- Child paths analyzed: ${stats.childrenCount}\n\n`;
+  markdown += `- Visits: ${stats?.visits || 'N/A'}\n`;
+  markdown += `- Value: ${stats?.value || 'N/A'}\n`;
+  markdown += `- Total visits in analysis: ${stats?.totalVisits || 'N/A'}\n`;
+  markdown += `- Child paths analyzed: ${stats?.childrenCount || 'N/A'}\n\n`;
   
   // Add selected reasoning path
-  markdown += `## Selected Reasoning Path\n\n\`\`\`\n${reasoningState}\n\`\`\`\n\n`;
+  markdown += `## Selected Reasoning Path\n\n\`\`\`\n${reasoningState || 'No reasoning path available'}\n\`\`\`\n\n`;
   
   // Add MCTS tree visualization
-  markdown += generateTreeVisualization(selectedNodeId, allNodes);
+  if (!isMock) {
+    markdown += generateTreeVisualization(selectedNodeId, allNodes);
+  }
   
   // Add overall workflow visualization
   markdown += `## Workflow Visualization\n\n`;
