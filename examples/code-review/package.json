@@ -8,7 +8,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "build": "tsc"
+    "build": "tsc",
+    "review": "node scripts/cli-review.js",
+    "test-review": "node scripts/test-review.js",
+    "standalone-review": "node scripts/run-standalone-review.js"
   },
   "keywords": [],
   "author": "",

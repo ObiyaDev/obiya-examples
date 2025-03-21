@@ -14,7 +14,8 @@ const selectBestMoveInputSchema = z.object({
   explorationConstant: z.number(),
   maxDepth: z.number(),
   isComplete: z.boolean().optional().default(false),
-  selectionMode: z.enum(['visits', 'value', 'value-ratio']).optional().default('visits')
+  selectionMode: z.enum(['visits', 'value', 'value-ratio']).optional().default('visits'),
+  outputPath: z.string().optional()
 });
 
 export type SelectBestMoveInput = z.infer<typeof selectBestMoveInputSchema>;
@@ -31,7 +32,7 @@ export const config: EventConfig = {
 
 export const handler: StepHandler<typeof config> = async (input: SelectBestMoveInput, { emit, logger, state, traceId }) => {
   try {
-    const { nodes, rootId, selectionMode = 'visits' } = input;
+    const { nodes, rootId, selectionMode = 'visits', outputPath } = input;
     
     // Validate root node exists
     if (!nodes[rootId]) {
@@ -50,89 +51,146 @@ export const handler: StepHandler<typeof config> = async (input: SelectBestMoveI
         topic: 'code-review.reasoning.completed',
         data: {
           selectedNodeId: rootId,
-          state: rootNode.state,
-          reasoning: 'No child nodes were explored during the MCTS process.',
+          state: rootNode.state || '',
+          reasoning: 'No child nodes were generated from the root.',
           stats: {
             visits: rootNode.visits,
             value: rootNode.value,
             totalVisits: rootNode.visits,
             childrenCount: 0
           },
-          allNodes: nodes
+          allNodes: nodes,
+          outputPath
         }
       });
+      
       return;
     }
     
-    // Find the best child based on the selection mode
-    let bestChildId = children[0]; // Default to first child
-    let bestScore = -Infinity;
+    // Select the best node based on the selection mode
+    let selectedNodeId: string;
+    let reasoning: string;
     
-    for (const childId of children) {
-      const child = nodes[childId];
-      if (!child) {
-        logger.warn('Child node referenced but not found in tree', { childId });
-        continue;
-      }
-      
-      let score: number;
-      switch (selectionMode) {
-        case 'visits':
-          score = child.visits;
-          break;
-        case 'value':
-          score = child.value;
-          break;
-        case 'value-ratio':
-          score = child.visits > 0 ? child.value / child.visits : 0;
-          break;
-        default:
-          score = child.visits; // Default to visits
-      }
-      
-      if (score > bestScore) {
-        bestScore = score;
-        bestChildId = childId;
-      }
+    switch (selectionMode) {
+      case 'visits':
+        selectedNodeId = findNodeWithMostVisits(nodes, children);
+        reasoning = `Selected based on number of visits: The node was visited ${nodes[selectedNodeId].visits} times with a total value of ${nodes[selectedNodeId].value.toFixed(2)}.`;
+        break;
+      case 'value':
+        selectedNodeId = findNodeWithHighestValue(nodes, children);
+        reasoning = `Selected based on highest accumulated value: The node has a value of ${nodes[selectedNodeId].value.toFixed(2)} after ${nodes[selectedNodeId].visits} visits.`;
+        break;
+      case 'value-ratio':
+        selectedNodeId = findNodeWithBestValueRatio(nodes, children);
+        reasoning = `Selected based on value/visits ratio: The node has a ratio of ${(nodes[selectedNodeId].value / nodes[selectedNodeId].visits).toFixed(2)} with ${nodes[selectedNodeId].visits} visits and a value of ${nodes[selectedNodeId].value.toFixed(2)}.`;
+        break;
+      default:
+        selectedNodeId = findNodeWithMostVisits(nodes, children);
+        reasoning = `Selected based on default strategy (visits count): The node was visited ${nodes[selectedNodeId].visits} times.`;
     }
     
-    const bestChild = nodes[bestChildId];
+    const selectedNode = nodes[selectedNodeId];
+    if (!selectedNode) {
+      logger.error('Selected node not found in tree', { selectedNodeId });
+      return;
+    }
     
-    // Generate reasoning about the selection
-    const selectionCriteria = {
-      'visits': 'number of visits',
-      'value': 'total accumulated value',
-      'value-ratio': 'value per visit ratio'
-    };
+    // Get total visit count
+    const totalVisits = getTotalVisits(nodes, rootId);
     
-    const reasoning = `Selected based on ${selectionCriteria[selectionMode]}: The node was visited ${bestChild.visits} times with a total value of ${bestChild.value}.`;
-    
-    logger.info('Best move selected', {
-      nodeId: bestChildId,
-      selectionMode,
-      visits: bestChild.visits,
-      value: bestChild.value,
-      rootVisits: rootNode.visits,
-      rootValue: rootNode.value
+    logger.info('Best move selected', { 
+      selectedNodeId, 
+      state: selectedNode.state,
+      mode: selectionMode,
+      visits: selectedNode.visits,
+      value: selectedNode.value,
+      totalVisits
     });
     
-    // Emit the selected best move
+    // Emit the selected reasoning path
     await emit({
       topic: 'code-review.reasoning.completed',
       data: {
-        selectedNodeId: bestChildId,
-        state: bestChild.state,
+        selectedNodeId,
+        state: selectedNode.state || '',
         reasoning,
         stats: {
-          visits: bestChild.visits,
-          value: bestChild.value,
-          totalVisits: rootNode.visits,
+          visits: selectedNode.visits,
+          value: selectedNode.value,
+          totalVisits,
           childrenCount: children.length
         },
-        allNodes: nodes
+        allNodes: nodes,
+        outputPath
       }
     });
   } catch (error) {
     logger.error('Error selecting best move', error);
   }
 };
+
+// Helper functions for node selection
+function findNodeWithMostVisits(nodes: Record<string, any>, childIds: string[]): string {
+  let bestId = childIds[0];
+  let mostVisits = nodes[bestId]?.visits || 0;
+  
+  for (const id of childIds) {
+    const node = nodes[id];
+    if (node && node.visits > mostVisits) {
+      mostVisits = node.visits;
+      bestId = id;
+    }
+  }
+  
+  return bestId;
+}
+
+function findNodeWithHighestValue(nodes: Record<string, any>, childIds: string[]): string {
+  let bestId = childIds[0];
+  let highestValue = nodes[bestId]?.value || 0;
+  
+  for (const id of childIds) {
+    const node = nodes[id];
+    if (node && node.value > highestValue) {
+      highestValue = node.value;
+      bestId = id;
+    }
+  }
+  
+  return bestId;
+}
+
+function findNodeWithBestValueRatio(nodes: Record<string, any>, childIds: string[]): string {
+  let bestId = childIds[0];
+  let bestRatio = 0;
+  
+  // Initialize with first node that has visits
+  for (const id of childIds) {
+    const node = nodes[id];
+    if (node && node.visits > 0) {
+      bestId = id;
+      bestRatio = node.value / node.visits;
+      break;
+    }
+  }
+  
+  // Find best ratio
+  for (const id of childIds) {
+    const node = nodes[id];
+    if (node && node.visits > 0) {
+      const ratio = node.value / node.visits;
+      if (ratio > bestRatio) {
+        bestRatio = ratio;
+        bestId = id;
+      }
+    }
+  }
+  
+  return bestId;
+}
+
+// Calculate total visits for all nodes in the tree
+function getTotalVisits(nodes: Record<string, any>, rootId: string): number {
+  // Sum all visits for all nodes in the tree
+  return Object.values(nodes).reduce((total, node: any) => total + node.visits, 0);
+}

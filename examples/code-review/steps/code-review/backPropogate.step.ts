@@ -10,7 +10,8 @@ const backpropagateInputSchema = z.object({
   maxIterations: z.number(),
   currentIteration: z.number(),
   explorationConstant: z.number(),
-  maxDepth: z.number()
+  maxDepth: z.number(),
+  outputPath: z.string().optional()
 });
 
 export type BackpropagateInput = z.infer<typeof backpropagateInputSchema>;
@@ -29,7 +30,7 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
   try {
     console.log('Backpropagation handler received input:', JSON.stringify(input, null, 2).substring(0, 300) + '...');
     
-    const { nodes, rootId, simulationResult, maxIterations, currentIteration, explorationConstant, maxDepth } = input;
+    const { nodes, rootId, simulationResult, maxIterations, currentIteration, explorationConstant, maxDepth, outputPath } = input;
     const { nodeId, value } = simulationResult;
     
     console.log('Processing simulationResult:', JSON.stringify(simulationResult, null, 2));
@@ -94,7 +95,8 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
         maxIterations,
         currentIteration,
         explorationConstant,
-        maxDepth
+        maxDepth,
+        outputPath
       }
     });
     console.log('Emitted mcts.backpropagation.completed event');
@@ -121,7 +123,8 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
           currentIteration: nextIteration,
           explorationConstant,
           maxDepth,
-          isComplete: true
+          isComplete: true,
+          outputPath
         }
       });
       console.log('Emitted mcts.iterations.completed event');
@@ -137,7 +140,8 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
           maxIterations,
           currentIteration: nextIteration,
           explorationConstant,
-          maxDepth
+          maxDepth,
+          outputPath
         }
       });
       console.log('Emitted mcts.iteration.started event');

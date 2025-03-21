@@ -12,7 +12,8 @@ const mctsControllerInputSchema = z.object({
   maxDepth: z.number().default(10),
   reviewStartCommit: z.string().optional(),
   reviewEndCommit: z.string().optional(),
-  requirements: z.string()
+  requirements: z.string(),
+  outputPath: z.string().optional()
 });
 export type MCTSControllerInput = z.infer<typeof mctsControllerInputSchema>;
 
@@ -70,7 +71,8 @@ export const handler: StepHandler<typeof config> = async (input: MCTSControllerI
           currentIteration: 0,
           maxIterations: input.maxIterations,
           explorationConstant: input.explorationConstant,
-          maxDepth: input.maxDepth
+          maxDepth: input.maxDepth,
+          outputPath: input.outputPath
         }
       });
       logger.info('Context analysis completed without iterations');
@@ -85,7 +87,8 @@ export const handler: StepHandler<typeof config> = async (input: MCTSControllerI
           currentIteration: 0,
           maxIterations: input.maxIterations,
           explorationConstant: input.explorationConstant,
-          maxDepth: input.maxDepth
+          maxDepth: input.maxDepth,
+          outputPath: input.outputPath
         }
       });
       logger.info('MCTS process started');
