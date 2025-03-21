@@ -75,7 +75,14 @@ export const handler: StepHandler<typeof config> = async (input: MarkdownReportI
       }
     });
   } catch (error) {
-    logger.error('Error generating markdown report', error);
+    // Create a safe error object without circular references
+    const safeError = {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown Error',
+      stack: error instanceof Error ? error.stack : undefined
+    };
+    
+    logger.error('Error generating markdown report', safeError);
     
     // Try to create a minimal report when errors occur
     try {
@@ -92,7 +99,7 @@ An error occurred during the code review process. This may be due to:
 - Other system errors
 
 ### Error Details
-${error instanceof Error ? error.message : String(error)}
+${safeError.message}
 
 ### Requirements
 ${state && await state.get(traceId, 'requirements') || 'No requirements available'}

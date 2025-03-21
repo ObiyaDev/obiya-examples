@@ -125,7 +125,14 @@ export const handler: StepHandler<typeof config> = async (input: SelectBestMoveI
       }
     });
   } catch (error) {
-    logger.error('Error selecting best move', error);
+    // Create a safe error object without circular references
+    const safeError = {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown Error',
+      stack: error instanceof Error ? error.stack : undefined
+    };
+    
+    logger.error('Error selecting best move', safeError);
   }
 };
 

@@ -31,21 +31,36 @@ export const handler: StepHandler<typeof config> = async (input: MCTSControllerI
   console.log('Controller received event with input:', JSON.stringify({
     ...input,
     requirements: input.requirements ? 
-      (input.requirements.length > 20 ? `${input.requirements.slice(0, 20)}...` : input.requirements) : undefined
+      (input.requirements.length > 20 ? `${input.requirements.slice(0, 20)}...` : input.requirements) : undefined,
+    repoUrl: input.repoUrl
   }, null, 2));
   
   logger.info('Analyzing review context', {
     ...input,
     requirements: input.requirements && input.requirements.length > 20
       ? `${input.requirements.slice(0, 20)}...`
-      : input.requirements
+      : input.requirements,
+    repoUrl: input.repoUrl
   });
 
   // Store requirements in state for error handling
   await state.set(traceId, 'requirements', input.requirements);
  
   try {
+    logger.info('Creating commits object for repository', { 
+      repoUrl: input.repoUrl, 
+      branch: input.branch,
+      reviewStartCommit: input.reviewStartCommit,
+      reviewEndCommit: input.reviewEndCommit
+    });
+    
     const commits = await Commits.create(traceId, state, input);
+    
+    logger.info('Successfully accessed repository and loaded commits', {
+      filesChanged: commits.files.split('\n').length,
+      commitMessages: commits.messages.split('\n').length
+    });
+    
     const evaluation = await evaluateCommits(commits, input.prompt);
 
     // Define a unique root node ID
@@ -97,14 +112,22 @@ export const handler: StepHandler<typeof config> = async (input: MCTSControllerI
       logger.info('MCTS process started');
     }
   } catch (error) {
-    logger.error('Error in controller step', error);
+    // Create a safe error object without circular references
+    const safeError = {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown Error',
+      stack: error instanceof Error ? error.stack : undefined
+    };
+    
+    logger.error('Error in controller step', safeError);
     await emit({
       topic: 'review.error',
       data: {
-        message: error instanceof Error ? error.message : String(error),
+        message: safeError.message,
         timestamp: new Date().toISOString(),
         repository: input.repoUrl,
-        outputPath: input.outputPath
+        outputPath: input.outputPath,
+        requirements: input.requirements
       }
     });
   }

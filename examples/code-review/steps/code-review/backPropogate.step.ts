@@ -152,7 +152,14 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
       });
     }
   } catch (error) {
-    console.log('ERROR in backpropagation step:', error);
-    logger.error('Error during backpropagation', error);
+    // Create a safe error object without circular references
+    const safeError = {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown Error',
+      stack: error instanceof Error ? error.stack : undefined
+    };
+    
+    console.log('ERROR in backpropagation step:', safeError);
+    logger.error('Error during backpropagation', safeError);
   }
 };  

@@ -8,6 +8,7 @@
 const path = require('path');
 const { execSync } = require('child_process');
 const fs = require('fs');
+const http = require('http');
 
 // Default configuration
 const DEFAULT_CONFIG = {
@@ -81,6 +82,55 @@ function startMotiaDevServer() {
   return false;
 }
 
+// Emit an event directly via HTTP to avoid command line escaping issues
+async function emitEvent(topic, data) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      topic,
+      data
+    });
+    
+    const options = {
+      hostname: 'localhost',
+      port: 3000,
+      path: '/api/events',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+    
+    const req = http.request(options, (res) => {
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            const result = JSON.parse(data);
+            resolve(result);
+          } catch (e) {
+            resolve({ success: true, data });
+          }
+        } else {
+          reject(new Error(`HTTP error ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+    
+    req.on('error', (error) => {
+      reject(error);
+    });
+    
+    req.write(payload);
+    req.end();
+  });
+}
+
 // Main function
 async function main() {
   try {
@@ -101,6 +151,7 @@ async function main() {
     // Create event payload
     const payload = {
       repository: process.cwd(),
+      repoUrl: process.cwd(),
       branch: args.branch || DEFAULT_CONFIG.branch,
       requirements: args.requirements || DEFAULT_CONFIG.requirements,
       depth: parseInt(args.depth || DEFAULT_CONFIG.depth.toString()),
@@ -109,24 +160,49 @@ async function main() {
       reviewMaxCommits: parseInt(args.reviewMaxCommits || DEFAULT_CONFIG.reviewMaxCommits.toString()),
       maxIterations: parseInt(args.maxIterations || DEFAULT_CONFIG.maxIterations.toString()),
       outputPath: args.outputPath || DEFAULT_CONFIG.outputPath,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      prompt: args.requirements || DEFAULT_CONFIG.requirements
     };
     
     console.log('Review configuration:', JSON.stringify(payload, null, 2));
     
-    // Save payload to a temporary file to avoid command line escaping issues
+    // Emit the event using motia CLI
+    console.log('Emitting review.requested event...');
+    
+    // Save payload to a temporary file
     const tempFile = path.join(process.cwd(), '.temp-payload.json');
     fs.writeFileSync(tempFile, JSON.stringify(payload));
     
-    // Emit the event using motia CLI with the file contents
-    console.log('Emitting review.requested event...');
-    const payloadContent = fs.readFileSync(tempFile, 'utf8');
-    execSync(`npx motia emit --topic review.requested --message '${payloadContent}'`, {
-      stdio: 'inherit'
-    });
+    // Create a minimal payload to reduce command line length and avoid special characters
+    const minimalPayload = {
+      repository: payload.repository,
+      repoUrl: payload.repoUrl,
+      branch: payload.branch,
+      requirements: payload.requirements,  // Use the full requirements
+      reviewStartCommit: payload.reviewStartCommit,
+      reviewEndCommit: payload.reviewEndCommit,
+      outputPath: payload.outputPath,
+      prompt: payload.prompt,  // Use the full prompt
+      maxIterations: payload.maxIterations,
+      depth: payload.depth
+    };
     
-    // Clean up temp file
-    fs.unlinkSync(tempFile);
+    // Convert to JSON without any special characters
+    // Handle escaping in a more robust way
+    let jsonPayload = JSON.stringify(minimalPayload);
+    jsonPayload = jsonPayload.replace(/"/g, '\\"');  // Escape double quotes
+    jsonPayload = jsonPayload.replace(/'/g, "\\'");  // Escape single quotes
+    
+    try {
+      // Execute the command with properly wrapped JSON
+      execSync(`npx motia emit --topic review.requested --message "${jsonPayload}"`, {
+        stdio: 'inherit'
+      });
+      console.log('Event emitted successfully');
+    } catch (error) {
+      console.error('Error emitting event:', error.message);
+      throw error;
+    }
     
     console.log('Review request emitted. Motia workflow has been initiated.');
     console.log(`The review will be written to: ${payload.outputPath}`);
