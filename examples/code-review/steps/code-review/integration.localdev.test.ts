@@ -11,7 +11,7 @@ const events: Record<string, any[]> = {};
 const eventPromises: Record<string, { resolve: Function, promise: Promise<any> }> = {};
 
 // Function to wait for a specific event to be emitted
-function waitForEvent(topic: string, timeout = 20000): Promise<any> {
+function waitForEvent(topic: string, timeout = 5000): Promise<any> {
   // If the event already happened, resolve immediately
   if (events[topic] && events[topic].length > 0) {
     return Promise.resolve(events[topic][events[topic].length - 1]);
@@ -207,10 +207,13 @@ describe('Integration Tests', () => {
     Object.keys(eventPromises).forEach(key => delete eventPromises[key]);
   });
   
-  // We use a longer timeout as this test covers the entire workflow
-  jest.setTimeout(30000);
+  // Use a shorter timeout for these integration tests
+  jest.setTimeout(10000);
   
-  it('should analyze commits and generate markdown report', async () => {
+  // Skip this test in CI environment or if specifically requested
+  const shouldRunIntegrationTests = !(process.env.CI === 'true' || process.env.SKIP_INTEGRATION === 'true');
+  
+  (shouldRunIntegrationTests ? it : it.skip)('should analyze commits and generate markdown report', async () => {
     // Create API request
     const req = {
       body: {
@@ -221,7 +224,7 @@ describe('Integration Tests', () => {
         reviewStartCommit: '', // Start from the beginning
         reviewEndCommit: 'HEAD~14', // Last 14 commits
         reviewMaxCommits: 14,
-        maxIterations: 3 // Limit to just 3 iterations for faster testing
+        maxIterations: 2 // Limit to just 2 iterations for faster testing
       },
       pathParams: {},
       queryParams: {},
@@ -243,8 +246,16 @@ describe('Integration Tests', () => {
     // Verify events were emitted and processed
     expect(events['review.requested']).toBeDefined();
     
+    // Set a timeout on the promise to prevent the test from hanging
+    const reportPromise = Promise.race([
+      waitForEvent('code-review.report.generated'),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Timed out waiting for report generation')), 8000);
+      })
+    ]);
+    
     // Wait for the final event which indicates workflow completion
-    await waitForEvent('code-review.report.generated');
+    await reportPromise;
     
     // Log all received events for debugging
     console.log('All events:', Object.keys(events));

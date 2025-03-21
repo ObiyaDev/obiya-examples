@@ -32,6 +32,12 @@ function parseArgs() {
 
 // Main function
 async function main() {
+  // Set a 60 second timeout for the entire process
+  const timeout = setTimeout(() => {
+    console.error('Code review timed out after 60 seconds');
+    process.exit(1);
+  }, 60000);
+
   try {
     console.log('Starting standalone code review...');
     
@@ -83,8 +89,13 @@ async function main() {
     console.log('='.repeat(40));
     console.log(content.substring(0, previewLength) + (content.length > previewLength ? '...' : ''));
     console.log('='.repeat(40));
+
+    // Clear the timeout if review completes successfully
+    clearTimeout(timeout);
   } catch (error) {
-    console.error('Error in standalone review:', error);
+    console.error('Error during code review:', error);
+    // Clear the timeout if we exit with an error
+    clearTimeout(timeout);
     process.exit(1);
   }
 }

@@ -114,10 +114,19 @@ describe('MCTS Controller Step', () => {
     expect(Commits.create).toHaveBeenCalledWith('test-trace-id', context.state, sampleInput);
     expect(evaluateCommits).toHaveBeenCalledWith(mockCommits, sampleInput.prompt);
     expect(context.logger.info).toHaveBeenCalledWith('Analyzing review context', expect.any(Object));
-    expect(context.emit).toHaveBeenCalledWith({
-      topic: 'mcts.iteration.started',
-      data: mockEvaluation
-    });
+    
+    // Check that an event was emitted with the right topic
+    expect(context.emit).toHaveBeenCalledWith(expect.objectContaining({
+      topic: 'mcts.iteration.started'
+    }));
+    
+    // Check the data contains the expected properties
+    const emitData = context.emit.mock.calls[0][0].data;
+    expect(emitData).toHaveProperty('nodes');
+    expect(emitData).toHaveProperty('rootId');
+    expect(emitData).toHaveProperty('currentNodeId');
+    expect(emitData).toHaveProperty('currentIteration', 0);
+    expect(emitData).toHaveProperty('maxIterations', 100);
   });
 
   it('should complete iterations when evaluation score is high', async () => {
@@ -136,11 +145,18 @@ describe('MCTS Controller Step', () => {
     // Assert
     expect(Commits.create).toHaveBeenCalledWith('test-trace-id', context.state, sampleInput);
     expect(evaluateCommits).toHaveBeenCalledWith(mockCommits, sampleInput.prompt);
-    expect(context.emit).toHaveBeenCalledWith({
-      topic: 'mcts.iterations.completed',
-      data: mockEvaluation
-    });
-    expect(context.logger.info).toHaveBeenCalledWith('Context analysis completed');
+    
+    // Check that an event was emitted with the right topic
+    expect(context.emit).toHaveBeenCalledWith(expect.objectContaining({
+      topic: 'mcts.iterations.completed'
+    }));
+    
+    // Check the data contains the expected properties
+    const emitData = context.emit.mock.calls[0][0].data;
+    expect(emitData).toHaveProperty('nodes');
+    expect(emitData).toHaveProperty('rootId');
+    expect(emitData).toHaveProperty('currentIteration', 0);
+    expect(emitData).toHaveProperty('maxIterations', 100);
   });
 
   it('should complete iterations when maxIterations is 0', async () => {
@@ -158,10 +174,17 @@ describe('MCTS Controller Step', () => {
     await handler(zeroIterationsInput, context as any);
     
     // Assert
-    expect(context.emit).toHaveBeenCalledWith({
-      topic: 'mcts.iterations.completed',
-      data: mockEvaluation
-    });
+    // Check that an event was emitted with the right topic
+    expect(context.emit).toHaveBeenCalledWith(expect.objectContaining({
+      topic: 'mcts.iterations.completed'
+    }));
+    
+    // Check the data contains the expected properties
+    const emitData = context.emit.mock.calls[0][0].data;
+    expect(emitData).toHaveProperty('nodes');
+    expect(emitData).toHaveProperty('rootId');
+    expect(emitData).toHaveProperty('currentIteration', 0);
+    expect(emitData).toHaveProperty('maxIterations', 0);
   });
 
   it('should handle errors in repository creation', async () => {

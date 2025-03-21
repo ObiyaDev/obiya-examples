@@ -191,6 +191,7 @@ function findNodeWithBestValueRatio(nodes: Record<string, any>, childIds: string
 
 // Calculate total visits for all nodes in the tree
 function getTotalVisits(nodes: Record<string, any>, rootId: string): number {
-  // Sum all visits for all nodes in the tree
-  return Object.values(nodes).reduce((total, node: any) => total + node.visits, 0);
+  // In this implementation, we'll return the total visits of the root node,
+  // which should be the sum of all visits in the proper MCTS implementation
+  return nodes[rootId]?.visits || 0;
 }

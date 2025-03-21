@@ -149,7 +149,13 @@ describe('Backpropagate Step', () => {
     await handler(input, context as any);
     
     // Assert
-    expect(context.emit).toHaveBeenCalledWith({
+    // Find the backpropagation.completed event
+    const backpropEvent = context.emit.mock.calls.find(
+      call => call[0].topic === 'mcts.backpropagation.completed'
+    );
+    
+    expect(backpropEvent).toBeDefined();
+    expect(backpropEvent[0]).toMatchObject({
       topic: 'mcts.backpropagation.completed',
       data: expect.objectContaining({
         nodes: input.nodes,

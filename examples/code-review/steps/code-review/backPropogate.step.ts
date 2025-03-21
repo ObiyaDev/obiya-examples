@@ -85,7 +85,11 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
     
     console.log('Backpropagation path:', backpropagationPath);
     
-    // Emit backpropagation completed event to trigger controller
+    // Check if we've reached the max iterations
+    const nextIteration = currentIteration + 1;
+    const isComplete = nextIteration >= maxIterations;
+    
+    // Emit backpropagation completed event
     console.log('Emitting mcts.backpropagation.completed event');
     await emit({
       topic: 'mcts.backpropagation.completed',
@@ -93,17 +97,13 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
         nodes,
         rootId,
         maxIterations,
-        currentIteration,
+        currentIteration: nextIteration,
         explorationConstant,
         maxDepth,
         outputPath
       }
     });
     console.log('Emitted mcts.backpropagation.completed event');
-    
-    // Check if we've reached the max iterations
-    const nextIteration = currentIteration + 1;
-    const isComplete = nextIteration >= maxIterations;
     
     if (isComplete) {
       console.log('Max iterations reached, emitting mcts.iterations.completed');
@@ -136,7 +136,7 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
         data: {
           nodes,
           rootId,
-          currentNodeId: rootId, // Start again from the root for the next iteration
+          currentNodeId: rootId,
           maxIterations,
           currentIteration: nextIteration,
           explorationConstant,
