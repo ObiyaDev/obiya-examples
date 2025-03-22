@@ -3,6 +3,30 @@ from typing import Dict, Optional, Any
 from pydantic import BaseModel, Field
 from steps.shared.actions import evaluate_commits, Commits, Node
 
+def convert_to_serializable(obj):
+    """Recursively convert objects to dictionaries for JSON serialization"""
+    if hasattr(obj, 'model_dump'):
+        # For Pydantic models
+        return convert_to_serializable(obj.model_dump())
+    elif hasattr(obj, '__dict__'):
+        # For SimpleNamespace or other objects
+        return convert_to_serializable(vars(obj))
+    elif isinstance(obj, dict):
+        # Handle dictionaries
+        return {key: convert_to_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        # Handle lists
+        return [convert_to_serializable(item) for item in obj]
+    elif isinstance(obj, tuple):
+        # Handle tuples
+        return tuple(convert_to_serializable(item) for item in obj)
+    elif isinstance(obj, (str, int, float, bool, type(None))):
+        # Keep primitives as they are
+        return obj
+    else:
+        # Default conversion to string for other types
+        return str(obj)
+
 class MCTSControllerInput(BaseModel):
     prompt: str = Field(..., description="The prompt for code review", min_length=1)
     repo_dir: str = Field(..., description="Directory of the repository to review", min_length=1)
@@ -44,33 +68,63 @@ config = {
 async def handler(req: Any, context: Any):
     """Handle the MCTS controller step."""
     try:
+        # Check if the input is from the backpropagation completed event
+        is_backpropagation = False
+        if isinstance(req, dict) and 'topic' in req:
+            is_backpropagation = req.get('topic') == 'mcts.backpropagation.completed'
+        elif hasattr(req, 'topic'):
+            is_backpropagation = req.topic == 'mcts.backpropagation.completed'
+        
         # Handle different input types (SimpleNamespace or Pydantic model)
         if hasattr(req, 'model_dump'):
             # It's a Pydantic model
             input_dict = req.model_dump()
             requirements = req.requirements
-            repo_dir = req.repo_dir
+            repo_dir = req.repo_dir if hasattr(req, 'repo_dir') else req.repository if hasattr(req, 'repository') else None
             branch = req.branch
-            review_start_commit = req.review_start_commit
-            review_end_commit = req.review_end_commit
+            review_start_commit = req.review_start_commit if hasattr(req, 'review_start_commit') else None
+            review_end_commit = req.review_end_commit if hasattr(req, 'review_end_commit') else None
             max_iterations = req.max_iterations
             exploration_constant = req.exploration_constant
             max_depth = req.max_depth
-            output_url = req.output_url
+            output_url = req.output_url if hasattr(req, 'output_url') else req.output_path if hasattr(req, 'output_path') else None
         else:
             # It's a SimpleNamespace object or dict
             input_dict = vars(req) if not isinstance(req, dict) else req
             requirements = input_dict.get('requirements')
-            repo_dir = input_dict.get('repo_dir')
+            repo_dir = input_dict.get('repo_dir') or input_dict.get('repository')
             branch = input_dict.get('branch')
             review_start_commit = input_dict.get('review_start_commit')
             review_end_commit = input_dict.get('review_end_commit')
             max_iterations = input_dict.get('max_iterations', 100)
             exploration_constant = input_dict.get('exploration_constant', 1.414)
             max_depth = input_dict.get('max_depth', 10)
-            output_url = input_dict.get('output_url')
+            output_url = input_dict.get('output_url') or input_dict.get('output_path')
+        
+        # If this is mcts.backpropagation.completed, use the nodes structure directly
+        if is_backpropagation:
+            # For backpropagation, extract the data field if it exists
+            forwarded_data = input_dict
+            if 'data' in input_dict:
+                forwarded_data = input_dict['data']
             
-        # Validate required fields
+            # Ensure we have the repository field (may be named repo_dir in the forwarded data)
+            if not repo_dir and 'repository' in forwarded_data:
+                repo_dir = forwarded_data['repository']
+                
+            # Include repo_dir as a fallback if only repository is available
+            if 'repository' in forwarded_data and not 'repo_dir' in forwarded_data:
+                forwarded_data['repo_dir'] = forwarded_data['repository']
+            
+            # Forward the data to the next stage
+            serializable_data = convert_to_serializable(forwarded_data)
+            await context.emit({
+                'topic': 'mcts.iteration.started', 
+                'data': serializable_data
+            })
+            return
+        
+        # Validate required fields for initial request
         if not repo_dir:
             raise ValueError("repo_dir is required")
         if not branch:
@@ -180,14 +234,14 @@ async def handler(req: Any, context: Any):
             # Skip MCTS and go straight to report generation
             await context.emit({
                 'topic': 'code-review.reasoning.completed',
-                'data': report_data
+                'data': convert_to_serializable(report_data)
             })
             return
 
         # Start MCTS process if no issues
         await context.emit({
             'topic': 'mcts.iteration.started',
-            'data': state.model_dump() if hasattr(state, 'model_dump') else vars(state)
+            'data': convert_to_serializable(state.model_dump() if hasattr(state, 'model_dump') else vars(state))
         })
 
     except Exception as error:
@@ -237,12 +291,12 @@ async def handler(req: Any, context: Any):
             # Emit report generation event
             await context.emit({
                 'topic': 'code-review.reasoning.completed',
-                'data': report_data
+                'data': convert_to_serializable(report_data)
             })
         except Exception as report_error:
             context.logger.error(f"Failed to generate error report: {str(report_error)}")
             # If even that fails, emit the basic error
             await context.emit({
                 'topic': 'review.error',
-                'data': error_data.model_dump() if hasattr(error_data, 'model_dump') else vars(error_data)
+                'data': convert_to_serializable(error_data.model_dump() if hasattr(error_data, 'model_dump') else vars(error_data))
             }) 

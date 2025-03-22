@@ -11,7 +11,10 @@ const backpropagateInputSchema = z.object({
   current_iteration: z.number(),
   exploration_constant: z.number(),
   max_depth: z.number(),
-  output_path: z.string().optional()
+  output_path: z.string().optional(),
+  repository: z.string().optional(),
+  requirements: z.string().optional(),
+  branch: z.string().optional()
 });
 
 export type BackpropagateInput = z.infer<typeof backpropagateInputSchema>;
@@ -31,7 +34,13 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
     console.log('Backpropagation handler received input:', JSON.stringify(input, null, 2).substring(0, 300) + '...');
     
     const { nodes, root_id, simulation_result, max_iterations, current_iteration, exploration_constant, max_depth, output_path } = input;
-    const { nodeId, value } = simulation_result;
+    const nodeId = simulation_result.nodeId;
+    const value = simulation_result.value;
+    
+    // Extract additional fields from input that may be needed for downstream steps
+    const repository = input.repository || '';
+    const requirements = input.requirements || 'No requirements specified';
+    const branch = input.branch || 'main';
     
     console.log('Processing simulationResult:', JSON.stringify(simulation_result, null, 2));
     
@@ -100,7 +109,11 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
         current_iteration: nextIteration,
         exploration_constant,
         max_depth,
-        output_path
+        output_path,
+        repository,
+        requirements,
+        branch,
+        topic: 'mcts.backpropagation.completed'
       }
     });
     console.log('Emitted mcts.backpropagation.completed event');
@@ -124,7 +137,10 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
           exploration_constant,
           max_depth,
           is_complete: true,
-          output_path
+          output_path,
+          repository,
+          requirements,
+          branch
         }
       });
       console.log('Emitted mcts.iterations.completed event');
@@ -141,7 +157,10 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
           current_iteration: nextIteration,
           exploration_constant,
           max_depth,
-          output_path
+          output_path,
+          repository,
+          requirements,
+          branch
         }
       });
       console.log('Emitted mcts.iteration.started event');

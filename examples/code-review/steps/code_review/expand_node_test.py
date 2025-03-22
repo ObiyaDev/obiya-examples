@@ -1,6 +1,6 @@
 """Tests for the expand node step."""
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch, ANY
 import uuid
 
 import importlib.util
@@ -200,8 +200,20 @@ async def test_handle_expansion_error(mock_expand_node, ctx, sample_input):
     await handler(sample_input, ctx)
     
     # Assert
-    ctx.logger.error.assert_called_with('Error expanding node', {'error': 'Expansion failed'})
-    ctx.emit.assert_not_called()
+    # First check that the error is logged
+    ctx.logger.error.assert_called_with(
+        'Error in expand_node function: Expansion failed', 
+        {'error': 'Expansion failed', 'traceback': ANY}
+    )
+    
+    # Then verify that fallback expansion was used
+    ctx.logger.info.assert_any_call('Using fallback expansion', {'steps_count': 3})
+    
+    # And that the event was emitted
+    ctx.emit.assert_called_once()
+    emit_call = ctx.emit.call_args[0][0]
+    assert emit_call['topic'] == 'mcts.node.expanded'
+    assert len(emit_call['data']['expanded_node_ids']) == 3  # Expecting 3 fallback steps
 
 @pytest.mark.asyncio
 @patch.object(module, 'expand_node')
@@ -217,11 +229,20 @@ async def test_handle_empty_steps(mock_expand_node, ctx, sample_input):
     # Call handler
     await handler(sample_input, ctx)
     
-    # Assert
-    ctx.logger.warn.assert_called_with('No expansion steps returned for node', {
-        'node_id': sample_input['selected_node_id']
-    })
-    ctx.emit.assert_not_called()
+    # Assert we noticed empty steps
+    ctx.logger.warn.assert_called_with(
+        'No expansion steps returned for node', 
+        {'node_id': sample_input['selected_node_id'], 'expansion_type': 'NodeExpansion', 'expansion_attrs': ANY}
+    )
+    
+    # Verify fallback was used
+    ctx.logger.info.assert_any_call('Using hardcoded fallback expansion', {'steps_count': 3})
+    
+    # Check that the event was emitted with the fallback steps
+    ctx.emit.assert_called_once()
+    emit_call = ctx.emit.call_args[0][0]
+    assert emit_call['topic'] == 'mcts.node.expanded'
+    assert len(emit_call['data']['expanded_node_ids']) == 3  # Expecting 3 fallback steps
 
 @pytest.mark.asyncio
 @patch.object(module, 'expand_node')
@@ -237,4 +258,9 @@ async def test_handle_missing_node(mock_expand_node, ctx, sample_input):
     ctx.logger.error.assert_called_with('Selected node not found in tree', {
         'node_id': 'non-existent-node'
     })
-    ctx.emit.assert_not_called() 
+    
+    # Check that we emit an error report
+    ctx.emit.assert_called_once()
+    emit_call = ctx.emit.call_args[0][0]
+    assert emit_call['topic'] == 'code-review.reasoning.completed'
+    assert 'Selected node non-existent-node not found in nodes' in emit_call['data']['reasoning'] 

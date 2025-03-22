@@ -43,9 +43,18 @@ else:
                         elif field_type == bool:
                             mock_data[field_name] = random.choice([True, False])
                         elif hasattr(field_type, "__origin__") and field_type.__origin__ == list:
-                            mock_data[field_name] = [f"Mock {field_name} {i}" for i in range(1, 3)]
+                            mock_data[field_name] = [f"Mock {field_name} {i}" for i in range(1, 4)]
                         else:
                             mock_data[field_name] = None
+                    
+                    # Handle NodeExpansion specifically to ensure we always have non-empty steps
+                    if response_model.__name__ == 'NodeExpansion':
+                        mock_data['reasoning'] = "Mock reasoning about code structure and potential improvements"
+                        mock_data['steps'] = [
+                            "Analyze code organization and maintainability",
+                            "Review error handling and edge cases",
+                            "Consider potential performance optimizations"
+                        ]
                     
                     # Handle nested objects with special field types
                     if hasattr(response_model, 'issues') and 'issues' in mock_data:
@@ -64,7 +73,11 @@ else:
                     response.content = response_model(**mock_data)
             elif use_json_mode or use_structured_output:
                 # If JSON mode is requested but no model, return a simple JSON string
-                response.content = '{"result": "Mock result", "status": "success"}'
+                if "reasoning" in prompt.lower() and "steps" in prompt.lower():
+                    # Looks like a request for expansion steps
+                    response.content = '{"reasoning": "Mock reasoning about code quality", "steps": ["Analyze code structure", "Review error handling", "Consider performance"]}'
+                else:
+                    response.content = '{"result": "Mock result", "status": "success"}'
                 
             return response
         

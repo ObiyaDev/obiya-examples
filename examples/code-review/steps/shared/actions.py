@@ -153,35 +153,78 @@ async def evaluate_commits(commits: Commits, requirements: str) -> Evaluation:
                 # If it's a string, try to parse as JSON
                 if isinstance(content, str):
                     try:
-                        data = json.loads(content)
+                        # Check if string is a markdown code block with JSON
+                        content_str = content.strip()
+                        json_str = None
                         
-                        # Create issues objects
-                        issues = []
-                        for issue_data in data.get('issues', []):
-                            issues.append(Issue(
-                                claim=issue_data.get('claim', 'No claim provided'),
-                                grounds=issue_data.get('grounds', 'No grounds provided'),
-                                warrant=issue_data.get('warrant', 'No warrant provided'),
-                                backing=issue_data.get('backing', 'No backing provided'),
-                                qualifier=issue_data.get('qualifier', 'No qualifier provided')
-                            ))
-                        
-                        if not issues:
-                            # Add a default issue if none were found
-                            issues = [Issue(
-                                claim="No specific issues identified",
-                                grounds="The code review did not find critical problems",
-                                warrant="Well-structured code often has fewer obvious issues",
-                                backing="Code quality metrics and review guidelines",
-                                qualifier="This may change with more detailed analysis"
-                            )]
+                        # Case 1: Markdown code block with JSON
+                        if content_str.startswith("```json") and "```" in content_str:
+                            # Extract JSON content from markdown code block
+                            json_str = content_str.replace("```json", "", 1)  # Remove first ```json
+                            json_str = json_str.split("```")[0].strip()  # Get content up to closing ```
+                            print(f"Extracted JSON from markdown code block: {json_str[:100]}...")
+                        # Case 2: Markdown code block without language specifier
+                        elif content_str.startswith("```") and "```" in content_str:
+                            json_str = content_str.replace("```", "", 1)  # Remove first ```
+                            json_str = json_str.split("```")[0].strip()  # Get content up to closing ```
+                            print(f"Extracted JSON from generic markdown block: {json_str[:100]}...")
+                        # Case 3: Raw JSON
+                        else:
+                            json_str = content_str
+                            print(f"Using raw string as JSON: {json_str[:100]}...")
                             
-                        return Evaluation(
-                            score=float(data.get('score', 0.5)),
-                            issues=issues,
-                            summary=data.get('summary', 'No summary provided'),
-                            issueSummary=data.get('issueSummary', 'No issue summary provided')
-                        )
+                        # Parse the extracted JSON
+                        if json_str:
+                            data = json.loads(json_str)
+                        else:
+                            # Fallback if no JSON found
+                            data = {"value": 0.5, "explanation": "Could not extract JSON"}
+                        
+                        # Extract values from parsed JSON
+                        if isinstance(data, dict):
+                            # Extract score - check both 'value' and 'score' fields
+                            value = float(data.get('value', data.get('score', 0.5)))
+                            
+                            # Handle explanation in different formats
+                            if 'explanation' in data:
+                                if isinstance(data['explanation'], dict):
+                                    # If explanation is an object with fields, convert to string
+                                    explanation_parts = []
+                                    for key, val in data['explanation'].items():
+                                        if isinstance(val, str):
+                                            explanation_parts.append(f"{key.replace('_', ' ').title()}: {val}")
+                                    explanation = "\n".join(explanation_parts)
+                                else:
+                                    explanation = str(data['explanation'])
+                            else:
+                                explanation = f"Evaluation score: {value}"
+                            
+                            return Evaluation(
+                                score=value,
+                                issues=[Issue(
+                                    claim="Evaluation used fallback parsing",
+                                    grounds="The API returned an unparseable response",
+                                    warrant="API errors suggest issues with structured output",
+                                    backing="Error logs show JSON parsing failure",
+                                    qualifier="This is a fallback response"
+                                )],
+                                summary=explanation,
+                                issueSummary="Used string response as summary due to parsing errors"
+                            )
+                        else:
+                            # Data is not a dict
+                            return Evaluation(
+                                score=0.5,
+                                issues=[Issue(
+                                    claim="Evaluation used fallback parsing",
+                                    grounds="The API returned an unparseable response",
+                                    warrant="API errors suggest issues with structured output",
+                                    backing="Error logs show JSON parsing failure",
+                                    qualifier="This is a fallback response"
+                                )],
+                                summary=f"Unexpected JSON structure: {str(data)[:200]}",
+                                issueSummary="Used string response as summary due to parsing errors"
+                            )
                     except Exception as json_error:
                         print(f"Error parsing JSON response: {json_error}")
                         # Create an evaluation using the string content as the summary
@@ -236,9 +279,19 @@ async def evaluate_reasoning(
 ) -> SimulationResult:
     """
     Evaluates the quality of reasoning paths in the simulation phase of MCTS.
+    
+    Returns:
+        SimulationResult: Always returns a valid SimulationResult object, even on error.
     """
     if not expanded_states:
-        raise ValueError("No expanded states to evaluate")
+        selected_id = 'fallback_node'
+        if expanded_node_ids and len(expanded_node_ids) > 0:
+            selected_id = expanded_node_ids[0]
+        return SimulationResult(
+            nodeId=selected_id,
+            value=0.5,
+            explanation="No expanded states to evaluate"
+        )
         
     try:
         # Select a random state to evaluate (as per MCTS simulation policy)
@@ -246,70 +299,166 @@ async def evaluate_reasoning(
         selected_state = expanded_states[idx]
         selected_id = expanded_node_ids[idx] if expanded_node_ids and idx < len(expanded_node_ids) else f"state_{idx}"
         
-        # Use the specialized reasoning evaluation agent
+        # Construct a simple prompt to evaluate the reasoning path
         eval_prompt = f"""
-        Evaluate this reasoning path for solving a software development problem.
+        Evaluate this reasoning step in a code review thought process.
         
-        Initial reasoning:
+        Initial reasoning state:
         {parent_state}
         
-        Next step in reasoning:
+        Considered next step:
         {selected_state}
+        
+        Rate how promising this reasoning path is on a scale from 0.0 to 1.0.
+        Consider logical coherence, technical relevance, and problem-solving value.
+        
+        Return a detailed explanation of your evaluation and a score.
         """
         
-        response: RunResponse = await reasoning_eval_agent.arun(
-            eval_prompt,
-            response_model=ReasoningEvaluation,
-            use_structured_output=True
-        )
-        
-        # Create simulation result
+        try:
+            # Use the specialized reasoning evaluation agent
+            eval_response = await reasoning_eval_agent.arun(
+                eval_prompt,
+                response_model=ReasoningEvaluation,
+                use_structured_output=True
+            )
+            
+            # Log response for debugging
+            print(f"Evaluation response: {type(eval_response)} - {eval_response}")
+            
+            # If the response is None, return a fallback
+            if not eval_response:
+                print("Null response from evaluation agent")
+                return SimulationResult(
+                    nodeId=selected_id,
+                    value=0.5,
+                    explanation="Null response from evaluation agent"
+                )
+            
+            # Process based on response content
+            if hasattr(eval_response, 'content'):
+                content = eval_response.content
+                
+                # Handle different types of content
+                if isinstance(content, ReasoningEvaluation):
+                    # Direct ReasoningEvaluation object
+                    return SimulationResult(
+                        nodeId=selected_id,
+                        value=content.value,
+                        explanation=content.explanation
+                    )
+                elif isinstance(content, dict):
+                    # Dictionary with compatible fields
+                    value = float(content.get('value', content.get('score', 0.5)))
+                    explanation = content.get('explanation', 'Evaluation from dict')
+                    return SimulationResult(
+                        nodeId=selected_id,
+                        value=value,
+                        explanation=explanation
+                    )
+                elif isinstance(content, str):
+                    # String that might be JSON or markdown code block with JSON
+                    try:
+                        # Check if string is a markdown code block with JSON
+                        content_str = content.strip()
+                        json_str = None
+                        
+                        # Case 1: Markdown code block with JSON
+                        if content_str.startswith("```json") and "```" in content_str:
+                            # Extract JSON content from markdown code block
+                            json_str = content_str.replace("```json", "", 1)  # Remove first ```json
+                            json_str = json_str.split("```")[0].strip()  # Get content up to closing ```
+                            print(f"Extracted JSON from markdown code block: {json_str[:100]}...")
+                        # Case 2: Markdown code block without language specifier
+                        elif content_str.startswith("```") and "```" in content_str:
+                            json_str = content_str.replace("```", "", 1)  # Remove first ```
+                            json_str = json_str.split("```")[0].strip()  # Get content up to closing ```
+                            print(f"Extracted JSON from generic markdown block: {json_str[:100]}...")
+                        # Case 3: Raw JSON
+                        else:
+                            json_str = content_str
+                            print(f"Using raw string as JSON: {json_str[:100]}...")
+                            
+                        # Parse the extracted JSON
+                        if json_str:
+                            data = json.loads(json_str)
+                        else:
+                            # Fallback if no JSON found
+                            data = {"value": 0.5, "explanation": "Could not extract JSON"}
+                        
+                        # Extract values from parsed JSON
+                        if isinstance(data, dict):
+                            # Extract score - check both 'value' and 'score' fields
+                            value = float(data.get('value', data.get('score', 0.5)))
+                            
+                            # Handle explanation in different formats
+                            if 'explanation' in data:
+                                if isinstance(data['explanation'], dict):
+                                    # If explanation is an object with fields, convert to string
+                                    explanation_parts = []
+                                    for key, val in data['explanation'].items():
+                                        if isinstance(val, str):
+                                            explanation_parts.append(f"{key.replace('_', ' ').title()}: {val}")
+                                    explanation = "\n".join(explanation_parts)
+                                else:
+                                    explanation = str(data['explanation'])
+                            else:
+                                explanation = f"Evaluation score: {value}"
+                            
+                            return SimulationResult(
+                                nodeId=selected_id,
+                                value=value,
+                                explanation=explanation
+                            )
+                        else:
+                            # Data is not a dict
+                            return SimulationResult(
+                                nodeId=selected_id,
+                                value=0.5,
+                                explanation=f"Unexpected JSON structure: {str(data)[:200]}"
+                            )
+                    except Exception as json_error:
+                        print(f"JSON parsing error: {json_error}, Content: {content[:100]}")
+                        # Return a fallback with the string content as explanation
+                        return SimulationResult(
+                            nodeId=selected_id,
+                            value=0.5,
+                            explanation=f"Failed to parse JSON: {content[:200]}"
+                        )
+                else:
+                    # Unknown content type
+                    content_type = type(content).__name__
+                    print(f"Unexpected content type: {content_type}")
+                    return SimulationResult(
+                        nodeId=selected_id,
+                        value=0.5,
+                        explanation=f"Unexpected content type: {content_type}"
+                    )
+            else:
+                # No content attribute
+                print("Response missing content attribute")
+                return SimulationResult(
+                    nodeId=selected_id,
+                    value=0.5,
+                    explanation="Response missing content attribute"
+                )
+                
+        except Exception as eval_error:
+            # Error during evaluation agent call
+            print(f"Evaluation agent error: {eval_error}")
+            return SimulationResult(
+                nodeId=selected_id,
+                value=0.5,
+                explanation=f"Evaluation error: {str(eval_error)}"
+            )
+            
+    except Exception as e:
+        # Any other error in the function
+        print(f"General evaluate_reasoning error: {e}")
+        # Select the first node ID if available, or use a fallback ID
+        selected_id = expanded_node_ids[0] if expanded_node_ids and len(expanded_node_ids) > 0 else "fallback_node"
         return SimulationResult(
             nodeId=selected_id,
-            value=response.content.value,
-            explanation=response.content.explanation
-        )
-        
-    except Exception as e:
-        print(f"Error in evaluate_reasoning: {e}")
-        # Fallback to general-purpose agent
-        try:
-            fallback_response = await fallback_agent.arun(
-                f"""
-                Evaluate this reasoning path for solving a software development problem.
-                Rate the quality on a scale from 0.0 to 1.0 and explain your rating.
-                
-                Initial reasoning:
-                {parent_state}
-                
-                Next step in reasoning:
-                {expanded_states[0]}
-                
-                Return a JSON object with this structure:
-                {{
-                    "value": 0.5,  # between 0.0 and 1.0
-                    "explanation": "Why you assigned this score"
-                }}
-                """,
-                use_json_mode=True
-            )
-            
-            data = json.loads(fallback_response.content)
-            
-            # Get the node ID
-            node_id = expanded_node_ids[0] if expanded_node_ids and len(expanded_node_ids) > 0 else "fallback_node"
-            
-            return SimulationResult(
-                nodeId=node_id,
-                value=data.get("value", 0.5),
-                explanation=data.get("explanation", "Fallback evaluation")
-            )
-        except Exception as fallback_error:
-            print(f"Fallback reasoning evaluation failed: {fallback_error}")
-            # Ultimate fallback
-            node_id = expanded_node_ids[0] if expanded_node_ids and len(expanded_node_ids) > 0 else "fallback_node"
-            return SimulationResult(
-                nodeId=node_id,
-                value=0.5,
-                explanation="Fallback evaluation due to service error"
-            ) 
+            value=0.5,
+            explanation=f"Error in evaluate_reasoning: {str(e)}"
+        ) 

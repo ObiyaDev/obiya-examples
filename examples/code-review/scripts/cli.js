@@ -21,7 +21,7 @@ const DEFAULT_CONFIG = {
   reviewStartCommit: '',
   reviewEndCommit: 'HEAD',
   reviewMaxCommits: 14,
-  maxIterations: 10,
+  maxIterations: 3,
   outputPath: path.join(process.cwd(), 'Review.md')
 };
 

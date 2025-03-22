@@ -255,4 +255,80 @@ describe('SelectBestMove Step', () => {
       })
     }));
   });
+
+  it('should handle nodes with simplified structure', async () => {
+    // Arrange
+    const context = createTestContext();
+    const input = createSampleInput();
+    
+    // Create simplified node structure (missing some fields but with the essential ones)
+    input.nodes = {
+      'root': {
+        id: 'root',
+        children: ['simple1', 'simple2'],
+        visits: 10,
+        value: 5,
+        state: 'Root state'
+      },
+      'simple1': {
+        id: 'simple1',
+        parent: 'root',
+        children: [],
+        visits: 5,
+        value: 3,
+        state: 'Simple node 1'
+      },
+      'simple2': {
+        id: 'simple2',
+        parent: 'root',
+        children: [],
+        visits: 4,
+        value: 2,
+        state: 'Simple node 2'
+      }
+    };
+    input.root_id = 'root';
+    
+    // Act
+    await handler(input, context as any);
+    
+    // Assert
+    const emitCall = context.emit.mock.calls[0][0];
+    expect(emitCall.data.selected_node_id).toBe('simple1'); // Node with most visits
+    expect(emitCall.data.state).toBe('Simple node 1');
+  });
+
+  it('should handle SimpleNamespace-like objects as input', async () => {
+    // Arrange
+    const context = createTestContext();
+    
+    // Create a SimpleNamespace-like object
+    class SimpleNamespace {
+      constructor(properties: Record<string, any>) {
+        Object.assign(this, properties);
+      }
+    }
+    
+    const nodes = createMockNodeTree();
+    
+    const input = new SimpleNamespace({
+      nodes,
+      root_id: 'root',
+      current_iteration: 50,
+      max_iterations: 50,
+      exploration_constant: 1.414,
+      max_depth: 10,
+      is_complete: true,
+      selection_mode: 'visits'
+    });
+    
+    // Act
+    await handler(input as any, context as any);
+    
+    // Assert
+    expect(context.emit).toHaveBeenCalled();
+    const emitCall = context.emit.mock.calls[0][0];
+    expect(emitCall.topic).toBe('code-review.reasoning.completed');
+    expect(emitCall.data.selected_node_id).toBe('node1'); // Node with most visits
+  });
 }); 
