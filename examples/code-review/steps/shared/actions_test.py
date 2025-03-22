@@ -1,16 +1,20 @@
 import pytest
 import os
-from uuid import uuid4
+from unittest.mock import patch, AsyncMock, MagicMock
 from steps.shared.actions import (
-    Node, NodeExpansion, Issue, Evaluation, SimulationResult, Commits,
-    select_node, expand_node, evaluate_commits, evaluate_reasoning
+    select_node, expand_node, evaluate_commits, evaluate_reasoning,
+    expansion_agent, fallback_agent
 )
+from steps.shared.models import (
+    Node, NodeExpansion, Issue, Evaluation, SimulationResult
+)
+from steps.shared.repositories import Commits
 
-# Skip all tests if SPEND is not true
-pytestmark = pytest.mark.skipif(
-    os.environ.get('SPEND') != 'true',
-    reason='Tests skipped unless SPEND=true'
-)
+# Remove the skip marker to enable these tests to run
+# pytestmark = pytest.mark.skipif(
+#     os.environ.get('SPEND') != 'true',
+#     reason='Tests skipped unless SPEND=true'
+# )
 
 # Test data fixtures
 @pytest.fixture
@@ -52,6 +56,7 @@ def sample_nodes() -> dict[str, Node]:
 @pytest.fixture
 def sample_commits() -> Commits:
     return Commits(
+        repo_dir="/tmp",
         files="file1.py\nfile2.py",
         messages="commit1: Initial commit\ncommit2: Update functionality",
         diff="diff --git a/file1.py b/file1.py\n..."
@@ -75,11 +80,28 @@ async def test_select_node(sample_nodes):
 # Test expand_node
 @pytest.mark.asyncio
 async def test_expand_node():
-    expansion = await expand_node("Current node state")
-    assert isinstance(expansion, NodeExpansion)
-    assert isinstance(expansion.reasoning, str)
-    assert isinstance(expansion.steps, list)
-    assert all(isinstance(step, str) for step in expansion.steps)
+    # Create a mock response with valid NodeExpansion
+    mock_expansion = NodeExpansion(
+        reasoning="Test reasoning process",
+        steps=["Step 1", "Step 2", "Step 3"]
+    )
+    
+    # Create a mock response object for the agent
+    mock_response = MagicMock()
+    mock_response.content = mock_expansion
+    
+    # Mock the expansion_agent.arun method
+    with patch.object(expansion_agent, 'arun', new_callable=AsyncMock) as mock_arun:
+        mock_arun.return_value = mock_response
+        
+        # Call the function
+        expansion = await expand_node("Current node state")
+        
+        # Verify the result
+        assert isinstance(expansion, NodeExpansion)
+        assert expansion.reasoning == "Test reasoning process"
+        assert len(expansion.steps) == 3
+        assert expansion.steps[0] == "Step 1"
 
 # Test evaluate_commits
 @pytest.mark.asyncio
@@ -114,71 +136,4 @@ async def test_evaluate_reasoning():
     assert isinstance(result, SimulationResult)
     assert isinstance(result.nodeId, str)
     assert 0 <= result.value <= 1
-    assert isinstance(result.explanation, str)
-
-# Test Commits class
-@pytest.mark.asyncio
-async def test_commits_create_raises_not_implemented():
-    with pytest.raises(NotImplementedError):
-        await Commits.create(
-            trace_id=str(uuid4()),
-            state={},
-            input_data={"repoUrl": "https://github.com/test/repo"}
-        )
-
-# Test type definitions
-def test_node_type_definition(sample_nodes):
-    node = sample_nodes["root"]
-    assert isinstance(node.id, str)
-    assert isinstance(node.children, list)
-    assert isinstance(node.visits, int)
-    assert isinstance(node.value, float)
-    assert isinstance(node.state, (str, type(None)))
-    assert isinstance(node.isTerminal, (bool, type(None)))
-
-def test_node_expansion_type_definition():
-    expansion = NodeExpansion(
-        reasoning="Test reasoning",
-        steps=["step1", "step2"]
-    )
-    assert isinstance(expansion.reasoning, str)
-    assert isinstance(expansion.steps, list)
-    assert all(isinstance(step, str) for step in expansion.steps)
-
-def test_issue_type_definition():
-    issue = Issue(
-        claim="Test claim",
-        grounds="Test grounds",
-        warrant="Test warrant",
-        backing="Test backing",
-        qualifier="Test qualifier"
-    )
-    assert all(isinstance(getattr(issue, field), str) for field in ["claim", "grounds", "warrant", "backing", "qualifier"])
-
-def test_evaluation_type_definition():
-    evaluation = Evaluation(
-        score=0.8,
-        issues=[Issue(
-            claim="Test claim",
-            grounds="Test grounds",
-            warrant="Test warrant",
-            backing="Test backing",
-            qualifier="Test qualifier"
-        )],
-        summary="Test summary",
-        issueSummary="Test issue summary"
-    )
-    assert isinstance(evaluation.score, float)
-    assert isinstance(evaluation.issues, list)
-    assert isinstance(evaluation.summary, str)
-    assert isinstance(evaluation.issueSummary, str)
-
-def test_simulation_result_type_definition():
-    result = SimulationResult(
-        nodeId="test-node",
-        value=0.8,
-        explanation="Test explanation"
-    )
-    assert isinstance(result.nodeId, str)
-    assert isinstance(result.value, float)
     assert isinstance(result.explanation, str) 

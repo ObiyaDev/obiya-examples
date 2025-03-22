@@ -8,3 +8,4 @@ coverage/
 .bak/
 Review.md
 __pycache__/
+.coverage

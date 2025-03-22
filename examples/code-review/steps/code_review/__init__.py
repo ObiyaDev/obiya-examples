@@ -1,1 +1,1 @@
-"""Code review steps package.""" 
+"""Code review package""" 

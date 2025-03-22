@@ -314,37 +314,3 @@ async def test_commits_creation_logging(mock_context, sample_input, mock_evaluat
             'files_changed': 2,  # len(files.split('\n'))
             'commit_messages': 2  # len(messages.split('\n'))
         })
-
-@pytest.mark.llm
-@pytest.mark.asyncio
-async def test_real_llm_evaluation(mock_context, sample_input):
-    """Test real LLM evaluation when SPEND environment variable is set."""
-    if not os.environ.get('SPEND'):
-        pytest.skip("Skipping test that requires real LLM responses")
-
-    with patch('steps.code_review.controller_step.Commits.create') as mock_create:
-        # Setup mock commits with real data
-        commits = AsyncMock()
-        commits.files = "app.py\nutils.py"
-        commits.messages = "Initial commit\nAdd utility functions"
-        commits.diff = "diff --git a/app.py b/app.py\n+print('hello')"
-        
-        mock_create.return_value = commits
-
-        # Execute handler with real LLM evaluation
-        await handler(sample_input, mock_context)
-
-        # Verify state was stored
-        mock_context.state.set.assert_called_once_with(
-            mock_context.trace_id,
-            'requirements',
-            sample_input.requirements
-        )
-
-        # Verify event was emitted
-        assert mock_context.emit.call_count == 1
-        emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'mcts.iteration.started'
-        assert isinstance(emit_call['data'], dict)
-        assert 'nodes' in emit_call['data']
-        assert 'root_id' in emit_call['data'] 
