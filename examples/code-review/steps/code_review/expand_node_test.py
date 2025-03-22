@@ -85,12 +85,12 @@ def sample_input(mock_node_tree):
     """Create sample input data for testing."""
     return {
         'nodes': mock_node_tree,
-        'rootId': 'root',
-        'selectedNodeId': 'node1',
-        'maxIterations': 100,
-        'currentIteration': 1,
-        'explorationConstant': 1.414,
-        'maxDepth': 10
+        'root_id': 'root',
+        'selected_node_id': 'node1',
+        'max_iterations': 100,
+        'current_iteration': 1,
+        'exploration_constant': 1.414,
+        'max_depth': 10
     }
 
 def test_config():
@@ -116,7 +116,7 @@ async def test_call_expand_node(mock_expand_node, ctx, sample_input):
     await handler(sample_input, ctx)
     
     # Assert
-    mock_expand_node.assert_called_with(sample_input['nodes'][sample_input['selectedNodeId']]['state'])
+    mock_expand_node.assert_called_with(sample_input['nodes'][sample_input['selected_node_id']]['state'])
 
 @pytest.mark.asyncio
 @patch.object(module, 'expand_node')
@@ -143,7 +143,7 @@ async def test_create_expansion_nodes(mock_expand_node, ctx, sample_input):
     
     # Check structure of first expanded node
     first_expanded_node = emit_call['data']['nodes']['expansion-child-1']
-    assert first_expanded_node['parent'] == sample_input['selectedNodeId']
+    assert first_expanded_node['parent'] == sample_input['selected_node_id']
     assert first_expanded_node['children'] == []
     assert first_expanded_node['visits'] == 0
     assert first_expanded_node['value'] == 0
@@ -165,7 +165,7 @@ async def test_update_children_array(mock_expand_node, ctx, sample_input):
     
     # Assert
     emit_call = ctx.emit.call_args[0][0]
-    selected_node = emit_call['data']['nodes'][sample_input['selectedNodeId']]
+    selected_node = emit_call['data']['nodes'][sample_input['selected_node_id']]
     
     assert 'expansion-child-1' in selected_node['children']
     assert 'expansion-child-2' in selected_node['children']
@@ -187,7 +187,7 @@ async def test_emit_expanded_nodes(mock_expand_node, ctx, sample_input):
     
     # Assert
     emit_call = ctx.emit.call_args[0][0]
-    assert emit_call['data']['expandedNodeIds'] == ['expansion-child-1', 'expansion-child-2']
+    assert emit_call['data']['expanded_node_ids'] == ['expansion-child-1', 'expansion-child-2']
 
 @pytest.mark.asyncio
 @patch.object(module, 'expand_node')
@@ -219,7 +219,7 @@ async def test_handle_empty_steps(mock_expand_node, ctx, sample_input):
     
     # Assert
     ctx.logger.warn.assert_called_with('No expansion steps returned for node', {
-        'nodeId': sample_input['selectedNodeId']
+        'node_id': sample_input['selected_node_id']
     })
     ctx.emit.assert_not_called()
 
@@ -228,13 +228,13 @@ async def test_handle_empty_steps(mock_expand_node, ctx, sample_input):
 async def test_handle_missing_node(mock_expand_node, ctx, sample_input):
     """Test that the case when the selected node does not exist is handled."""
     # Modify input to have a non-existent node ID
-    sample_input['selectedNodeId'] = 'non-existent-node'
+    sample_input['selected_node_id'] = 'non-existent-node'
     
     # Call handler
     await handler(sample_input, ctx)
     
     # Assert
     ctx.logger.error.assert_called_with('Selected node not found in tree', {
-        'nodeId': 'non-existent-node'
+        'node_id': 'non-existent-node'
     })
     ctx.emit.assert_not_called() 

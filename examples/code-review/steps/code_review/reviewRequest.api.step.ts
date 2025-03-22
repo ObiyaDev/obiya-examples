@@ -12,7 +12,8 @@ const bodySchema = z.object({
   reviewMaxCommits: z.number().nonnegative().optional().default(100).describe('The maximum number of commits to review. Defaults to 100.'),
   reviewEndCommit: z.string().optional().default('HEAD').describe('The commit hash to end the review at. Defaults to the latest commit.'),
   requirements: z.string().min(1).optional().default('').describe('The requirements for the code review. Defaults to an empty string.'),
-  outputUrl: z.string().optional().default('file://../..').describe('The URL to save the review file. Defaults to the current directory.')
+  outputUrl: z.string().optional().default('file://../..').describe('The URL to save the review file. Defaults to the current directory.'),
+  maxIterations: z.number().nonnegative().optional().describe('The maximum number of iterations for the code review. This is deprecated and will be removed in future versions. Use max_iterations instead.')
 });
 
 export const config: ApiRouteConfig = {
@@ -28,12 +29,25 @@ export const config: ApiRouteConfig = {
 
 export const handler: StepHandler<typeof config> = async (req, { emit, logger }) => {
   logger.info('Review requested via API', { body: req.body });
-  await validateOutputUrl(req.body.outputUrl);
 
-    const { repository, requirements, depth, branch } = req.body;
-    const repo_dir = fetchRepository(repository, branch);
-    const review_start_commit = req.body.reviewStartCommit || 'HEAD~10';
-    const review_end_commit = req.body.reviewEndCommit || 'HEAD';
+  let output_url = req.body.outputUrl || 'file://Review.md';
+  if (!output_url.startsWith('file://') && !output_url.startsWith('http://') && !output_url.startsWith('https://')) {
+    // Convert path to file URL
+    output_url = `file://${output_url}`;
+  }
+  
+  // Validate the output URL
+  try {
+    await validateOutputUrl(output_url);
+  } catch (error: any) {
+    logger.warn(`Output URL validation failed: ${error.message}. Using default location.`);
+    output_url = 'file://Review.md';
+  }
+
+  const { repository, requirements, depth, branch } = req.body;
+  const repo_dir = fetchRepository(repository, branch);
+  const review_start_commit = req.body.reviewStartCommit || 'HEAD~10';
+  const review_end_commit = req.body.reviewEndCommit || 'HEAD';
 
   await emit({
     topic: 'review.requested',
@@ -45,10 +59,10 @@ export const handler: StepHandler<typeof config> = async (req, { emit, logger })
       review_end_commit,
       requirements,
       timestamp: new Date().toISOString(),
-      max_iterations: 100,
+      max_iterations: req.body.maxIterations || 100,
       exploration_constant: 1.414,
       max_depth: depth,
-      output_url: req.body.outputUrl
+      output_url
     },
   });
 
@@ -78,7 +92,10 @@ export const validateOutputUrl = async (outputUrl: string | undefined) => {
         }
         
         // Don't try to check existence of '/' directory
-        if (filePath !== '/' && fs.existsSync(filePath)) {
+        if (filePath === '/') {
+          // If path is just '/', use default file path instead
+          filePath = path.join(process.cwd(), 'Review.md');
+        } else if (fs.existsSync(filePath)) {
           const stats = fs.statSync(filePath);
           // Only throw an error if it's a file that exists
           if (stats.isFile()) {
@@ -103,51 +120,67 @@ export const validateOutputUrl = async (outputUrl: string | undefined) => {
     }
     throw error;
   }
-  
-  return outputUrl;
 }
 
 export const fetchRepository = (repository: string, branch: string) => {
-  try {
-    const repoUrl = new URL(repository);
-    const repoDir = path.join(process.cwd(), '.motia', 'git', repoUrl.pathname);
-
-    if (repoUrl.protocol === 'gh:') {
-      throw new Error('Octokit not supported yet');
-    }
-    if (!fs.existsSync(repoDir)) {
-      execSync(`git clone ${repository} ${repoDir}`);
-    }
-    
-    // Checkout the specified branch
-    execSync(`git checkout ${branch}`, { cwd: repoDir });
-    
-    // Try to pull, but continue even if it fails
+  // If repository is a local path and exists, use it directly
+  if (fs.existsSync(repository) && fs.statSync(repository).isDirectory()) {
     try {
-      execSync(`git pull`, { cwd: repoDir });
-    } catch (pullError: any) {}
-
-    return repoDir;
-  } catch (error: any) {
-    // Handle local repositories (file paths)
-    if (error instanceof TypeError && (error as any).code === 'ERR_INVALID_URL') {
-      const repoDir = repository;
+      // Verify it's a git repository
+      execSync('git rev-parse --is-inside-work-tree', { 
+        cwd: repository,
+        stdio: 'pipe'
+      });
       
-      // Verify it's a directory that exists
-      if (!fs.existsSync(repoDir)) {
-        throw new Error(`Repository directory not found: ${repoDir}`);
+      // Check if branch exists and switch to it
+      const currentBranch = execSync('git branch --show-current', { 
+        cwd: repository,
+        stdio: 'pipe' 
+      }).toString().trim();
+      
+      if (currentBranch !== branch) {
+        try {
+          // Try to switch to the branch
+          execSync(`git checkout ${branch}`, { 
+            cwd: repository,
+            stdio: 'pipe' 
+          });
+        } catch (error) {
+          console.error(`Already on '${currentBranch}'`);
+          // Continue with current branch if switch fails
+        }
       }
       
-      // Try to checkout the specified branch
-      try {
-        execSync(`git checkout ${branch}`, { cwd: repoDir });
-      } catch (checkoutError: any) {
-        throw new Error(`Failed to checkout branch ${branch}: ${checkoutError.message}`);
-      }
-      
-      return repoDir;
+      return repository;
+    } catch (error) {
+      // Not a git repository or other git error
+      throw new Error(`${repository} is not a valid git repository: ${error}`);
+    }
+  }
+  
+  // If it's not a local path or doesn't exist, try to clone it
+  const repoName = repository.split('/').pop()?.replace('.git', '') || 'repo';
+  const clonePath = path.join(process.cwd(), 'tmp', repoName);
+  
+  // Create directory if it doesn't exist
+  if (!fs.existsSync(path.dirname(clonePath))) {
+    fs.mkdirSync(path.dirname(clonePath), { recursive: true });
+  }
+  
+  try {
+    // Check if repository already exists at clone path
+    if (fs.existsSync(clonePath)) {
+      // Pull latest changes
+      execSync(`git -C ${clonePath} fetch --all`, { stdio: 'pipe' });
+      execSync(`git -C ${clonePath} checkout ${branch}`, { stdio: 'pipe' });
+      execSync(`git -C ${clonePath} pull origin ${branch}`, { stdio: 'pipe' });
+    } else {
+      // Clone repository
+      execSync(`git clone --branch ${branch} ${repository} ${clonePath}`, { stdio: 'pipe' });
     }
     
-    throw error;
+    return clonePath;
+  } catch (error) {
+    throw new Error(`Failed to fetch repository ${repository}: ${error}`);
   }
 }

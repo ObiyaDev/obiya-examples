@@ -32,8 +32,22 @@ export const handler: StepHandler<typeof config> = async (input: ErrorHandlerInp
     const timestamp = input.timestamp || new Date().toISOString();
     
     // Use output path from input or default to Review.md in the current directory
-    const parsedUrl = new URL(input.output_url || 'file://Review.md');
-    let filePath = parsedUrl.pathname || 'Review.md';
+    let filePath = 'Review.md';
+    
+    try {
+      if (input.output_url) {
+        const parsedUrl = new URL(input.output_url);
+        if (parsedUrl.protocol === 'file:') {
+          filePath = parsedUrl.pathname;
+        } else {
+          filePath = input.output_url.replace('file://', '');
+        }
+      }
+    } catch (urlError) {
+      // If URL parsing fails, try to use the output_url directly or fall back to default
+      filePath = input.output_url || 'Review.md';
+      logger.warn('Failed to parse output URL', { url: input.output_url, error: String(urlError) });
+    }
     
     // If filePath is not absolute, make it relative to current working directory
     if (!path.isAbsolute(filePath)) {
@@ -42,8 +56,14 @@ export const handler: StepHandler<typeof config> = async (input: ErrorHandlerInp
     
     // Ensure the directory exists
     const dirPath = path.dirname(filePath);
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
+    try {
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+    } catch (dirError) {
+      logger.warn('Failed to create directory', { dir: dirPath, error: String(dirError) });
+      // Fall back to current directory
+      filePath = path.join(process.cwd(), 'ERROR-REPORT.md');
     }
     
     // Create more detailed error report
@@ -59,9 +79,15 @@ ${input.requirements ? `- Requirements: ${input.requirements}\n` : ''}
 `;
 
     // Write the report
-    fs.writeFileSync(filePath, fallbackMarkdown);
-
-    logger.info('Generated fallback review report', { filePath });
+    try {
+      fs.writeFileSync(filePath, fallbackMarkdown);
+      logger.info('Generated fallback review report', { filePath });
+    } catch (writeError) {
+      logger.error('Failed to write to file', { path: filePath, error: String(writeError) });
+      // Try one more time with a simple fallback path
+      filePath = path.join(process.cwd(), 'ERROR-REPORT.md');
+      fs.writeFileSync(filePath, fallbackMarkdown);
+    }
 
     // Emit completion event
     await emit({
@@ -79,15 +105,22 @@ ${input.requirements ? `- Requirements: ${input.requirements}\n` : ''}
     // Try to write to a failsafe location
     try {
       const failsafeReport = `# Critical Error Report
-      
+
 Failed to generate error report due to: ${errorMessage}
 Original error: ${input.message}
 `;
       
-      fs.writeFileSync(path.join(process.cwd(), 'ERROR-REPORT.md'), failsafeReport);
-    } catch {
+      // Write directly to current directory with a simple filename
+      const errorFilePath = 'ERROR-REPORT.md';
+      fs.writeFileSync(errorFilePath, failsafeReport);
+      logger.info('Generated critical error report', { filePath: errorFilePath });
+    } catch (criticalError) {
       // At this point, we can only log the critical failure
-      logger.error('Critical failure in error handler', { originalError: input.message });
+      logger.error('Critical failure in error handler', { 
+        originalError: input.message,
+        handlerError: errorMessage,
+        criticalError: String(criticalError)
+      });
     }
   }
 };

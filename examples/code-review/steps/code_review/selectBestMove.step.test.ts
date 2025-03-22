@@ -65,13 +65,13 @@ const createMockNodeTree = () => {
 // Sample input data for selectBestMove
 const createSampleInput = (): SelectBestMoveInput => ({
   nodes: createMockNodeTree(),
-  rootId: 'root',
-  currentIteration: 50,
-  maxIterations: 50,
-  explorationConstant: 1.414,
-  maxDepth: 10,
-  isComplete: true,
-  selectionMode: 'visits' // Default selection mode
+  root_id: 'root',
+  current_iteration: 50,
+  max_iterations: 50,
+  exploration_constant: 1.414,
+  max_depth: 10,
+  is_complete: true,
+  selection_mode: 'visits' // Default selection mode
 });
 
 describe('SelectBestMove Step', () => {
@@ -102,7 +102,7 @@ describe('SelectBestMove Step', () => {
     expect(emitCall.topic).toBe('code-review.reasoning.completed');
     
     // The node with the highest visit count should be selected (node1)
-    expect(emitCall.data.selectedNodeId).toBe('node1');
+    expect(emitCall.data.selected_node_id).toBe('node1');
     expect(emitCall.data.state).toBe(input.nodes['node1'].state);
   });
 
@@ -110,7 +110,7 @@ describe('SelectBestMove Step', () => {
     // Arrange
     const context = createTestContext();
     const input = createSampleInput();
-    input.selectionMode = 'value'; // Change selection mode to value
+    input.selection_mode = 'value'; // Change selection mode to value
     
     // Make all nodes have equal visits but different values
     input.nodes['node1'].visits = 10;
@@ -125,7 +125,7 @@ describe('SelectBestMove Step', () => {
     
     // Assert
     const emitCall = context.emit.mock.calls[0][0];
-    expect(emitCall.data.selectedNodeId).toBe('node2');
+    expect(emitCall.data.selected_node_id).toBe('node2');
     expect(emitCall.data.state).toBe(input.nodes['node2'].state);
   });
 
@@ -133,7 +133,7 @@ describe('SelectBestMove Step', () => {
     // Arrange
     const context = createTestContext();
     const input = createSampleInput();
-    input.selectionMode = 'value-ratio'; // Select by value/visit ratio
+    input.selection_mode = 'value-ratio'; // Select by value/visit ratio
     
     // Set up nodes with different value/visit ratios
     input.nodes['node1'].visits = 10;
@@ -148,7 +148,7 @@ describe('SelectBestMove Step', () => {
     
     // Assert
     const emitCall = context.emit.mock.calls[0][0];
-    expect(emitCall.data.selectedNodeId).toBe('node2');
+    expect(emitCall.data.selected_node_id).toBe('node2');
   });
 
   it('should handle the case with no children', async () => {
@@ -164,7 +164,7 @@ describe('SelectBestMove Step', () => {
     expect(context.logger.warn).toHaveBeenCalledWith('Root node has no children to select from', expect.any(Object));
     expect(context.emit).toHaveBeenCalled();
     const emitCall = context.emit.mock.calls[0][0];
-    expect(emitCall.data.selectedNodeId).toBe('root');
+    expect(emitCall.data.selected_node_id).toBe('root');
     expect(emitCall.data.state).toBe(input.nodes['root'].state);
   });
 
@@ -188,7 +188,7 @@ describe('SelectBestMove Step', () => {
     
     // Assert
     const emitCall = context.emit.mock.calls[0][0];
-    expect(emitCall.data.selectedNodeId).toBe('node1'); // First child
+    expect(emitCall.data.selected_node_id).toBe('node1'); // First child
   });
 
   it('should provide detailed reasoning for the selected node', async () => {
@@ -202,14 +202,14 @@ describe('SelectBestMove Step', () => {
     // Assert
     const emitCall = context.emit.mock.calls[0][0];
     expect(emitCall.data).toMatchObject({
-      selectedNodeId: 'node1',
+      selected_node_id: 'node1',
       state: input.nodes['node1'].state,
       reasoning: expect.any(String), // Just check that reasoning is a string
       stats: expect.objectContaining({
         visits: input.nodes['node1'].visits,
         value: input.nodes['node1'].value,
-        totalVisits: input.nodes['root'].visits,
-        childrenCount: input.nodes['root'].children.length
+        total_visits: input.nodes['root'].visits,
+        children_count: input.nodes['root'].children.length
       })
     });
   });
@@ -220,7 +220,7 @@ describe('SelectBestMove Step', () => {
     const input = createSampleInput();
     
     // Cause an error by making the root node non-existent
-    input.rootId = 'non-existent-node';
+    input.root_id = 'non-existent-node';
     
     // Act
     await handler(input, context as any);
@@ -240,7 +240,7 @@ describe('SelectBestMove Step', () => {
     
     // Assert
     const emitCall = context.emit.mock.calls[0][0];
-    expect(emitCall.data.allNodes).toEqual(expect.objectContaining({
+    expect(emitCall.data.all_nodes).toEqual(expect.objectContaining({
       'node1': expect.objectContaining({
         visits: input.nodes['node1'].visits,
         value: input.nodes['node1'].value,

@@ -114,7 +114,21 @@ async def handler(req: Any, context: Any):
         # Define a unique root node ID
         root_id = f'root-{int(datetime.now().timestamp())}'
 
-        # Initialize the MCTS tree structure
+        # Properly handle evaluation summary whether it's a string or object
+        summary_state = ""
+        if hasattr(evaluation, 'summary'):
+            summary_state = evaluation.summary
+        elif isinstance(evaluation, str):
+            summary_state = evaluation
+        else:
+            # Use string representation as fallback
+            summary_state = str(evaluation)
+        
+        # Get evaluation score with proper fallback
+        evaluation_score = 0.5  # Default fallback score
+        if hasattr(evaluation, 'score'):
+            evaluation_score = evaluation.score
+        
         nodes = {
             root_id: Node(
                 id=root_id,
@@ -122,7 +136,7 @@ async def handler(req: Any, context: Any):
                 children=[],
                 visits=1,
                 value=0,
-                state=evaluation.summary,
+                state=summary_state,
                 isTerminal=False
             )
         }
@@ -138,18 +152,42 @@ async def handler(req: Any, context: Any):
             output_url=output_url
         )
 
-        # If max_iterations is 0 or evaluation score is high, complete immediately
-        if max_iterations == 0 or evaluation.score >= 0.9:
+        # Skip MCTS if there are issues with evaluation or max_iterations is 0
+        skip_mcts = max_iterations == 0
+        
+        if skip_mcts or evaluation_score >= 0.9:
+            # Prepare data for report generation
+            final_state_dict = state.model_dump() if hasattr(state, 'model_dump') else vars(state)
+            
+            # Add additional fields for report generation
+            report_data = {
+                'selected_node_id': root_id,
+                'state': summary_state,
+                'reasoning': f"Code review analysis completed.\n\n{summary_state}",
+                'stats': {
+                    'visits': 1,
+                    'value': evaluation_score,
+                    'total_visits': 1,
+                    'children_count': 0
+                },
+                'all_nodes': nodes,
+                'output_url': output_url,
+                'requirements': requirements,
+                'repository': repo_dir,
+                'branch': branch
+            }
+            
+            # Skip MCTS and go straight to report generation
             await context.emit({
-                'topic': 'mcts.iterations.completed',
-                'data': state.model_dump()
+                'topic': 'code-review.reasoning.completed',
+                'data': report_data
             })
             return
 
-        # Start MCTS process
+        # Start MCTS process if no issues
         await context.emit({
             'topic': 'mcts.iteration.started',
-            'data': state.model_dump()
+            'data': state.model_dump() if hasattr(state, 'model_dump') else vars(state)
         })
 
     except Exception as error:
@@ -164,7 +202,47 @@ async def handler(req: Any, context: Any):
             requirements=getattr(req, 'requirements', 'Unknown requirements')
         )
         
-        await context.emit({
-            'topic': 'review.error',
-            'data': error_data.model_dump()
-        }) 
+        # Try to generate a basic report even if there was an error
+        try:
+            root_id = f'error-{int(datetime.now().timestamp())}'
+            nodes = {
+                root_id: Node(
+                    id=root_id,
+                    parent=None,
+                    children=[],
+                    visits=1,
+                    value=0,
+                    state=f"Error occurred during code review: {str(error)}",
+                    isTerminal=True
+                )
+            }
+            
+            report_data = {
+                'selected_node_id': root_id,
+                'state': f"Error occurred during code review: {str(error)}",
+                'reasoning': f"The code review process encountered an error: {str(error)}",
+                'stats': {
+                    'visits': 1,
+                    'value': 0,
+                    'total_visits': 1,
+                    'children_count': 0
+                },
+                'all_nodes': nodes,
+                'output_url': getattr(req, 'output_url', 'file://ERROR-REPORT.md'),
+                'requirements': getattr(req, 'requirements', 'Unknown requirements'),
+                'repository': getattr(req, 'repo_dir', 'Unknown repository'),
+                'branch': getattr(req, 'branch', 'main')
+            }
+            
+            # Emit report generation event
+            await context.emit({
+                'topic': 'code-review.reasoning.completed',
+                'data': report_data
+            })
+        except Exception as report_error:
+            context.logger.error(f"Failed to generate error report: {str(report_error)}")
+            # If even that fails, emit the basic error
+            await context.emit({
+                'topic': 'review.error',
+                'data': error_data.model_dump() if hasattr(error_data, 'model_dump') else vars(error_data)
+            }) 

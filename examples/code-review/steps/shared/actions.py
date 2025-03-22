@@ -92,7 +92,7 @@ async def evaluate_commits(commits: Commits, requirements: str) -> Evaluation:
         
         boundaries_response = await system_analysis_agent.arun(boundaries_prompt)
         
-        strategy = boundaries_response.content
+        strategy = boundaries_response.content if isinstance(boundaries_response.content, str) else "Strategy analysis not available"
         
         # Step 2: Perform code review using the specialized Toulmin model agent
         eval_prompt = f"""
@@ -112,69 +112,122 @@ async def evaluate_commits(commits: Commits, requirements: str) -> Evaluation:
         
         Diff:
         {commits.diff}
+        
+        Return a JSON structure with these fields:
+        - score: A number between 0 and 1 representing the overall quality
+        - issues: An array of objects, each with claim, grounds, warrant, backing, and qualifier fields
+        - summary: A string summarizing the overall evaluation
+        - issueSummary: A string summarizing the issues found
         """
         
-        eval_response: RunResponse = await code_review_agent.arun(
-            eval_prompt,
-            response_model=Evaluation,
-            use_structured_output=True
+        # Create default evaluation in case of failure
+        default_evaluation = Evaluation(
+            score=0.5,
+            issues=[Issue(
+                claim="Code review completed with default evaluation",
+                grounds="The review system encountered issues with the AI response",
+                warrant="Default evaluations are used when structured data cannot be parsed",
+                backing="System logs show response parsing errors",
+                qualifier="This is a default response"
+            )],
+            summary="Code review completed with limited data. The system was unable to generate a detailed analysis.",
+            issueSummary="No specific issues could be identified due to response processing errors."
         )
         
-        return eval_response.content
-        
-    except Exception as e:
-        print(f"Error in evaluate_commits: {e}")
-        # Fallback to general-purpose agent
         try:
-            fallback_response = await fallback_agent.arun(
-                f"""
-                Evaluate these code changes against the given requirements.
-                
-                Requirements:
-                {requirements}
-                
-                Files Changed:
-                {commits.files}
-                
-                Commit Messages:
-                {commits.messages}
-                
-                Provide a JSON response with this structure:
-                {{
-                    "score": 0.5,  # between 0.0 and 1.0
-                    "issues": [
-                        {{
-                            "claim": "Main assertion about an issue",
-                            "grounds": "Evidence supporting the claim",
-                            "warrant": "Reasoning connecting grounds to claim",
-                            "backing": "Support for the warrant",
-                            "qualifier": "Conditions or limits on the claim"
-                        }}
-                    ],
-                    "summary": "Overall evaluation summary",
-                    "issueSummary": "Summary of identified issues"
-                }}
-                """,
+            eval_response = await code_review_agent.arun(
+                eval_prompt,
+                response_model=Evaluation,
+                use_structured_output=True,
                 use_json_mode=True
             )
             
-            data = json.loads(fallback_response.content)
-            return Evaluation(**data)
-        except Exception as fallback_error:
-            print(f"Fallback evaluation failed: {fallback_error}")
-            # Ultimate fallback
-            return Evaluation(
-                score=0.5,
-                issues=[Issue(
-                    claim="Evaluation failed due to API error",
-                    grounds="The error occurred during commit evaluation",
-                    warrant="API errors indicate temporary service unavailability",
-                    backing="Error logs show API failure",
-                    qualifier="This is a fallback response"
-                )],
-                summary="Unable to complete evaluation due to service error",
-                issueSummary="Fallback response generated due to API error"
-            )
+            # Handle various response types
+            if eval_response and hasattr(eval_response, 'content'):
+                content = eval_response.content
+                
+                # If it's already an Evaluation object, return it
+                if isinstance(content, Evaluation):
+                    return content
+                
+                # If it's a string, try to parse as JSON
+                if isinstance(content, str):
+                    try:
+                        data = json.loads(content)
+                        
+                        # Create issues objects
+                        issues = []
+                        for issue_data in data.get('issues', []):
+                            issues.append(Issue(
+                                claim=issue_data.get('claim', 'No claim provided'),
+                                grounds=issue_data.get('grounds', 'No grounds provided'),
+                                warrant=issue_data.get('warrant', 'No warrant provided'),
+                                backing=issue_data.get('backing', 'No backing provided'),
+                                qualifier=issue_data.get('qualifier', 'No qualifier provided')
+                            ))
+                        
+                        if not issues:
+                            # Add a default issue if none were found
+                            issues = [Issue(
+                                claim="No specific issues identified",
+                                grounds="The code review did not find critical problems",
+                                warrant="Well-structured code often has fewer obvious issues",
+                                backing="Code quality metrics and review guidelines",
+                                qualifier="This may change with more detailed analysis"
+                            )]
+                            
+                        return Evaluation(
+                            score=float(data.get('score', 0.5)),
+                            issues=issues,
+                            summary=data.get('summary', 'No summary provided'),
+                            issueSummary=data.get('issueSummary', 'No issue summary provided')
+                        )
+                    except Exception as json_error:
+                        print(f"Error parsing JSON response: {json_error}")
+                        # Create an evaluation using the string content as the summary
+                        return Evaluation(
+                            score=0.5,
+                            issues=[Issue(
+                                claim="Evaluation used fallback parsing",
+                                grounds="The API returned an unparseable response",
+                                warrant="API errors suggest issues with structured output",
+                                backing="Error logs show JSON parsing failure",
+                                qualifier="This is a fallback response"
+                            )],
+                            summary=str(content)[:500],  # Limit to 500 chars
+                            issueSummary="Used string response as summary due to parsing errors"
+                        )
+                
+                # If it's a dict, try to create an Evaluation
+                if isinstance(content, dict):
+                    try:
+                        return Evaluation(**content)
+                    except Exception as dict_error:
+                        print(f"Error creating Evaluation from dict: {dict_error}")
+                        return default_evaluation
+            
+            # If we couldn't process the response properly, return default
+            return default_evaluation
+            
+        except Exception as eval_error:
+            print(f"Error in code review evaluation: {eval_error}")
+            return default_evaluation
+            
+    except Exception as e:
+        print(f"Error in evaluate_commits: {e}")
+        # Ultimate fallback
+        return Evaluation(
+            score=0.5,
+            issues=[Issue(
+                claim="Evaluation failed due to system error",
+                grounds="The error occurred during commit evaluation",
+                warrant="System errors indicate potential processing issues",
+                backing="Error logs show evaluation failure",
+                qualifier="This is a fallback response"
+            )],
+            summary="Unable to complete evaluation due to system error",
+            issueSummary="Fallback response generated due to system error"
+        )
 
 async def evaluate_reasoning(
     parent_state: str,

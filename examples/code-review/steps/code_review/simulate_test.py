@@ -68,12 +68,12 @@ def sample_input(mock_node_tree):
     """Create sample input data for testing."""
     return {
         'nodes': mock_node_tree,
-        'rootId': 'root',
-        'expandedNodeIds': ['expanded-1', 'expanded-2'],
-        'maxIterations': 100,
-        'currentIteration': 1,
-        'explorationConstant': 1.414,
-        'maxDepth': 10
+        'root_id': 'root',
+        'expanded_node_ids': ['expanded-1', 'expanded-2'],
+        'max_iterations': 100,
+        'current_iteration': 1,
+        'exploration_constant': 1.414,
+        'max_depth': 10
     }
 
 def test_config():
@@ -103,9 +103,9 @@ if should_mock:
         
         # Assert
         mock_evaluate_reasoning.assert_called_with(
-            sample_input['nodes'][sample_input['rootId']]['state'],
-            [sample_input['nodes'][node_id]['state'] for node_id in sample_input['expandedNodeIds']],
-            sample_input['expandedNodeIds']
+            sample_input['nodes'][sample_input['root_id']]['state'],
+            [sample_input['nodes'][node_id]['state'] for node_id in sample_input['expanded_node_ids']],
+            sample_input['expanded_node_ids']
         )
 
     @pytest.mark.asyncio
@@ -129,14 +129,14 @@ if should_mock:
         
         assert emit_call['topic'] == 'mcts.simulation.completed'
         assert emit_call['data']['nodes'] == sample_input['nodes']
-        assert emit_call['data']['rootId'] == sample_input['rootId']
-        assert emit_call['data']['simulationResult']['nodeId'] == 'expanded-1'
-        assert emit_call['data']['simulationResult']['value'] == 0.8
-        assert emit_call['data']['simulationResult']['explanation'] == 'Mock explanation for evaluation'
-        assert emit_call['data']['maxIterations'] == sample_input['maxIterations']
-        assert emit_call['data']['currentIteration'] == sample_input['currentIteration']
-        assert emit_call['data']['explorationConstant'] == sample_input['explorationConstant']
-        assert emit_call['data']['maxDepth'] == sample_input['maxDepth']
+        assert emit_call['data']['root_id'] == sample_input['root_id']
+        assert emit_call['data']['simulation_result']['node_id'] == 'expanded-1'
+        assert emit_call['data']['simulation_result']['value'] == 0.8
+        assert emit_call['data']['simulation_result']['explanation'] == 'Mock explanation for evaluation'
+        assert emit_call['data']['max_iterations'] == sample_input['max_iterations']
+        assert emit_call['data']['current_iteration'] == sample_input['current_iteration']
+        assert emit_call['data']['exploration_constant'] == sample_input['exploration_constant']
+        assert emit_call['data']['max_depth'] == sample_input['max_depth']
 
     @pytest.mark.asyncio
     @patch.object(module, 'evaluate_reasoning')
@@ -164,37 +164,37 @@ else:
 async def test_handle_empty_expanded_nodes(ctx, sample_input):
     """Test that the case when no expanded nodes are provided is handled."""
     # Modify input to have empty expanded nodes
-    sample_input['expandedNodeIds'] = []
+    sample_input['expanded_node_ids'] = []
     
     # Call handler
     await handler(sample_input, ctx)
     
     # Assert
-    ctx.logger.warn.assert_called_with('No expanded nodes to simulate', {'rootId': 'root'})
+    ctx.logger.warn.assert_called_with('No expanded nodes to simulate', {'root_id': 'root'})
     ctx.emit.assert_not_called()
 
 @pytest.mark.asyncio
 async def test_handle_missing_nodes(ctx, sample_input):
     """Test that the case when a node is missing is handled."""
     # Modify input to have a non-existent node ID
-    sample_input['expandedNodeIds'] = ['non-existent-node']
+    sample_input['expanded_node_ids'] = ['non-existent-node']
     
     # Call handler
     await handler(sample_input, ctx)
     
     # Assert
-    ctx.logger.error.assert_called_with('Node not found in tree', {'nodeId': 'non-existent-node'})
+    ctx.logger.error.assert_called_with('Node not found in tree', {'node_id': 'non-existent-node'})
     ctx.emit.assert_not_called()
 
 @pytest.mark.asyncio
 async def test_handle_missing_root(ctx, sample_input):
     """Test that the case when the root node is missing is handled."""
     # Modify input to have a non-existent root ID
-    sample_input['rootId'] = 'non-existent-root'
+    sample_input['root_id'] = 'non-existent-root'
     
     # Call handler
     await handler(sample_input, ctx)
     
     # Assert
-    ctx.logger.error.assert_called_with('Root node not found in tree', {'rootId': 'non-existent-root'})
+    ctx.logger.error.assert_called_with('Root node not found in tree', {'root_id': 'non-existent-root'})
     ctx.emit.assert_not_called() 

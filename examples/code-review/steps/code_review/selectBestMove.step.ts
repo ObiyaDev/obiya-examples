@@ -9,14 +9,14 @@ export type SelectionMode = 'visits' | 'value' | 'value-ratio';
 
 const selectBestMoveInputSchema = z.object({
   nodes: z.record(z.string(), NodeSchema),
-  rootId: z.string(),
-  currentIteration: z.number(),
-  maxIterations: z.number(),
-  explorationConstant: z.number(),
-  maxDepth: z.number(),
-  isComplete: z.boolean().optional().default(false),
-  selectionMode: z.enum(['visits', 'value', 'value-ratio']).optional().default('visits'),
-  outputPath: z.string().optional()
+  root_id: z.string(),
+  current_iteration: z.number(),
+  max_iterations: z.number(),
+  exploration_constant: z.number(),
+  max_depth: z.number(),
+  is_complete: z.boolean().optional().default(false),
+  selection_mode: z.enum(['visits', 'value', 'value-ratio']).optional().default('visits'),
+  output_url: z.string().optional()
 });
 
 export type SelectBestMoveInput = z.infer<typeof selectBestMoveInputSchema>;
@@ -33,35 +33,35 @@ export const config: EventConfig = {
 
 export const handler: StepHandler<typeof config> = async (input: SelectBestMoveInput, { emit, logger, state, traceId }) => {
   try {
-    const { nodes, rootId, selectionMode = 'visits', outputPath } = input;
+    const { nodes, root_id, selection_mode = 'visits', output_url } = input;
     
     // Validate root node exists
-    if (!nodes[rootId]) {
-      logger.error('Root node not found in tree', { rootId });
+    if (!nodes[root_id]) {
+      logger.error('Root node not found in tree', { root_id });
       return;
     }
     
-    const rootNode = nodes[rootId];
+    const rootNode = nodes[root_id];
     const { children } = rootNode;
     
     // If root has no children, return the root node itself
     if (!children || children.length === 0) {
-      logger.warn('Root node has no children to select from', { rootId });
+      logger.warn('Root node has no children to select from', { root_id });
       
       await emit({
         topic: 'code-review.reasoning.completed',
         data: {
-          selectedNodeId: rootId,
+          selected_node_id: root_id,
           state: rootNode.state || '',
           reasoning: 'No child nodes were generated from the root.',
           stats: {
             visits: rootNode.visits,
             value: rootNode.value,
-            totalVisits: rootNode.visits,
-            childrenCount: 0
+            total_visits: rootNode.visits,
+            children_count: 0
           },
-          allNodes: nodes,
-          outputPath
+          all_nodes: nodes,
+          output_url: output_url
         }
       });
       
@@ -69,60 +69,60 @@ export const handler: StepHandler<typeof config> = async (input: SelectBestMoveI
     }
     
     // Select the best node based on the selection mode
-    let selectedNodeId: string;
+    let selected_node_id: string;
     let reasoning: string;
     
-    switch (selectionMode) {
+    switch (selection_mode) {
       case 'visits':
-        selectedNodeId = findNodeWithMostVisits(nodes, children);
-        reasoning = `Selected based on number of visits: The node was visited ${nodes[selectedNodeId].visits} times with a total value of ${nodes[selectedNodeId].value.toFixed(2)}.`;
+        selected_node_id = findNodeWithMostVisits(nodes, children);
+        reasoning = `Selected based on number of visits: The node was visited ${nodes[selected_node_id].visits} times with a total value of ${nodes[selected_node_id].value.toFixed(2)}.`;
         break;
       case 'value':
-        selectedNodeId = findNodeWithHighestValue(nodes, children);
-        reasoning = `Selected based on highest accumulated value: The node has a value of ${nodes[selectedNodeId].value.toFixed(2)} after ${nodes[selectedNodeId].visits} visits.`;
+        selected_node_id = findNodeWithHighestValue(nodes, children);
+        reasoning = `Selected based on highest accumulated value: The node has a value of ${nodes[selected_node_id].value.toFixed(2)} after ${nodes[selected_node_id].visits} visits.`;
         break;
       case 'value-ratio':
-        selectedNodeId = findNodeWithBestValueRatio(nodes, children);
-        reasoning = `Selected based on value/visits ratio: The node has a ratio of ${(nodes[selectedNodeId].value / nodes[selectedNodeId].visits).toFixed(2)} with ${nodes[selectedNodeId].visits} visits and a value of ${nodes[selectedNodeId].value.toFixed(2)}.`;
+        selected_node_id = findNodeWithBestValueRatio(nodes, children);
+        reasoning = `Selected based on value/visits ratio: The node has a ratio of ${(nodes[selected_node_id].value / nodes[selected_node_id].visits).toFixed(2)} with ${nodes[selected_node_id].visits} visits and a value of ${nodes[selected_node_id].value.toFixed(2)}.`;
         break;
       default:
-        selectedNodeId = findNodeWithMostVisits(nodes, children);
-        reasoning = `Selected based on default strategy (visits count): The node was visited ${nodes[selectedNodeId].visits} times.`;
+        selected_node_id = findNodeWithMostVisits(nodes, children);
+        reasoning = `Selected based on default strategy (visits count): The node was visited ${nodes[selected_node_id].visits} times.`;
     }
     
-    const selectedNode = nodes[selectedNodeId];
-    if (!selectedNode) {
-      logger.error('Selected node not found in tree', { selectedNodeId });
+    const selected_node = nodes[selected_node_id];
+    if (!selected_node) {
+      logger.error('Selected node not found in tree', { selected_node_id });
       return;
     }
     
     // Get total visit count
-    const totalVisits = getTotalVisits(nodes, rootId);
+    const total_visits = getTotalVisits(nodes, root_id);
     
     logger.info('Best move selected', { 
-      selectedNodeId, 
-      state: selectedNode.state,
-      mode: selectionMode,
-      visits: selectedNode.visits,
-      value: selectedNode.value,
-      totalVisits
+      selected_node_id, 
+      state: selected_node.state,
+      mode: selection_mode,
+      visits: selected_node.visits,
+      value: selected_node.value,
+      total_visits
     });
     
     // Emit the selected reasoning path
     await emit({
       topic: 'code-review.reasoning.completed',
       data: {
-        selectedNodeId,
-        state: selectedNode.state || '',
+        selected_node_id,
+        state: selected_node.state || '',
         reasoning,
         stats: {
-          visits: selectedNode.visits,
-          value: selectedNode.value,
-          totalVisits,
-          childrenCount: children.length
+          visits: selected_node.visits,
+          value: selected_node.value,
+          total_visits,
+          children_count: children.length
         },
-        allNodes: nodes,
-        outputPath
+        all_nodes: nodes,
+        output_url: output_url
       }
     });
   } catch (error) {

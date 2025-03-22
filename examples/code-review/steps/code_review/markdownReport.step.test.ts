@@ -141,17 +141,19 @@ describe('MarkdownReport Step', () => {
       throw new Error('Write error');
     });
 
-    await expect(handler(mockInput, context as any))
-      .rejects
-      .toThrow('Write error');
+    // The handler now handles errors instead of throwing
+    await handler(mockInput, context as any);
 
     // Verify error was logged
     expect(context.logger.error).toHaveBeenCalledWith(
-      'Error generating markdown report',
+      'Error writing file',
       expect.objectContaining({
-        error: expect.any(Error)
+        error: expect.stringContaining('Write error')
       })
     );
+    
+    // Even with an error, we should still emit the event
+    expect(context.emit).toHaveBeenCalled();
   });
 
   it('should include all required sections in the report', async () => {
@@ -190,9 +192,10 @@ describe('MarkdownReport Step', () => {
       }
     };
 
-    // We expect this to throw due to missing required fields
-    await expect(handler(invalidInput as any, context as any))
-      .rejects
-      .toThrow();
+    // The handler now handles invalid input with defaults
+    await handler(invalidInput as any, context as any);
+    
+    // Should still emit an event even with invalid input
+    expect(context.emit).toHaveBeenCalled();
   });
 });

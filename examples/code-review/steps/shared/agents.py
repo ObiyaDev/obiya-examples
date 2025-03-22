@@ -24,7 +24,7 @@ else:
         def run(self, messages):
             return self.mock_function(messages)
         
-        async def arun(self, prompt, use_structured_output=False, response_model=None, **kwargs):
+        async def arun(self, prompt, use_structured_output=False, response_model=None, use_json_mode=False, **kwargs):
             """Mock asynchronous run method"""
             response = await self.mock_arun_function(prompt)
             
@@ -42,13 +42,30 @@ else:
                             mock_data[field_name] = random.uniform(0.0, 1.0)
                         elif field_type == bool:
                             mock_data[field_name] = random.choice([True, False])
-                        elif field_type == list:
-                            mock_data[field_name] = [f"Mock {field_name} {i}" for i in range(random.randint(0, 10))]
+                        elif hasattr(field_type, "__origin__") and field_type.__origin__ == list:
+                            mock_data[field_name] = [f"Mock {field_name} {i}" for i in range(1, 3)]
                         else:
                             mock_data[field_name] = None
                     
+                    # Handle nested objects with special field types
+                    if hasattr(response_model, 'issues') and 'issues' in mock_data:
+                        if hasattr(response_model, 'Issue'):
+                            issue_class = getattr(response_model, 'Issue')
+                            mock_data['issues'] = [
+                                {
+                                    'claim': 'Mock issue claim',
+                                    'grounds': 'Mock issue grounds',
+                                    'warrant': 'Mock issue warrant',
+                                    'backing': 'Mock issue backing',
+                                    'qualifier': 'Mock issue qualifier'
+                                }
+                            ]
+                    
                     response.content = response_model(**mock_data)
-            
+            elif use_json_mode or use_structured_output:
+                # If JSON mode is requested but no model, return a simple JSON string
+                response.content = '{"result": "Mock result", "status": "success"}'
+                
             return response
         
         def set_mock_function(self, mock_function):
@@ -106,6 +123,8 @@ code_review_agent = Agent(
     4. Backing: Support for your warrants (industry standards, best practices)
     5. Qualifiers: Conditions under which claims may not hold
     
+    IMPORTANT: Your response MUST be valid JSON with the requested structure. This is critical for proper processing.
+    
     Thoroughly analyze code structure, architecture, potential bugs, security concerns,
     and alignment with specified requirements.
     """
@@ -118,6 +137,8 @@ system_analysis_agent = Agent(
     instructions="""You are an expert software architect who specializes in analyzing system boundaries.
     Given a set of code changes and commit messages, your task is to identify the strategy
     employed by the developer and determine the boundaries of the system being modified.
+    
+    IMPORTANT: If asked for JSON output, ensure your response is valid JSON with the requested structure.
     
     Focus on:
     1. Architecture patterns present in the code
@@ -136,6 +157,8 @@ reasoning_eval_agent = Agent(
     Given an initial reasoning state and a possible next step, your job is to assess
     how promising this path is for solving a software development problem.
     
+    IMPORTANT: If asked for JSON output, ensure your response is valid JSON with the requested structure.
+    
     Consider:
     1. Logical coherence - Does the step logically follow from the initial state?
     2. Technical soundness - Is the step technically feasible and correct?
@@ -148,7 +171,11 @@ reasoning_eval_agent = Agent(
 fallback_agent = Agent(
     model=OpenRouter(id="google/gemini-2.0-flash-001"),
     description="General-purpose software engineering assistant",
-    instructions="""You are a software engineering assistant.
-    Provide helpful responses related to code analysis and software design.
+    instructions="""You are a general-purpose software engineering assistant.
+    Your task is to respond to various software development and analysis queries.
+    
+    IMPORTANT: When asked for JSON responses, always ensure your response is valid, properly formatted JSON.
+    
+    Follow instructions carefully and provide detailed, accurate responses.
     """
 ) 
