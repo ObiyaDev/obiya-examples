@@ -76,12 +76,8 @@ async def handler(req: MCTSControllerInput, context: Any):
             'commit_messages': len(commits.messages.split('\n'))
         })
         
-        try:
-            evaluation = await evaluate_commits(commits, req.requirements)
-        except Exception as eval_error:
-            context.logger.error(f"Error in evaluate_commits: {str(eval_error)}")
-            raise Exception(f"Evaluation failed: {str(eval_error)}")
-
+        evaluation = await evaluate_commits(commits, req.requirements)
+        
         # Define a unique root node ID
         root_id = f'root-{int(datetime.now().timestamp())}'
 
@@ -125,13 +121,14 @@ async def handler(req: MCTSControllerInput, context: Any):
 
     except Exception as error:
         context.logger.error(f"Error in MCTS controller: {str(error)}")
+        error_data = ErrorData(
+            message=str(error),
+            timestamp=datetime.now().isoformat(),
+            repository=req.repo_dir,
+            output_url=req.output_url,
+            requirements=req.requirements
+        )
         await context.emit({
             'topic': 'review.error',
-            'data': ErrorData(
-                message=str(error),
-                timestamp=datetime.now().isoformat(),
-                repository=req.repo_dir,
-                output_url=req.output_url,
-                requirements=req.requirements
-            ).model_dump()
+            'data': error_data.model_dump()
         }) 
