@@ -1,19 +1,28 @@
 import { jest } from '@jest/globals';
 
 // Mock fetch function
-global.fetch = jest.fn().mockImplementation((url) => {
-  return Promise.resolve({
+global.fetch = jest.fn().mockImplementation((_url: unknown) => {
+  const mockResponse = {
     ok: true,
     status: 200,
     statusText: 'OK',
-    headers: {
-      get: jest.fn().mockImplementation((header) => {
-        if (header === 'allow') return 'GET, POST, OPTIONS';
-        return null;
-      })
-    }
-  });
-}) as jest.Mock;
+    headers: new Headers({
+      'allow': 'GET, POST, OPTIONS'
+    }),
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+    blob: () => Promise.resolve(new Blob([])),
+    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    formData: () => Promise.resolve(new FormData()),
+    clone: function() { return Promise.resolve(this); },
+    body: null,
+    bodyUsed: false,
+    redirected: false,
+    type: 'basic',
+    url: ''
+  };
+  return Promise.resolve(mockResponse as unknown as Response);
+}) as unknown as typeof fetch;
 
 // Mock the file system
 jest.mock('fs', () => ({
@@ -27,24 +36,41 @@ jest.mock('child_process', () => ({
 
 // Mock the module and its dependencies
 jest.mock('./reviewRequest.api.step', () => {
+  // Define types for validated body
+  interface ValidatedBody {
+    repository: string;
+    requirements: string;
+    branch?: string;
+    depth?: number;
+    reviewStartCommit?: string;
+    reviewEndCommit?: string;
+    outputUrl?: string;
+  }
+
   // Create a mock implementation of the bodySchema
   const mockBodySchema = {
-    parse: jest.fn().mockImplementation((data: any) => {
-      if (!data.repository) {
+    parse: jest.fn().mockImplementation((data: unknown): ValidatedBody => {
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid input');
+      }
+      const input = data as Record<string, unknown>;
+      
+      if (!input.repository) {
         throw new Error('Missing required field: repository');
       }
-      if (!data.requirements) {
+      if (!input.requirements) {
         throw new Error('Missing required field: requirements');
       }
       
       // Return the data with defaults
       return {
-        ...data,
-        branch: data.branch || 'main',
-        depth: data.depth || 2,
-        reviewStartCommit: data.reviewStartCommit || '',
-        reviewEndCommit: data.reviewEndCommit || 'HEAD',
-        outputUrl: data.outputUrl || 'file://.'
+        repository: String(input.repository),
+        requirements: String(input.requirements),
+        branch: input.branch ? String(input.branch) : 'main',
+        depth: input.depth ? Number(input.depth) : 2,
+        reviewStartCommit: input.reviewStartCommit ? String(input.reviewStartCommit) : '',
+        reviewEndCommit: input.reviewEndCommit ? String(input.reviewEndCommit) : 'HEAD',
+        outputUrl: input.outputUrl ? String(input.outputUrl) : 'file://.'
       };
     })
   };
@@ -54,7 +80,7 @@ jest.mock('./reviewRequest.api.step', () => {
       bodySchema: mockBodySchema
     },
     handler: jest.fn().mockImplementation(async (req: any, context: any) => {
-      const validatedBody = mockBodySchema.parse(req.body);
+      const validatedBody = mockBodySchema.parse(req.body) as ValidatedBody;
       const mockRepoDir = '/mocked/repo/path';
       
       await context.emit({
@@ -81,12 +107,12 @@ jest.mock('./reviewRequest.api.step', () => {
         }
       };
     }),
-    validateOutputUrl: jest.fn().mockImplementation(async (url: string) => {
-      return url;
-    }),
-    fetchRepository: jest.fn().mockImplementation((repo: string) => {
+    validateOutputUrl: jest.fn().mockImplementation(async (url: unknown) => {
+      return String(url);
+    }) as jest.Mock,
+    fetchRepository: jest.fn().mockImplementation((repo: unknown) => {
       return '/mocked/repo/path';
-    })
+    }) as jest.Mock
   };
 });
 
@@ -98,6 +124,13 @@ mockDate.toISOString = jest.fn(() => '2023-01-01T00:00:00.000Z');
 
 // Import the module after mocking
 import * as ReviewRequestStep from './reviewRequest.api.step';
+
+interface ApiResponse {
+  status: number;
+  body: {
+    message: string;
+  };
+}
 
 describe('Review Request API Step', () => {
   let mockEmit: jest.Mock;
@@ -128,7 +161,7 @@ describe('Review Request API Step', () => {
       }
     };
 
-    const result = await ReviewRequestStep.handler(request as any, context as any);
+    const result = await ReviewRequestStep.handler(request as any, context as any) as ApiResponse;
 
     expect(result.status).toBe(200);
     expect(result.body.message).toBe('Code review process initiated');
