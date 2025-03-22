@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 import math
 from steps.shared.models import Node
 
@@ -17,7 +17,8 @@ async def select_node_ucb1(
     current_node_id: str,
     exploration_constant: float,
     max_depth: int,
-    depth: int = 0
+    depth: int = 0,
+    output_url: str = None
 ) -> Node:
     """
     Selects a node using the UCB1 formula, which balances exploration and exploitation
@@ -62,21 +63,45 @@ async def select_node_ucb1(
     # Fallback to current node if no children are available
     return current_node
 
-async def handler(input_data: dict, ctx):
+async def handler(input_data: Any, ctx):
     """Handler for the SelectNode step"""
     try:
-        # Extract input data
-        nodes = input_data['nodes']
-        root_id = input_data['rootId']
-        current_node_id = input_data['currentNodeId']
-        max_iterations = input_data['maxIterations']
-        current_iteration = input_data['currentIteration']
-        exploration_constant = input_data['explorationConstant']
-        max_depth = input_data['maxDepth']
+        # Handle different input formats (dict, SimpleNamespace, etc.)
+        if not isinstance(input_data, dict):
+            # Convert to dictionary if it's not already
+            try:
+                # Try to convert SimpleNamespace to dict
+                input_dict = vars(input_data)
+            except:
+                # If all else fails, log error and return
+                ctx.logger.error('Invalid input format for select_node')
+                return
+        else:
+            input_dict = input_data
+            
+        # Extract required fields with fallbacks
+        nodes = input_dict.get('nodes', {})
+        root_id = input_dict.get('root_id', None)
+        current_node_id = input_dict.get('current_node_id', root_id)
+        max_iterations = input_dict.get('max_iterations', 100)
+        current_iteration = input_dict.get('current_iteration', 0)
+        exploration_constant = input_dict.get('exploration_constant', 1.414)
+        max_depth = input_dict.get('max_depth', 10)
+        
+        # Additional values that might be needed
+        output_url = input_dict.get('output_url', None)
         
         # Basic validation
         if not nodes:
             ctx.logger.error('No valid nodes available for selection')
+            return
+            
+        if not root_id:
+            ctx.logger.error('Root ID not provided')
+            return
+            
+        if not current_node_id:
+            ctx.logger.error('Current node ID not provided')
             return
         
         # Select the best node according to UCB1 formula
@@ -85,9 +110,9 @@ async def handler(input_data: dict, ctx):
         )
         
         ctx.logger.info('Node selected', {
-            'selectedNodeId': selected_node.id,
-            'currentIteration': current_iteration,
-            'maxIterations': max_iterations
+            'selected_node_id': selected_node.id,
+            'current_iteration': current_iteration,
+            'max_iterations': max_iterations
         })
         
         # Emit the selected node for the next step in MCTS
@@ -95,12 +120,13 @@ async def handler(input_data: dict, ctx):
             'topic': 'mcts.node.selected',
             'data': {
                 'nodes': nodes,
-                'rootId': root_id,
-                'selectedNodeId': selected_node.id,
-                'maxIterations': max_iterations,
-                'currentIteration': current_iteration,
-                'explorationConstant': exploration_constant,
-                'maxDepth': max_depth
+                'root_id': root_id,
+                'selected_node_id': selected_node.id,
+                'max_iterations': max_iterations,
+                'current_iteration': current_iteration,
+                'exploration_constant': exploration_constant,
+                'max_depth': max_depth,
+                'output_url': output_url
             }
         })
     except Exception as error:

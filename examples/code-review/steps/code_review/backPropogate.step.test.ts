@@ -65,16 +65,16 @@ const createMockNodeTree = () => {
 // Sample input data for backpropagation
 const createSampleInput = (): BackpropagateInput => ({
   nodes: createMockNodeTree(),
-  rootId: 'root',
-  simulationResult: {
+  root_id: 'root',
+  simulation_result: {
     nodeId: 'leaf1',
     value: 0.8,
     explanation: 'Test explanation for high value'
   },
-  maxIterations: 100,
-  currentIteration: 1,
-  explorationConstant: 1.414,
-  maxDepth: 10
+  max_iterations: 100,
+  current_iteration: 1,
+  exploration_constant: 1.414,
+  max_depth: 10
 });
 
 describe('Backpropagate Step', () => {
@@ -103,7 +103,7 @@ describe('Backpropagate Step', () => {
     
     // Assert
     expect(input.nodes['leaf1'].visits).toBe(originalNodeVisits + 1);
-    expect(input.nodes['leaf1'].value).toBe(originalNodeValue + input.simulationResult.value);
+    expect(input.nodes['leaf1'].value).toBe(originalNodeValue + input.simulation_result.value);
   });
 
   it('should propagate updates up to the root node', async () => {
@@ -120,7 +120,7 @@ describe('Backpropagate Step', () => {
     // Assert
     nodesInPath.forEach((nodeId, index) => {
       expect(input.nodes[nodeId].visits).toBe(originalVisits[index] + 1);
-      expect(input.nodes[nodeId].value).toBe(originalValues[index] + input.simulationResult.value);
+      expect(input.nodes[nodeId].value).toBe(originalValues[index] + input.simulation_result.value);
     });
   });
 
@@ -159,11 +159,11 @@ describe('Backpropagate Step', () => {
       topic: 'mcts.backpropagation.completed',
       data: expect.objectContaining({
         nodes: input.nodes,
-        rootId: input.rootId,
-        maxIterations: input.maxIterations,
-        currentIteration: input.currentIteration + 1, // Iteration should be incremented
-        explorationConstant: input.explorationConstant,
-        maxDepth: input.maxDepth
+        root_id: input.root_id,
+        max_iterations: input.max_iterations,
+        current_iteration: input.current_iteration + 1, // Iteration should be incremented
+        exploration_constant: input.exploration_constant,
+        max_depth: input.max_depth
       })
     });
   });
@@ -174,7 +174,7 @@ describe('Backpropagate Step', () => {
     const input = createSampleInput();
     
     // Cause an error by making the node path invalid
-    input.simulationResult.nodeId = 'non-existent-node';
+    input.simulation_result.nodeId = 'non-existent-node';
     
     // Act
     await handler(input, context as any);
@@ -188,7 +188,7 @@ describe('Backpropagate Step', () => {
     // Arrange
     const context = createTestContext();
     const input = createSampleInput();
-    input.simulationResult.nodeId = 'root'; // Start from root which has null parent
+    input.simulation_result.nodeId = 'root'; // Start from root which has null parent
     
     // Act
     await handler(input, context as any);
@@ -211,7 +211,7 @@ describe('Backpropagate Step', () => {
       'Backpropagation completed',
       expect.objectContaining({
         path: ['leaf1', 'node1', 'root'],
-        value: input.simulationResult.value
+        value: input.simulation_result.value
       })
     );
   });

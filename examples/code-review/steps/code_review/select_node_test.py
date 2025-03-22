@@ -1,10 +1,15 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 import importlib.util
+import os
+
+# Get the correct path to the step file, accounting for the current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+step_file_path = os.path.join(current_dir, 'select_node.step.py')
 
 spec = importlib.util.spec_from_file_location(
     name="select_node",
-    location="steps/code_review/select_node.step.py"
+    location=step_file_path
 )
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
@@ -83,12 +88,12 @@ def create_sample_input(create_mock_node_tree):
     def _create_sample_input(node_id='root'):
         return {
             'nodes': create_mock_node_tree,
-            'rootId': 'root',
-            'currentNodeId': node_id,
-            'maxIterations': 100,
-            'currentIteration': 1,
-            'explorationConstant': 1.414,
-            'maxDepth': 10
+            'root_id': 'root',
+            'current_node_id': node_id,
+            'max_iterations': 100,
+            'current_iteration': 1,
+            'exploration_constant': 1.414,
+            'max_depth': 10
         }
     return _create_sample_input
 
@@ -115,14 +120,14 @@ async def test_emit_selected_node(create_test_context, create_sample_input):
     emit_call = ctx.emit.call_args[0][0]
     assert emit_call['topic'] == 'mcts.node.selected'
     assert 'nodes' in emit_call['data']
-    assert 'rootId' in emit_call['data']
-    assert 'selectedNodeId' in emit_call['data']
-    assert 'maxIterations' in emit_call['data']
-    assert 'currentIteration' in emit_call['data']
-    assert 'explorationConstant' in emit_call['data']
-    assert 'maxDepth' in emit_call['data']
+    assert 'root_id' in emit_call['data']
+    assert 'selected_node_id' in emit_call['data']
+    assert 'max_iterations' in emit_call['data']
+    assert 'current_iteration' in emit_call['data']
+    assert 'exploration_constant' in emit_call['data']
+    assert 'max_depth' in emit_call['data']
     
-    ctx.logger.info.assert_called_with('Node selected', {'selectedNodeId': emit_call['data']['selectedNodeId'], 'currentIteration': 1, 'maxIterations': 100})
+    ctx.logger.info.assert_called_with('Node selected', {'selected_node_id': emit_call['data']['selected_node_id'], 'current_iteration': 1, 'max_iterations': 100})
 
 @pytest.mark.asyncio
 async def test_handle_empty_nodes(create_test_context, create_sample_input):
@@ -152,7 +157,7 @@ async def test_select_highest_ucb1(create_test_context, create_sample_input):
     
     # Assert
     emit_call = ctx.emit.call_args[0][0]
-    assert emit_call['data']['selectedNodeId'] == 'child2'
+    assert emit_call['data']['selected_node_id'] == 'child2'
 
 @pytest.mark.asyncio
 async def test_select_unexplored_node(create_test_context, create_sample_input, create_mock_node_tree):
@@ -178,4 +183,4 @@ async def test_select_unexplored_node(create_test_context, create_sample_input, 
     
     # Assert
     emit_call = ctx.emit.call_args[0][0]
-    assert emit_call['data']['selectedNodeId'] == 'child4'  # Should prefer unexplored node 
+    assert emit_call['data']['selected_node_id'] == 'child4'  # Should prefer unexplored node 

@@ -94,7 +94,7 @@ expansion_agent = Agent(
 
 # Agent for commit evaluation using Toulmin model
 code_review_agent = Agent(
-    model=OpenRouter(id="google/gemini-1.5-pro-latest"),
+    model=OpenRouter(id="google/gemini-2.0-flash-001"),
     description="Expert software reviewer using Toulmin model",
     instructions="""You are an expert software reviewer who uses the Toulmin Model of Argumentation.
     Given a set of commits, you'll evaluate code changes against specified requirements.
@@ -113,7 +113,7 @@ code_review_agent = Agent(
 
 # Analysis agent for system boundaries
 system_analysis_agent = Agent(
-    model=OpenRouter(id="google/gemini-1.5-pro-latest"),
+    model=OpenRouter(id="google/gemini-2.0-flash-001"),
     description="Expert software architect",
     instructions="""You are an expert software architect who specializes in analyzing system boundaries.
     Given a set of code changes and commit messages, your task is to identify the strategy

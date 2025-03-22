@@ -5,13 +5,13 @@ import { NodeSchema, SimulationResultSchema } from '../shared/models';
 
 const backpropagateInputSchema = z.object({
   nodes: z.record(z.string(), NodeSchema),
-  rootId: z.string(),
-  simulationResult: SimulationResultSchema,
-  maxIterations: z.number(),
-  currentIteration: z.number(),
-  explorationConstant: z.number(),
-  maxDepth: z.number(),
-  outputPath: z.string().optional()
+  root_id: z.string(),
+  simulation_result: SimulationResultSchema,
+  max_iterations: z.number(),
+  current_iteration: z.number(),
+  exploration_constant: z.number(),
+  max_depth: z.number(),
+  output_path: z.string().optional()
 });
 
 export type BackpropagateInput = z.infer<typeof backpropagateInputSchema>;
@@ -30,10 +30,10 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
   try {
     console.log('Backpropagation handler received input:', JSON.stringify(input, null, 2).substring(0, 300) + '...');
     
-    const { nodes, rootId, simulationResult, maxIterations, currentIteration, explorationConstant, maxDepth, outputPath } = input;
-    const { nodeId, value } = simulationResult;
+    const { nodes, root_id, simulation_result, max_iterations, current_iteration, exploration_constant, max_depth, output_path } = input;
+    const { nodeId, value } = simulation_result;
     
-    console.log('Processing simulationResult:', JSON.stringify(simulationResult, null, 2));
+    console.log('Processing simulationResult:', JSON.stringify(simulation_result, null, 2));
     
     // Validate the node exists
     if (!nodes[nodeId]) {
@@ -79,15 +79,15 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
     logger.info('Backpropagation completed', {
       path: backpropagationPath,
       value,
-      currentIteration,
-      maxIterations
+      current_iteration,
+      max_iterations
     });
     
     console.log('Backpropagation path:', backpropagationPath);
     
     // Check if we've reached the max iterations
-    const nextIteration = currentIteration + 1;
-    const isComplete = nextIteration >= maxIterations;
+    const nextIteration = current_iteration + 1;
+    const isComplete = nextIteration >= max_iterations;
     
     // Emit backpropagation completed event
     console.log('Emitting mcts.backpropagation.completed event');
@@ -95,12 +95,12 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
       topic: 'mcts.backpropagation.completed',
       data: {
         nodes,
-        rootId,
-        maxIterations,
-        currentIteration: nextIteration,
-        explorationConstant,
-        maxDepth,
-        outputPath
+        root_id,
+        max_iterations,
+        current_iteration: nextIteration,
+        exploration_constant,
+        max_depth,
+        output_path
       }
     });
     console.log('Emitted mcts.backpropagation.completed event');
@@ -108,9 +108,9 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
     if (isComplete) {
       console.log('Max iterations reached, emitting mcts.iterations.completed');
       logger.info('MCTS process completed', {
-        totalIterations: nextIteration,
-        rootNodeVisits: nodes[rootId].visits,
-        rootNodeValue: nodes[rootId].value
+        total_iterations: nextIteration,
+        root_node_visits: nodes[root_id].visits,
+        root_node_value: nodes[root_id].value
       });
       
       // Emit the tree for final move selection
@@ -118,13 +118,13 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
         topic: 'mcts.iterations.completed',
         data: {
           nodes,
-          rootId,
-          maxIterations,
-          currentIteration: nextIteration,
-          explorationConstant,
-          maxDepth,
-          isComplete: true,
-          outputPath
+          root_id,
+          max_iterations,
+          current_iteration: nextIteration,
+          exploration_constant,
+          max_depth,
+          is_complete: true,
+          output_path
         }
       });
       console.log('Emitted mcts.iterations.completed event');
@@ -135,20 +135,20 @@ export const handler: StepHandler<typeof config> = async (input: BackpropagateIn
         topic: 'mcts.iteration.started',
         data: {
           nodes,
-          rootId,
-          currentNodeId: rootId,
-          maxIterations,
-          currentIteration: nextIteration,
-          explorationConstant,
-          maxDepth,
-          outputPath
+          root_id,
+          current_node_id: root_id,
+          max_iterations,
+          current_iteration: nextIteration,
+          exploration_constant,
+          max_depth,
+          output_path
         }
       });
       console.log('Emitted mcts.iteration.started event');
       
       logger.info('Starting next MCTS iteration', {
         iteration: nextIteration,
-        maxIterations
+        max_iterations
       });
     }
   } catch (error) {
