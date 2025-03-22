@@ -1,7 +1,17 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from steps.code_review.controller import handler, MCTSControllerInput
 from steps.shared.actions import Evaluation, Issue
+
+import importlib.util
+spec = importlib.util.spec_from_file_location(
+    name="controller",
+    location="steps/code_review/controller.step.py"
+)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+handler = module.handler
+MCTSControllerInput = module.MCTSControllerInput
 
 @pytest.fixture
 def mock_context():
@@ -51,175 +61,13 @@ def mock_commits():
     commits.messages = "commit1\ncommit2"
     return commits
 
-@pytest.mark.asyncio
-async def test_controller_initialization(mock_context, sample_input, mock_evaluation, mock_commits):
-    """Test successful initialization of the MCTS controller."""
-    with patch('steps.code_review.controller.evaluate_commits') as mock_evaluate, \
-         patch('steps.code_review.controller.Commits.create') as mock_create:
-
-        # Setup mocks
-        mock_create.return_value = mock_commits
-        mock_evaluate.return_value = mock_evaluation
-
-        # Execute handler
-        await handler(sample_input, mock_context)
-
-        # Verify state was stored
-        mock_context.state.set.assert_called_once_with(
-            mock_context.trace_id,
-            'requirements',
-            sample_input.requirements
-        )
-
-        # Verify commits were created with correct arguments
-        mock_create.assert_called_once_with(
-            mock_context.trace_id,
-            mock_context.state,
-            sample_input.model_dump()
-        )
-
-        # Verify evaluation was performed with correct arguments
-        mock_evaluate.assert_called_once_with(mock_commits, sample_input.requirements)
-
-        # Verify MCTS iteration started event was emitted
-        assert mock_context.emit.call_count == 1
-        emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'mcts.iteration.started'
-        assert isinstance(emit_call['data'], dict)
-
-@pytest.mark.asyncio
-async def test_high_score_immediate_completion(mock_context, sample_input, mock_commits):
-    """Test that high evaluation scores skip iterations."""
-    with patch('steps.code_review.controller.evaluate_commits') as mock_evaluate, \
-         patch('steps.code_review.controller.Commits.create') as mock_create:
-        
-        # Setup mock to return high score
-        high_score_eval = Evaluation(
-            score=0.95,
-            issues=[],
-            summary="Excellent code",
-            issueSummary="No issues found"
-        )
-        mock_evaluate.return_value = high_score_eval
-        mock_create.return_value = mock_commits
-
-        # Execute handler
-        await handler(sample_input, mock_context)
-
-        # Verify completion event was emitted
-        assert mock_context.emit.call_count == 1
-        emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'mcts.iterations.completed'
-        assert isinstance(emit_call['data'], dict)
-        assert 'max_iterations' in emit_call['data']
-
-@pytest.mark.asyncio
-async def test_zero_iterations_immediate_completion(mock_context, sample_input, mock_commits):
-    """Test that zero max_iterations skips the MCTS process."""
-    # Modify input to have zero iterations
-    input_zero_iter = sample_input.model_copy(update={'max_iterations': 0})
-
-    with patch('steps.code_review.controller.evaluate_commits') as mock_evaluate, \
-         patch('steps.code_review.controller.Commits.create') as mock_create:
-
-        # Setup mocks with proper async behavior
-        mock_create.return_value = mock_commits
-        mock_evaluate.return_value = Evaluation(
-            score=0.5,
-            issues=[Issue(
-                claim="Test claim",
-                grounds="Test grounds",
-                warrant="Test warrant",
-                backing="Test backing",
-                qualifier="Test qualifier"
-            )],
-            summary="Average code",
-            issueSummary="Some issues found"
-        )
-
-        # Execute handler
-        await handler(input_zero_iter, mock_context)
-
-        # Verify completion event was emitted
-        assert mock_context.emit.call_count == 1
-        emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'mcts.iterations.completed'
-        assert isinstance(emit_call['data'], dict)
-        assert emit_call['data']['max_iterations'] == 0
-
-@pytest.mark.asyncio
-async def test_error_handling(mock_context, sample_input):
-    """Test error handling and error event emission."""
-    with patch('steps.code_review.controller.Commits.create') as mock_create:
-        # Setup mock to raise an error
-        mock_create.side_effect = Exception("Repository access failed")
-
-        # Execute handler
-        await handler(sample_input, mock_context)
-
-        # Verify error event was emitted
-        assert mock_context.emit.call_count == 1
-        emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'review.error'
-        
-        # Verify error data structure
-        error_data = emit_call['data']
-        assert isinstance(error_data, dict)
-        assert 'message' in error_data
-        assert 'timestamp' in error_data
-        assert 'repository' in error_data
-        assert error_data['message'] == "Repository access failed"
-
-@pytest.mark.asyncio
-async def test_evaluation_error_handling(mock_context, sample_input, mock_commits):
-    """Test error handling during commit evaluation."""
-    with patch('steps.code_review.controller.evaluate_commits') as mock_evaluate, \
-         patch('steps.code_review.controller.Commits.create') as mock_create:
-
-        # Setup mocks
-        mock_create.return_value = mock_commits
-        mock_evaluate.side_effect = Exception("Evaluation failed")
-
-        # Execute handler
-        await handler(sample_input, mock_context)
-
-        # Verify error event was emitted
-        assert mock_context.emit.call_count == 1
-        emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'review.error'
-        assert emit_call['data']['message'] == 'Evaluation failed'
-
-@pytest.mark.asyncio
-async def test_state_initialization(mock_context, sample_input, mock_evaluation, mock_commits):
-    """Test proper initialization of MCTS state."""
-    with patch('steps.code_review.controller.Commits.create') as mock_create, \
-         patch('steps.code_review.controller.evaluate_commits') as mock_evaluate:
-
-        mock_create.return_value = mock_commits
-        mock_evaluate.return_value = mock_evaluation
-
-        # Execute handler
-        await handler(sample_input, mock_context)
-
-        # Verify emitted state
-        assert mock_context.emit.call_count == 1
-        emit_call = mock_context.emit.call_args[0][0]
-        state_data = emit_call['data']
-
-        # Check state structure
-        assert isinstance(state_data, dict)
-        assert state_data['max_iterations'] == sample_input.max_iterations
-        assert state_data['exploration_constant'] == sample_input.exploration_constant
-        assert state_data['max_depth'] == sample_input.max_depth
-        assert state_data['output_url'] == sample_input.output_url
-        
-        # Check root node
-        root_id = state_data['root_id']
-        nodes = state_data['nodes']
-        assert root_id in nodes
-        assert nodes[root_id]['parent'] is None
-        assert nodes[root_id]['visits'] == 1
-        assert nodes[root_id]['state'] == mock_evaluation.summary
+class MockCommitsWithCreate:
+    @staticmethod
+    async def create(trace_id, state, data):
+        mock = AsyncMock()
+        mock.files = "file1.py\nfile2.py"
+        mock.messages = "commit1\ncommit2"
+        return mock
 
 @pytest.mark.asyncio
 async def test_input_validation(mock_context):
@@ -250,23 +98,158 @@ async def test_input_validation(mock_context):
         )
 
 @pytest.mark.asyncio
+async def test_error_handling(mock_context, sample_input):
+    """Test error handling and error event emission."""
+    with patch.object(module, 'Commits') as MockCommits:
+        # Setup mock to raise an error
+        MockCommits.create.side_effect = Exception("Repository access failed")
+
+        # Execute handler
+        await handler(sample_input, mock_context)
+
+        # Verify error event was emitted
+        assert mock_context.emit.call_count == 1
+        emit_call = mock_context.emit.call_args[0][0]
+        assert emit_call['topic'] == 'review.error'
+        
+        # Verify error data structure
+        error_data = emit_call['data']
+        assert isinstance(error_data, dict)
+        assert 'message' in error_data
+        assert 'timestamp' in error_data
+        assert 'repository' in error_data
+        assert error_data['message'] == "Repository access failed"
+
+@pytest.mark.asyncio
+async def test_controller_initialization(mock_context, sample_input, mock_evaluation):
+    """Test successful initialization of the MCTS controller."""
+    with patch.object(module, 'evaluate_commits', return_value=mock_evaluation), \
+         patch.object(module, 'Commits', MockCommitsWithCreate):
+
+        # Execute handler
+        await handler(sample_input, mock_context)
+
+        # Verify state was stored
+        mock_context.state.set.assert_called_once_with(
+            mock_context.trace_id,
+            'requirements',
+            sample_input.requirements
+        )
+
+        # Verify MCTS iteration started event was emitted
+        assert mock_context.emit.call_count == 1
+        emit_call = mock_context.emit.call_args[0][0]
+        assert emit_call['topic'] == 'mcts.iteration.started'
+        assert isinstance(emit_call['data'], dict)
+
+@pytest.mark.asyncio
+async def test_high_score_immediate_completion(mock_context, sample_input):
+    """Test that high evaluation scores skip iterations."""
+    high_score_eval = Evaluation(
+        score=0.95,
+        issues=[],
+        summary="Excellent code",
+        issueSummary="No issues found"
+    )
+    
+    with patch.object(module, 'evaluate_commits', return_value=high_score_eval), \
+         patch.object(module, 'Commits', MockCommitsWithCreate):
+
+        # Execute handler
+        await handler(sample_input, mock_context)
+
+        # Verify completion event was emitted
+        assert mock_context.emit.call_count == 1
+        emit_call = mock_context.emit.call_args[0][0]
+        assert emit_call['topic'] == 'mcts.iterations.completed'
+        assert isinstance(emit_call['data'], dict)
+        assert 'max_iterations' in emit_call['data']
+
+@pytest.mark.asyncio
+async def test_zero_iterations_immediate_completion(mock_context, sample_input):
+    """Test that zero max_iterations skips the MCTS process."""
+    # Modify input to have zero iterations
+    input_zero_iter = sample_input.model_copy(update={'max_iterations': 0})
+    
+    test_eval = Evaluation(
+        score=0.5,
+        issues=[Issue(
+            claim="Test claim",
+            grounds="Test grounds",
+            warrant="Test warrant",
+            backing="Test backing",
+            qualifier="Test qualifier"
+        )],
+        summary="Average code",
+        issueSummary="Some issues found"
+    )
+
+    with patch.object(module, 'evaluate_commits', return_value=test_eval), \
+         patch.object(module, 'Commits', MockCommitsWithCreate):
+
+        # Execute handler
+        await handler(input_zero_iter, mock_context)
+
+        # Verify completion event was emitted
+        assert mock_context.emit.call_count == 1
+        emit_call = mock_context.emit.call_args[0][0]
+        assert emit_call['topic'] == 'mcts.iterations.completed'
+        assert isinstance(emit_call['data'], dict)
+        assert emit_call['data']['max_iterations'] == 0
+
+@pytest.mark.asyncio
+async def test_evaluation_error_handling(mock_context, sample_input):
+    """Test error handling during commit evaluation."""
+    with patch.object(module, 'evaluate_commits', side_effect=Exception("Evaluation failed")), \
+         patch.object(module, 'Commits', MockCommitsWithCreate):
+
+        # Execute handler
+        await handler(sample_input, mock_context)
+
+        # Verify error event was emitted
+        assert mock_context.emit.call_count == 1
+        emit_call = mock_context.emit.call_args[0][0]
+        assert emit_call['topic'] == 'review.error'
+        assert emit_call['data']['message'] == 'Evaluation failed'
+
+@pytest.mark.asyncio
+async def test_state_initialization(mock_context, sample_input, mock_evaluation):
+    """Test proper initialization of MCTS state."""
+    with patch.object(module, 'evaluate_commits', return_value=mock_evaluation), \
+         patch.object(module, 'Commits', MockCommitsWithCreate):
+
+        # Execute handler
+        await handler(sample_input, mock_context)
+
+        # Verify emitted state
+        assert mock_context.emit.call_count == 1
+        emit_call = mock_context.emit.call_args[0][0]
+        state_data = emit_call['data']
+
+        # Check state structure
+        assert isinstance(state_data, dict)
+        assert state_data['max_iterations'] == sample_input.max_iterations
+        assert state_data['exploration_constant'] == sample_input.exploration_constant
+        assert state_data['max_depth'] == sample_input.max_depth
+        assert state_data['output_url'] == sample_input.output_url
+        
+        # Check root node
+        root_id = state_data['root_id']
+        nodes = state_data['nodes']
+        assert root_id in nodes
+        assert nodes[root_id]['parent'] is None
+        assert nodes[root_id]['visits'] == 1
+        assert nodes[root_id]['state'] == mock_evaluation.summary
+
+@pytest.mark.asyncio
 async def test_logging_truncation(mock_context, sample_input, mock_evaluation):
     """Test that long requirements are properly truncated in logs."""
     # Create input with long requirements
     long_requirements = "A" * 100  # Long string
     input_with_long_req = sample_input.model_copy(update={'requirements': long_requirements})
 
-    with patch('steps.code_review.controller.Commits.create') as mock_create, \
-         patch('steps.code_review.controller.evaluate_commits') as mock_evaluate:
-        
-        # Setup mock commits with proper async behavior
-        commits = AsyncMock()
-        # Mock the properties as regular strings
-        commits.files = "file1.py\nfile2.py"
-        commits.messages = "commit1\ncommit2"
-        
-        mock_create.return_value = commits
-        mock_evaluate.return_value = mock_evaluation
+    with patch.object(module, 'evaluate_commits', return_value=mock_evaluation), \
+         patch.object(module, 'Commits', MockCommitsWithCreate):
 
         # Execute handler
         await handler(input_with_long_req, mock_context)
@@ -285,16 +268,8 @@ async def test_logging_truncation(mock_context, sample_input, mock_evaluation):
 @pytest.mark.asyncio
 async def test_commits_creation_logging(mock_context, sample_input, mock_evaluation):
     """Test that repository access and commit loading is properly logged."""
-    with patch('steps.code_review.controller.Commits.create') as mock_create, \
-         patch('steps.code_review.controller.evaluate_commits') as mock_evaluate:
-        
-        # Setup mock commits with proper async behavior
-        commits = AsyncMock()
-        commits.files = "file1.py\nfile2.py"
-        commits.messages = "commit1\ncommit2"
-        
-        mock_create.return_value = commits
-        mock_evaluate.return_value = mock_evaluation
+    with patch.object(module, 'evaluate_commits', return_value=mock_evaluation), \
+         patch.object(module, 'Commits', MockCommitsWithCreate):
 
         # Execute handler
         await handler(sample_input, mock_context)

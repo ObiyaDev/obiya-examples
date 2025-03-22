@@ -1,8 +1,16 @@
 import os
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from steps.code_review.controller import MCTSControllerInput
 from steps.shared.actions import Evaluation, Issue
+
+import importlib.util
+spec = importlib.util.spec_from_file_location(
+    name="controller",
+    location="steps/code_review/controller.step.py"
+)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+MCTSControllerInput = module.MCTSControllerInput
 
 def pytest_configure(config):
     """Configure pytest with custom markers."""
