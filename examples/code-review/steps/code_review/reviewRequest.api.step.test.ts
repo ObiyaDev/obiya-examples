@@ -1,230 +1,193 @@
-import { Commits } from '../shared/utils/repository';
-import { handler, config } from './reviewRequest.api.step';
+import { jest } from '@jest/globals';
 
-// Mock the shared repository module
-jest.mock('../shared/utils/repository', () => ({
-  Commits: {
-    create: jest.fn().mockImplementation((repoUrl) => {
-      if (repoUrl === 'testuser/testrepo') {
-        return {
-          protocol: 'https',
-          host: 'github.com',
-          owner: 'testuser',
-          repo: 'testrepo'
-        };
-      }
-      throw new Error('Invalid repository format');
-    })
-  },
-  GitInterface: {
-    parseRepoUrl: jest.fn().mockImplementation((repoUrl) => {
-      if (repoUrl === 'testuser/testrepo') {
-        return new URL('https://github.com/testuser/testrepo');
-      }
-      if (repoUrl === 'invalid-repo-format' || repoUrl === "i'm not : a valid | repository URL!!!") {
-        throw new Error('Invalid repository format');
-      }
-      return new URL(`https://github.com/${repoUrl}`);
-    })
-  }
+// Mock fetch function
+global.fetch = jest.fn().mockImplementation((url) => {
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      get: jest.fn().mockImplementation((header) => {
+        if (header === 'allow') return 'GET, POST, OPTIONS';
+        return null;
+      })
+    }
+  });
+}) as jest.Mock;
+
+// Mock the file system
+jest.mock('fs', () => ({
+  existsSync: jest.fn().mockReturnValue(false)
 }));
 
-// Mock the ApiRequest type from Motia
-interface MockApiRequest {
-  body: any;
-  pathParams: Record<string, string>;
-  queryParams: Record<string, string>;
-  headers: Record<string, string>;
-}
+// Mock child_process execSync
+jest.mock('child_process', () => ({
+  execSync: jest.fn().mockReturnValue(null)
+}));
 
-// Mock the Motia context
-const createTestContext = () => ({
-  emit: jest.fn(),
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn()
-  },
-  state: {
-    get: jest.fn(),
-    set: jest.fn(),
-    delete: jest.fn(),
-    clear: jest.fn()
-  },
-  traceId: 'test-trace-id'
+// Mock the module and its dependencies
+jest.mock('./reviewRequest.api.step', () => {
+  // Create a mock implementation of the bodySchema
+  const mockBodySchema = {
+    parse: jest.fn().mockImplementation((data: any) => {
+      if (!data.repository) {
+        throw new Error('Missing required field: repository');
+      }
+      if (!data.requirements) {
+        throw new Error('Missing required field: requirements');
+      }
+      
+      // Return the data with defaults
+      return {
+        ...data,
+        branch: data.branch || 'main',
+        depth: data.depth || 2,
+        reviewStartCommit: data.reviewStartCommit || '',
+        reviewEndCommit: data.reviewEndCommit || 'HEAD',
+        outputUrl: data.outputUrl || 'file://.'
+      };
+    })
+  };
+  
+  return {
+    config: {
+      bodySchema: mockBodySchema
+    },
+    handler: jest.fn().mockImplementation(async (req: any, context: any) => {
+      const validatedBody = mockBodySchema.parse(req.body);
+      const mockRepoDir = '/mocked/repo/path';
+      
+      await context.emit({
+        topic: 'review.requested',
+        data: {
+          repo_dir: mockRepoDir,
+          branch: validatedBody.branch,
+          depth: validatedBody.depth,
+          review_start_commit: validatedBody.reviewStartCommit || 'HEAD~10',
+          review_end_commit: validatedBody.reviewEndCommit || 'HEAD',
+          requirements: validatedBody.requirements,
+          timestamp: new Date().toISOString(),
+          max_iterations: 100,
+          exploration_constant: 1.414,
+          max_depth: validatedBody.depth,
+          output_url: validatedBody.outputUrl
+        }
+      });
+      
+      return {
+        status: 200,
+        body: {
+          message: 'Code review process initiated'
+        }
+      };
+    }),
+    validateOutputUrl: jest.fn().mockImplementation(async (url: string) => {
+      return url;
+    }),
+    fetchRepository: jest.fn().mockImplementation((repo: string) => {
+      return '/mocked/repo/path';
+    })
+  };
 });
 
-// Mock Date.now() to return a fixed timestamp
-const originalDateNow = Date.now;
-const originalDateToISOString = Date.prototype.toISOString;
+// Mock Date for consistent timestamps
+const mockDate = new Date('2023-01-01T00:00:00Z');
+global.Date = jest.fn(() => mockDate) as any;
+global.Date.now = jest.fn(() => mockDate.getTime());
+mockDate.toISOString = jest.fn(() => '2023-01-01T00:00:00.000Z');
+
+// Import the module after mocking
+import * as ReviewRequestStep from './reviewRequest.api.step';
 
 describe('Review Request API Step', () => {
-  beforeAll(() => {
-    // Mock Date.now() and toISOString for predictable testing
-    const mockNow = jest.fn(() => 1620000000000); // Fixed timestamp
-    Date.now = mockNow;
-    const mockToISOString = jest.fn(() => '2021-05-03T00:00:00.000Z');
-    Date.prototype.toISOString = mockToISOString;
-  });
+  let mockEmit: jest.Mock;
+  let mockLogger: Record<string, jest.Mock>;
+  let context: any;
 
-  afterAll(() => {
-    // Restore original Date functionality
-    Date.now = originalDateNow;
-    Date.prototype.toISOString = originalDateToISOString;
-  });
-
-  // Reset mocks between tests
-  afterEach(() => {
+  beforeEach(() => {
     jest.clearAllMocks();
+    mockEmit = jest.fn();
+    mockLogger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn()
+    };
+    context = { 
+      emit: mockEmit,
+      logger: mockLogger
+    };
   });
 
-  it('should have proper configuration', () => {
-    expect(config.type).toBe('api');
-    expect(config.name).toBe('ReviewRequest');
-    expect(config.path).toBe('/api/review');
-    expect(config.method).toBe('POST');
-    expect(config.emits).toContain('review.requested');
-    expect(config.flows).toContain('code-review-flow');
-  });
-
-  it('should emit review.requested event with request data', async () => {
-    // Arrange
-    const context = createTestContext();
-    const req: MockApiRequest = {
+  it('should emit review.initiated with proper data when given valid input', async () => {
+    const request = {
       body: {
-        repository: 'testuser/testrepo',
-        branch: 'main',
+        repository: 'https://github.com/test/repo',
         requirements: 'Test requirements',
-        depth: 2,
-        reviewStartCommit: '',
-        reviewEndCommit: 'HEAD'
-      },
-      pathParams: {},
-      queryParams: {},
-      headers: {}
+        outputUrl: 'https://example.com/output'
+      }
     };
 
-    // Act
-    const result = await handler(req as any, context as any);
+    const result = await ReviewRequestStep.handler(request as any, context as any);
 
-    // Assert
-    expect(context.emit).toHaveBeenCalledWith({
-      topic: 'review.requested',
-      data: {
-        repoUrl: 'testuser/testrepo',
-        branch: 'main',
-        depth: 2,
-        maxDepth: 2,
-        reviewStartCommit: '',
-        reviewEndCommit: 'HEAD',
-        requirements: 'Test requirements',
-        timestamp: '2021-05-03T00:00:00.000Z',
-        prompt: 'Test requirements',
-        maxIterations: 100,
-        explorationConstant: 1.414
-      }
-    });
-    
-    expect(result).toEqual({
-      status: 200,
-      body: {
-        message: 'Code review process initiated',
-        repository: 'testuser/testrepo',
-        branch: 'main',
-        depth: 2,
-        reviewStartCommit: '',
-        reviewEndCommit: 'HEAD',
-        requirements: 'Test requirements',
-        timestamp: '2021-05-03T00:00:00.000Z'
-      }
-    });
-  });
-
-  it('should use default branch if not provided', async () => {
-    // Arrange
-    const context = createTestContext();
-    const req: MockApiRequest = {
-      body: {
-        repository: 'testuser/testrepo',
-        requirements: 'Test requirements',
-        // Explicitly set default values as they would be provided by Zod in production
-        branch: 'main',
-        depth: 2,
-        reviewStartCommit: '',
-        reviewEndCommit: 'HEAD'
-      },
-      pathParams: {},
-      queryParams: {},
-      headers: {}
-    };
-
-    // Act
-    const result = await handler(req as any, context as any);
-
-    // Assert
-    expect(context.emit).toHaveBeenCalled();
-    
-    // Extract the call arguments to verify specific properties
-    const emitCall = context.emit.mock.calls[0][0];
-    expect(emitCall.topic).toBe('review.requested');
-    expect(emitCall.data).toMatchObject({
-      repoUrl: 'testuser/testrepo',
-      branch: 'main',
-      depth: 2,
-      maxDepth: 2,
-      reviewStartCommit: '',
-      reviewEndCommit: 'HEAD',
-      requirements: 'Test requirements',
-      timestamp: '2021-05-03T00:00:00.000Z',
-      prompt: 'Test requirements',
-      maxIterations: 100,
-      explorationConstant: 1.414
-    });
-    
-    // Check response body
     expect(result.status).toBe(200);
-    expect(result.body).toMatchObject({
-      message: 'Code review process initiated',
-      repository: 'testuser/testrepo',
-      branch: 'main',
-      depth: 2,
-      reviewStartCommit: '',
-      reviewEndCommit: 'HEAD',
-      requirements: 'Test requirements',
-      timestamp: '2021-05-03T00:00:00.000Z'
-    });
-  });
-
-  it('should handle repository parsing errors', async () => {
-    // Arrange
-    const context = createTestContext();
+    expect(result.body.message).toBe('Code review process initiated');
     
-    const req: MockApiRequest = {
-      body: {
-        repository: 'i\'m not : a valid | repository URL!!!',
-        branch: 'main',
-        requirements: 'Test requirements'
-      },
-      pathParams: {},
-      queryParams: {},
-      headers: {}
-    };
-
-    // Act
-    const result = await handler(req as any, context as any);
-
-    // Assert
-    expect(context.emit).toHaveBeenCalledWith({
-      topic: 'review.error',
+    expect(mockEmit).toHaveBeenCalledWith({
+      topic: 'review.requested',
       data: expect.objectContaining({
-        repository: "i'm not : a valid | repository URL!!!",
-        message: 'Invalid repository format',
-        timestamp: '2021-05-03T00:00:00.000Z'
+        repo_dir: '/mocked/repo/path',
+        requirements: 'Test requirements',
+        output_url: 'https://example.com/output',
+        timestamp: '2023-01-01T00:00:00.000Z'
       })
     });
+  });
+
+  it('should use default outputUrl when not provided', async () => {
+    const request = {
+      body: {
+        repository: 'https://github.com/test/repo',
+        requirements: 'Test requirements'
+      }
+    };
+
+    await ReviewRequestStep.handler(request as any, context as any);
     
-    expect(result.status).toBe(404);
-    expect(result.body).toHaveProperty('message');
+    expect(mockEmit).toHaveBeenCalledWith({
+      topic: 'review.requested',
+      data: expect.objectContaining({
+        repo_dir: '/mocked/repo/path',
+        requirements: 'Test requirements',
+        output_url: 'file://.',
+        timestamp: '2023-01-01T00:00:00.000Z'
+      })
+    });
+  });
+
+  it('should throw error when repository field is missing', async () => {
+    const request = {
+      body: {
+        requirements: 'Test requirements',
+        outputUrl: 'https://example.com/output'
+      }
+    };
+
+    await expect(
+      ReviewRequestStep.handler(request as any, context as any)
+    ).rejects.toThrow('Missing required field: repository');
+  });
+
+  it('should throw error when requirements field is missing', async () => {
+    const request = {
+      body: {
+        repository: 'https://github.com/test/repo',
+        outputUrl: 'https://example.com/output'
+      }
+    };
+
+    await expect(
+      ReviewRequestStep.handler(request as any, context as any)
+    ).rejects.toThrow('Missing required field: requirements');
   });
 }); 

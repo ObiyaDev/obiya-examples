@@ -8,6 +8,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:skipTs": "TS_NODE_TRANSPILE_ONLY=true jest --no-cache",
     "build": "scripts/setup_python_env.sh && tsc",
     "review": "node scripts/cli.js"
   },

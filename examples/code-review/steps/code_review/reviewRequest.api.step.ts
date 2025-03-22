@@ -12,7 +12,7 @@ const bodySchema = z.object({
   reviewMaxCommits: z.number().nonnegative().optional().default(100).describe('The maximum number of commits to review. Defaults to 100.'),
   reviewEndCommit: z.string().optional().default('HEAD').describe('The commit hash to end the review at. Defaults to the latest commit.'),
   requirements: z.string().min(1).optional().default('').describe('The requirements for the code review. Defaults to an empty string.'),
-  outputUrl: z.string().optional().describe('The URL to save the review file. Defaults to the current directory.')
+  outputUrl: z.string().optional().default('file://.').describe('The URL to save the review file. Defaults to the current directory.')
 });
 
 export const config: ApiRouteConfig = {
@@ -60,7 +60,7 @@ export const handler: StepHandler<typeof config> = async (req, { emit, logger })
   };
 };
 
-const validateOutputUrl = async (outputUrl: string) => {
+export const validateOutputUrl = async (outputUrl: string) => {
   const parsedOutputUrl = new URL(outputUrl);
   switch (parsedOutputUrl.protocol) {
     case 'file:':
@@ -81,7 +81,7 @@ const validateOutputUrl = async (outputUrl: string) => {
   return outputUrl;
 } 
 
-const fetchRepository = (repository: string, branch: string) => {
+export const fetchRepository = (repository: string, branch: string) => {
   const repoUrl = new URL(repository);
   const repoDir = path.join(process.cwd(), '.motia', 'git', repoUrl.pathname);
 
