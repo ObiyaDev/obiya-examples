@@ -12,90 +12,10 @@ from steps.shared.agents import (
     mcts_agent, expansion_agent, code_review_agent,
     system_analysis_agent, reasoning_eval_agent, fallback_agent
 )
-from steps.shared.tools import calculate_ucb, find_node_with_highest_ucb, get_node_depth
 
 # ====================
 # Main Functions
 # ====================
-
-async def select_node(
-    nodes: Dict[str, Node],
-    root_id: str,
-    current_node_id: str,
-    max_iterations: int,
-    current_iteration: int,
-    exploration_constant: float,
-    max_depth: int
-) -> Node:
-    """
-    Selects a node using the UCB1 algorithm for the MCTS tree traversal.
-    """
-    try:
-        # Use the special MCTS agent with tools for better node selection
-        messages = [
-            Message(
-                role="system", 
-                content=f"""
-                Help select the best node for exploration in a Monte Carlo Tree Search.
-                
-                Current state:
-                - Root node: {root_id}
-                - Current node: {current_node_id} 
-                - Iteration: {current_iteration}/{max_iterations}
-                - Exploration constant: {exploration_constant}
-                - Max depth: {max_depth}
-                
-                You have access to tools that can help calculate UCB1 values and find the node with the highest UCB1.
-                """
-            ),
-            Message(
-                role="user", 
-                content=f"Here are the available nodes: {json.dumps({k: v.model_dump() for k, v in nodes.items()}, indent=2)}"
-            )
-        ]
-        
-        response: RunResponse = await mcts_agent.arun(
-            messages=messages,
-            tools=[calculate_ucb, find_node_with_highest_ucb, get_node_depth],
-            response_model=NodeSelectionResponse
-        )
-        
-        selected_node_id = response.content.selected_node_id
-        
-        if selected_node_id not in nodes:
-            raise ValueError(f"Selected node {selected_node_id} not found in nodes")
-            
-        return nodes[selected_node_id]
-        
-    except Exception as e:
-        print(f"Error in select_node: {e}")
-        # Fallback to a simpler algorithm
-        try:
-            # Use random selection with bias toward unexplored nodes
-            current_node = nodes[current_node_id]
-            
-            # If the node has children, select the one with the highest UCB value
-            if current_node.children:
-                child_nodes = [nodes[child_id] for child_id in current_node.children]
-                unexplored = [n for n in child_nodes if n.visits == 0]
-                
-                if unexplored:
-                    return random.choice(unexplored)
-                
-                # Calculate UCB values manually
-                best_node = max(
-                    child_nodes, 
-                    key=lambda n: (n.value/n.visits if n.visits > 0 else float('inf')) + 
-                         exploration_constant * (2 * current_node.visits / n.visits if n.visits > 0 else float('inf'))**0.5
-                )
-                return best_node
-            
-            # If no children, return the current node
-            return current_node
-        except Exception as fallback_error:
-            print(f"Fallback selection failed: {fallback_error}")
-            # Final fallback - just return a random node
-            return nodes[random.choice(list(nodes.keys()))]
 
 async def expand_node(current_node: str) -> NodeExpansion:
     """
