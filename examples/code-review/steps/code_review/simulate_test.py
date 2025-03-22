@@ -3,7 +3,17 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import os
 
-from steps.code_review.simulate import handler, config
+import importlib.util
+spec = importlib.util.spec_from_file_location(
+    name="simulate",
+    location="steps/code_review/simulate.step.py"
+)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+handler = module.handler
+config = module.config
+
 from steps.shared.models import SimulationResult
 
 # Determine if we should use mocks
@@ -77,7 +87,7 @@ def test_config():
 # Tests that require agent mocking
 if should_mock:
     @pytest.mark.asyncio
-    @patch('steps.code_review.simulate.evaluate_reasoning')
+    @patch.object(module, 'evaluate_reasoning')
     async def test_call_evaluate_reasoning(mock_evaluate_reasoning, ctx, sample_input):
         """Test that the handler calls evaluate_reasoning with the correct parameters."""
         # Setup mock
@@ -99,7 +109,7 @@ if should_mock:
         )
 
     @pytest.mark.asyncio
-    @patch('steps.code_review.simulate.evaluate_reasoning')
+    @patch.object(module, 'evaluate_reasoning')
     async def test_emit_simulation_completed(mock_evaluate_reasoning, ctx, sample_input):
         """Test that the handler emits the simulation result."""
         # Setup mock
@@ -129,7 +139,7 @@ if should_mock:
         assert emit_call['data']['maxDepth'] == sample_input['maxDepth']
 
     @pytest.mark.asyncio
-    @patch('steps.code_review.simulate.evaluate_reasoning')
+    @patch.object(module, 'evaluate_reasoning')
     async def test_handle_simulation_error(mock_evaluate_reasoning, ctx, sample_input):
         """Test that errors during simulation are handled properly."""
         # Setup mock to raise an exception

@@ -1,13 +1,14 @@
 // 5. SelectBestMove activity
 import { z } from 'zod';
 import { EventConfig, StepHandler } from 'motia';
-import { nodeSchema } from '../shared/agents/claude';
+import { NodeSchema } from '../shared/models';
 
 // Define the selection mode options
 export type SelectionMode = 'visits' | 'value' | 'value-ratio';
 
+
 const selectBestMoveInputSchema = z.object({
-  nodes: z.record(z.string(), nodeSchema),
+  nodes: z.record(z.string(), NodeSchema),
   rootId: z.string(),
   currentIteration: z.number(),
   maxIterations: z.number(),

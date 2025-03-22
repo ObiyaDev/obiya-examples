@@ -1,12 +1,12 @@
 // 4. Backpropagate activity
 import { z } from 'zod';
 import { EventConfig, StepHandler } from 'motia';
-import { nodeSchema, SimulationResult, simulationResultSchema } from '../shared/agents/claude';
+import { NodeSchema, SimulationResultSchema } from '../shared/models';
 
 const backpropagateInputSchema = z.object({
-  nodes: z.record(z.string(), nodeSchema),
+  nodes: z.record(z.string(), NodeSchema),
   rootId: z.string(),
-  simulationResult: simulationResultSchema,
+  simulationResult: SimulationResultSchema,
   maxIterations: z.number(),
   currentIteration: z.number(),
   explorationConstant: z.number(),

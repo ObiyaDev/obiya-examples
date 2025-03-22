@@ -1,6 +1,18 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from steps.code_review.select_node import handler, config, select_node_ucb1
+import importlib.util
+
+spec = importlib.util.spec_from_file_location(
+    name="select_node",
+    location="steps/code_review/select_node.step.py"
+)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+handler = module.handler
+config = module.config
+select_node_ucb1 = module.select_node_ucb1
+
 from steps.shared.models import Node
 
 @pytest.fixture

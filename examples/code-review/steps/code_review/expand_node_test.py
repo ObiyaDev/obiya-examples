@@ -3,7 +3,17 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
 
-from steps.code_review.expand_node import handler, config
+import importlib.util
+spec = importlib.util.spec_from_file_location(
+    name="expand_node",
+    location="steps/code_review/expand_node.step.py"
+)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+handler = module.handler
+config = module.config
+
 from steps.shared.models import NodeExpansion
 
 # Mock UUIDs for deterministic testing
@@ -92,7 +102,7 @@ def test_config():
     assert 'code-review-flow' in config['flows']
 
 @pytest.mark.asyncio
-@patch('steps.code_review.expand_node.expand_node')
+@patch.object(module, 'expand_node')
 async def test_call_expand_node(mock_expand_node, ctx, sample_input):
     """Test that the handler calls expand_node with the selected node state."""
     # Setup mock
@@ -109,7 +119,7 @@ async def test_call_expand_node(mock_expand_node, ctx, sample_input):
     mock_expand_node.assert_called_with(sample_input['nodes'][sample_input['selectedNodeId']]['state'])
 
 @pytest.mark.asyncio
-@patch('steps.code_review.expand_node.expand_node')
+@patch.object(module, 'expand_node')
 async def test_create_expansion_nodes(mock_expand_node, ctx, sample_input):
     """Test that new nodes are created for each expansion step."""
     # Setup mock
@@ -140,7 +150,7 @@ async def test_create_expansion_nodes(mock_expand_node, ctx, sample_input):
     assert first_expanded_node['state'] == 'Step 1'
 
 @pytest.mark.asyncio
-@patch('steps.code_review.expand_node.expand_node')
+@patch.object(module, 'expand_node')
 async def test_update_children_array(mock_expand_node, ctx, sample_input):
     """Test that the selected node's children array is updated."""
     # Setup mock
@@ -162,7 +172,7 @@ async def test_update_children_array(mock_expand_node, ctx, sample_input):
     assert len(selected_node['children']) == 2
 
 @pytest.mark.asyncio
-@patch('steps.code_review.expand_node.expand_node')
+@patch.object(module, 'expand_node')
 async def test_emit_expanded_nodes(mock_expand_node, ctx, sample_input):
     """Test that the expanded nodes array is emitted in the event data."""
     # Setup mock
@@ -180,7 +190,7 @@ async def test_emit_expanded_nodes(mock_expand_node, ctx, sample_input):
     assert emit_call['data']['expandedNodeIds'] == ['expansion-child-1', 'expansion-child-2']
 
 @pytest.mark.asyncio
-@patch('steps.code_review.expand_node.expand_node')
+@patch.object(module, 'expand_node')
 async def test_handle_expansion_error(mock_expand_node, ctx, sample_input):
     """Test that errors during node expansion are handled properly."""
     # Setup mock to raise an exception
@@ -194,7 +204,7 @@ async def test_handle_expansion_error(mock_expand_node, ctx, sample_input):
     ctx.emit.assert_not_called()
 
 @pytest.mark.asyncio
-@patch('steps.code_review.expand_node.expand_node')
+@patch.object(module, 'expand_node')
 async def test_handle_empty_steps(mock_expand_node, ctx, sample_input):
     """Test that the case when no steps are returned is handled."""
     # Setup mock
@@ -214,7 +224,7 @@ async def test_handle_empty_steps(mock_expand_node, ctx, sample_input):
     ctx.emit.assert_not_called()
 
 @pytest.mark.asyncio
-@patch('steps.code_review.expand_node.expand_node')
+@patch.object(module, 'expand_node')
 async def test_handle_missing_node(mock_expand_node, ctx, sample_input):
     """Test that the case when the selected node does not exist is handled."""
     # Modify input to have a non-existent node ID
