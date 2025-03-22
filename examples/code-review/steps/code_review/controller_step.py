@@ -6,16 +6,16 @@ import json
 from steps.shared.actions import evaluate_commits, Commits, Node, Evaluation
 
 class MCTSControllerInput(BaseModel):
-    prompt: str = Field(..., description="The prompt for code review")
-    repo_url: str = Field(..., description="URL of the repository to review")
-    branch: str = Field(..., description="Branch to review")
+    prompt: str = Field(..., description="The prompt for code review", min_length=1)
+    repo_dir: str = Field(..., description="Directory of the repository to review", min_length=1)
+    branch: str = Field(..., description="Branch to review", min_length=1)
     max_iterations: int = Field(default=100, description="Maximum number of MCTS iterations")
     exploration_constant: float = Field(default=1.414, description="Exploration constant for UCB1")
     max_depth: int = Field(default=10, description="Maximum depth of the MCTS tree")
     review_start_commit: Optional[str] = Field(None, description="Starting commit for review")
     review_end_commit: Optional[str] = Field(None, description="Ending commit for review")
-    requirements: str = Field(..., description="Requirements for the code review")
-    output_path: Optional[str] = Field(None, description="Path to save the review output")
+    requirements: str = Field(..., description="Requirements for the code review", min_length=1)
+    output_url: Optional[str] = Field(None, description="URL to save the review output")
 
 class MCTSControllerState(BaseModel):
     nodes: Dict[str, Node]
@@ -25,13 +25,13 @@ class MCTSControllerState(BaseModel):
     max_iterations: int
     exploration_constant: float
     max_depth: int
-    output_path: Optional[str]
+    output_url: Optional[str]
 
 class ErrorData(BaseModel):
     message: str
     timestamp: str
     repository: str
-    output_path: Optional[str]
+    output_url: Optional[str]
     requirements: str
 
 config = {
@@ -55,7 +55,7 @@ async def handler(req: MCTSControllerInput, context: Any):
     context.logger.info('Analyzing review context', {
         **req.model_dump(),
         'requirements': truncated_requirements,
-        'repo_url': req.repo_url
+        'repo_dir': req.repo_dir
     })
 
     # Store requirements in state for error handling
@@ -63,7 +63,7 @@ async def handler(req: MCTSControllerInput, context: Any):
  
     try:
         context.logger.info('Creating commits object for repository', { 
-            'repo_url': req.repo_url, 
+            'repo_dir': req.repo_dir, 
             'branch': req.branch,
             'review_start_commit': req.review_start_commit,
             'review_end_commit': req.review_end_commit
@@ -76,7 +76,11 @@ async def handler(req: MCTSControllerInput, context: Any):
             'commit_messages': len(commits.messages.split('\n'))
         })
         
-        evaluation = await evaluate_commits(commits, req.requirements)
+        try:
+            evaluation = await evaluate_commits(commits, req.requirements)
+        except Exception as eval_error:
+            context.logger.error(f"Error in evaluate_commits: {str(eval_error)}")
+            raise Exception(f"Evaluation failed: {str(eval_error)}")
 
         # Define a unique root node ID
         root_id = f'root-{int(datetime.now().timestamp())}'
@@ -102,41 +106,32 @@ async def handler(req: MCTSControllerInput, context: Any):
             max_iterations=req.max_iterations,
             exploration_constant=req.exploration_constant,
             max_depth=req.max_depth,
-            output_path=req.output_path
+            output_url=req.output_url
         )
-    
-        if evaluation.score > 0.9 or req.max_iterations == 0:
-            # If the score is already high or no iterations requested, complete immediately
+
+        # If max_iterations is 0 or evaluation score is high, complete immediately
+        if req.max_iterations == 0 or evaluation.score >= 0.9:
             await context.emit({
                 'topic': 'mcts.iterations.completed',
                 'data': state.model_dump()
             })
-            context.logger.info('Context analysis completed without iterations')
-        else:
-            # Start the MCTS process
-            await context.emit({
-                'topic': 'mcts.iteration.started',
-                'data': state.model_dump()
-            })
-            context.logger.info('MCTS process started')
-            
-    except Exception as error:
-        # Create a safe error object without circular references
-        error_data = ErrorData(
-            message=str(error),
-            timestamp=datetime.now().isoformat(),
-            repository=req.repo_url,
-            output_path=req.output_path,
-            requirements=req.requirements
-        )
-        
-        context.logger.error('Error in controller step', {
-            'error': str(error),
-            'type': type(error).__name__,
-            'trace': getattr(error, '__traceback__', None)
+            return
+
+        # Start MCTS process
+        await context.emit({
+            'topic': 'mcts.iteration.started',
+            'data': state.model_dump()
         })
-        
+
+    except Exception as error:
+        context.logger.error(f"Error in MCTS controller: {str(error)}")
         await context.emit({
             'topic': 'review.error',
-            'data': error_data.model_dump()
+            'data': ErrorData(
+                message=str(error),
+                timestamp=datetime.now().isoformat(),
+                repository=req.repo_dir,
+                output_url=req.output_url,
+                requirements=req.requirements
+            ).model_dump()
         }) 

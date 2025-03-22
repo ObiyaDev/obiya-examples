@@ -124,7 +124,7 @@ code-review/
 │   ├── test-review.js    # Test script with mock data
 │   └── run-standalone-review.js  # Standalone analysis script
 ├── steps/
-│   ├── code-review/      # Core MCTS implementation
+│   ├── code_review/      # Core MCTS implementation
 │   │   ├── backPropogate.step.ts
 │   │   ├── controller.step.ts
 │   │   ├── expandNode.step.ts
