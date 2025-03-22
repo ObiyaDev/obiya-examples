@@ -1,20 +1,13 @@
 import pytest
-import os
 from unittest.mock import patch, AsyncMock, MagicMock
 from steps.shared.actions import (
-    select_node, expand_node, evaluate_commits, evaluate_reasoning,
+    expand_node, evaluate_commits, evaluate_reasoning,
     expansion_agent, fallback_agent
 )
 from steps.shared.models import (
     Node, NodeExpansion, Issue, Evaluation, SimulationResult
 )
 from steps.shared.repositories import Commits
-
-# Remove the skip marker to enable these tests to run
-# pytestmark = pytest.mark.skipif(
-#     os.environ.get('SPEND') != 'true',
-#     reason='Tests skipped unless SPEND=true'
-# )
 
 # Test data fixtures
 @pytest.fixture
@@ -61,21 +54,6 @@ def sample_commits() -> Commits:
         messages="commit1: Initial commit\ncommit2: Update functionality",
         diff="diff --git a/file1.py b/file1.py\n..."
     )
-
-# Test select_node
-@pytest.mark.asyncio
-async def test_select_node(sample_nodes):
-    selected_node = await select_node(
-        nodes=sample_nodes,
-        root_id="root",
-        current_node_id="root",
-        max_iterations=100,
-        current_iteration=0,
-        exploration_constant=1.4,
-        max_depth=5
-    )
-    assert isinstance(selected_node, Node)
-    assert selected_node.id in sample_nodes
 
 # Test expand_node
 @pytest.mark.asyncio

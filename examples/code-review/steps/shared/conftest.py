@@ -1,8 +1,7 @@
 import os
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from datetime import datetime
-from steps.code_review.controller_step import MCTSControllerInput
+from steps.code_review.controller import MCTSControllerInput
 from steps.shared.actions import Evaluation, Issue
 
 def pytest_configure(config):

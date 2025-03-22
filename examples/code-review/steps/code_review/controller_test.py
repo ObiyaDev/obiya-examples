@@ -1,10 +1,7 @@
 import pytest
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
-import os
-
-from steps.code_review.controller_step import handler, MCTSControllerInput, MCTSControllerState, ErrorData
-from steps.shared.actions import Node, Evaluation, Issue
+from steps.code_review.controller import handler, MCTSControllerInput
+from steps.shared.actions import Evaluation, Issue
 
 @pytest.fixture
 def mock_context():
@@ -57,8 +54,8 @@ def mock_commits():
 @pytest.mark.asyncio
 async def test_controller_initialization(mock_context, sample_input, mock_evaluation, mock_commits):
     """Test successful initialization of the MCTS controller."""
-    with patch('steps.code_review.controller_step.evaluate_commits') as mock_evaluate, \
-         patch('steps.code_review.controller_step.Commits.create') as mock_create:
+    with patch('steps.code_review.controller.evaluate_commits') as mock_evaluate, \
+         patch('steps.code_review.controller.Commits.create') as mock_create:
 
         # Setup mocks
         mock_create.return_value = mock_commits
@@ -93,8 +90,8 @@ async def test_controller_initialization(mock_context, sample_input, mock_evalua
 @pytest.mark.asyncio
 async def test_high_score_immediate_completion(mock_context, sample_input, mock_commits):
     """Test that high evaluation scores skip iterations."""
-    with patch('steps.code_review.controller_step.evaluate_commits') as mock_evaluate, \
-         patch('steps.code_review.controller_step.Commits.create') as mock_create:
+    with patch('steps.code_review.controller.evaluate_commits') as mock_evaluate, \
+         patch('steps.code_review.controller.Commits.create') as mock_create:
         
         # Setup mock to return high score
         high_score_eval = Evaluation(
@@ -122,8 +119,8 @@ async def test_zero_iterations_immediate_completion(mock_context, sample_input, 
     # Modify input to have zero iterations
     input_zero_iter = sample_input.model_copy(update={'max_iterations': 0})
 
-    with patch('steps.code_review.controller_step.evaluate_commits') as mock_evaluate, \
-         patch('steps.code_review.controller_step.Commits.create') as mock_create:
+    with patch('steps.code_review.controller.evaluate_commits') as mock_evaluate, \
+         patch('steps.code_review.controller.Commits.create') as mock_create:
 
         # Setup mocks with proper async behavior
         mock_create.return_value = mock_commits
@@ -153,7 +150,7 @@ async def test_zero_iterations_immediate_completion(mock_context, sample_input, 
 @pytest.mark.asyncio
 async def test_error_handling(mock_context, sample_input):
     """Test error handling and error event emission."""
-    with patch('steps.code_review.controller_step.Commits.create') as mock_create:
+    with patch('steps.code_review.controller.Commits.create') as mock_create:
         # Setup mock to raise an error
         mock_create.side_effect = Exception("Repository access failed")
 
@@ -176,8 +173,8 @@ async def test_error_handling(mock_context, sample_input):
 @pytest.mark.asyncio
 async def test_evaluation_error_handling(mock_context, sample_input, mock_commits):
     """Test error handling during commit evaluation."""
-    with patch('steps.code_review.controller_step.evaluate_commits') as mock_evaluate, \
-         patch('steps.code_review.controller_step.Commits.create') as mock_create:
+    with patch('steps.code_review.controller.evaluate_commits') as mock_evaluate, \
+         patch('steps.code_review.controller.Commits.create') as mock_create:
 
         # Setup mocks
         mock_create.return_value = mock_commits
@@ -195,8 +192,8 @@ async def test_evaluation_error_handling(mock_context, sample_input, mock_commit
 @pytest.mark.asyncio
 async def test_state_initialization(mock_context, sample_input, mock_evaluation, mock_commits):
     """Test proper initialization of MCTS state."""
-    with patch('steps.code_review.controller_step.Commits.create') as mock_create, \
-         patch('steps.code_review.controller_step.evaluate_commits') as mock_evaluate:
+    with patch('steps.code_review.controller.Commits.create') as mock_create, \
+         patch('steps.code_review.controller.evaluate_commits') as mock_evaluate:
 
         mock_create.return_value = mock_commits
         mock_evaluate.return_value = mock_evaluation
@@ -259,8 +256,8 @@ async def test_logging_truncation(mock_context, sample_input, mock_evaluation):
     long_requirements = "A" * 100  # Long string
     input_with_long_req = sample_input.model_copy(update={'requirements': long_requirements})
 
-    with patch('steps.code_review.controller_step.Commits.create') as mock_create, \
-         patch('steps.code_review.controller_step.evaluate_commits') as mock_evaluate:
+    with patch('steps.code_review.controller.Commits.create') as mock_create, \
+         patch('steps.code_review.controller.evaluate_commits') as mock_evaluate:
         
         # Setup mock commits with proper async behavior
         commits = AsyncMock()
@@ -288,8 +285,8 @@ async def test_logging_truncation(mock_context, sample_input, mock_evaluation):
 @pytest.mark.asyncio
 async def test_commits_creation_logging(mock_context, sample_input, mock_evaluation):
     """Test that repository access and commit loading is properly logged."""
-    with patch('steps.code_review.controller_step.Commits.create') as mock_create, \
-         patch('steps.code_review.controller_step.evaluate_commits') as mock_evaluate:
+    with patch('steps.code_review.controller.Commits.create') as mock_create, \
+         patch('steps.code_review.controller.evaluate_commits') as mock_evaluate:
         
         # Setup mock commits with proper async behavior
         commits = AsyncMock()
