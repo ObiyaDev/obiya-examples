@@ -6,6 +6,8 @@ dist/
 coverage/
 .cursor/
 .bak/
-Review.md
 __pycache__/
 .coverage
+
+Review.md
+ERROR-REPORT.md
