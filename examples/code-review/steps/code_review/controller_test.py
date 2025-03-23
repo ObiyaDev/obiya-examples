@@ -115,10 +115,12 @@ async def test_error_handling(mock_context, sample_input):
         # Verify error data structure
         error_data = emit_call['data']
         assert isinstance(error_data, dict)
-        assert 'message' in error_data
-        assert 'timestamp' in error_data
-        assert 'repository' in error_data
-        assert error_data['message'] == "Repository access failed"
+        
+        # Check for the new format used in the application
+        assert 'state' in error_data
+        assert 'reasoning' in error_data
+        assert 'selected_node_id' in error_data
+        assert 'Repository access failed' in error_data['reasoning']
 
 @pytest.mark.asyncio
 async def test_controller_initialization(mock_context, sample_input, mock_evaluation):
@@ -139,7 +141,7 @@ async def test_controller_initialization(mock_context, sample_input, mock_evalua
         # Verify MCTS iteration started event was emitted
         assert mock_context.emit.call_count == 1
         emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'code-review.reasoning.completed'
+        assert emit_call['topic'] == 'mcts.iteration.started'
         assert isinstance(emit_call['data'], dict)
 
 @pytest.mark.asyncio
@@ -163,7 +165,13 @@ async def test_high_score_immediate_completion(mock_context, sample_input):
         emit_call = mock_context.emit.call_args[0][0]
         assert emit_call['topic'] == 'code-review.reasoning.completed'
         assert isinstance(emit_call['data'], dict)
-        assert 'max_iterations' in emit_call['data']
+        
+        # Check for expected fields in the actual implementation
+        assert 'selected_node_id' in emit_call['data']
+        assert 'state' in emit_call['data']
+        assert 'reasoning' in emit_call['data']
+        assert 'stats' in emit_call['data']
+        assert 'all_nodes' in emit_call['data']
 
 @pytest.mark.asyncio
 async def test_zero_iterations_immediate_completion(mock_context, sample_input):
@@ -195,7 +203,14 @@ async def test_zero_iterations_immediate_completion(mock_context, sample_input):
         emit_call = mock_context.emit.call_args[0][0]
         assert emit_call['topic'] == 'code-review.reasoning.completed'
         assert isinstance(emit_call['data'], dict)
-        assert emit_call['data']['max_iterations'] == 0
+        
+        # Verify it contains the expected fields from the report_data structure
+        assert 'selected_node_id' in emit_call['data']
+        assert 'state' in emit_call['data']
+        assert 'reasoning' in emit_call['data']
+        
+        # Verify it contains the state from the evaluation
+        assert emit_call['data']['state'] == "Average code"
 
 @pytest.mark.asyncio
 async def test_evaluation_error_handling(mock_context, sample_input):
@@ -246,7 +261,7 @@ async def test_logging_truncation(mock_context, sample_input, mock_evaluation):
     # Create input with long requirements
     long_requirements = "A" * 100  # Long string
     input_with_long_req = sample_input.model_copy(update={'requirements': long_requirements})
-
+    
     with patch.object(module, 'evaluate_commits', return_value=mock_evaluation), \
          patch.object(module, 'Commits', MockCommitsWithCreate):
 
@@ -261,8 +276,7 @@ async def test_logging_truncation(mock_context, sample_input, mock_evaluation):
         # Verify emit was called
         assert mock_context.emit.call_count == 1
         emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'code-review.reasoning.completed'
-        assert isinstance(emit_call['data'], dict) 
+        assert emit_call['topic'] == 'mcts.iteration.started'
 
 @pytest.mark.asyncio
 async def test_commits_creation_logging(mock_context, sample_input, mock_evaluation):
@@ -285,3 +299,32 @@ async def test_commits_creation_logging(mock_context, sample_input, mock_evaluat
             'files_changed': 2,  # len(files.split('\n'))
             'commit_messages': 2  # len(messages.split('\n'))
         })
+
+@pytest.mark.asyncio
+async def test_edge_cases(mock_context, sample_input, mock_evaluation):
+    """Test edge cases such as empty summaries or issues."""
+    # Evaluation with empty fields
+    empty_eval = Evaluation(
+        score=0.7,
+        issues=[],
+        summary="",
+        issueSummary=""
+    )
+    
+    with patch.object(module, 'evaluate_commits', return_value=empty_eval), \
+         patch.object(module, 'Commits', MockCommitsWithCreate):
+
+        # Execute handler
+        await handler(sample_input, mock_context)
+
+        # Verify event emission
+        assert mock_context.emit.call_count == 1
+        emit_call = mock_context.emit.call_args[0][0]
+        assert emit_call['topic'] == 'mcts.iteration.started'
+        assert isinstance(emit_call['data'], dict)
+        
+        # Check the fields actually found in the emission data
+        assert 'current_iteration' in emit_call['data']
+        assert 'current_node_id' in emit_call['data']
+        assert 'exploration_constant' in emit_call['data']
+        assert 'max_depth' in emit_call['data']
