@@ -4,13 +4,26 @@ from unittest.mock import AsyncMock, MagicMock
 from steps.shared.actions import Evaluation, Issue
 
 import importlib.util
-spec = importlib.util.spec_from_file_location(
-    name="controller",
-    location="steps/code_review/controller.step.py"
-)
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
-MCTSControllerInput = module.MCTSControllerInput
+import sys
+from pathlib import Path
+
+# Add the code-review directory to the path so we can import the modules
+# Resolve the parent directory of the current file
+parent_dir = Path(__file__).resolve().parent.parent
+
+def load_module(name, path):
+    """Load a module from a file path."""
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+# Import controller module dynamically
+controller_path = parent_dir / "code_review" / "controller.step.py"
+controller = load_module("controller", controller_path)
+
+# Import other modules as needed
+# ...
 
 def pytest_configure(config):
     """Configure pytest with custom markers."""
@@ -25,18 +38,24 @@ def pytest_runtest_setup(item):
 
 @pytest.fixture
 def mock_context():
-    """Fixture for the context object."""
+    """Create a mocked context for testing."""
     context = MagicMock()
     context.logger = MagicMock()
-    context.state = AsyncMock()
+    context.logger.info = MagicMock()
+    context.logger.warn = MagicMock()
+    context.logger.error = MagicMock()
+    context.logger.debug = MagicMock()
     context.emit = AsyncMock()
+    context.state = MagicMock()
+    context.state.get = AsyncMock()
+    context.state.set = AsyncMock()
     context.trace_id = "test-trace-id"
     return context
 
 @pytest.fixture
 def sample_input():
     """Fixture for sample input data."""
-    return MCTSControllerInput(
+    return controller.MCTSControllerInput(
         prompt="Review this code",
         repo_dir="/path/to/repo",
         branch="main",

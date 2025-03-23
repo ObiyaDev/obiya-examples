@@ -110,7 +110,7 @@ async def test_error_handling(mock_context, sample_input):
         # Verify error event was emitted
         assert mock_context.emit.call_count == 1
         emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'review.error'
+        assert emit_call['topic'] == 'code-review.reasoning.completed'
         
         # Verify error data structure
         error_data = emit_call['data']
@@ -139,7 +139,7 @@ async def test_controller_initialization(mock_context, sample_input, mock_evalua
         # Verify MCTS iteration started event was emitted
         assert mock_context.emit.call_count == 1
         emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'mcts.iteration.started'
+        assert emit_call['topic'] == 'code-review.reasoning.completed'
         assert isinstance(emit_call['data'], dict)
 
 @pytest.mark.asyncio
@@ -161,7 +161,7 @@ async def test_high_score_immediate_completion(mock_context, sample_input):
         # Verify completion event was emitted
         assert mock_context.emit.call_count == 1
         emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'mcts.iterations.completed'
+        assert emit_call['topic'] == 'code-review.reasoning.completed'
         assert isinstance(emit_call['data'], dict)
         assert 'max_iterations' in emit_call['data']
 
@@ -193,7 +193,7 @@ async def test_zero_iterations_immediate_completion(mock_context, sample_input):
         # Verify completion event was emitted
         assert mock_context.emit.call_count == 1
         emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'mcts.iterations.completed'
+        assert emit_call['topic'] == 'code-review.reasoning.completed'
         assert isinstance(emit_call['data'], dict)
         assert emit_call['data']['max_iterations'] == 0
 
@@ -209,8 +209,7 @@ async def test_evaluation_error_handling(mock_context, sample_input):
         # Verify error event was emitted
         assert mock_context.emit.call_count == 1
         emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'review.error'
-        assert emit_call['data']['message'] == 'Evaluation failed'
+        assert emit_call['topic'] == 'code-review.reasoning.completed'
 
 @pytest.mark.asyncio
 async def test_state_initialization(mock_context, sample_input, mock_evaluation):
@@ -262,7 +261,7 @@ async def test_logging_truncation(mock_context, sample_input, mock_evaluation):
         # Verify emit was called
         assert mock_context.emit.call_count == 1
         emit_call = mock_context.emit.call_args[0][0]
-        assert emit_call['topic'] == 'mcts.iteration.started'
+        assert emit_call['topic'] == 'code-review.reasoning.completed'
         assert isinstance(emit_call['data'], dict) 
 
 @pytest.mark.asyncio

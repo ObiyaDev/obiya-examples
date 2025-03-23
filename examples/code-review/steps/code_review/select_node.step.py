@@ -3,11 +3,14 @@ import math
 import datetime
 import json
 from steps.shared.models import Node
+from shared.tools import calculate_ucb
+import asyncio
+import random
 
 config = {
     'type': 'event',
     'name': 'SelectNode',
-    'description': 'Selects a node in the MCTS tree using UCB1 formula',
+    'description': 'Selects a node for expansion based on UCB1 score',
     'subscribes': ['mcts.iteration.started'],
     'emits': ['mcts.node.selected', 'code-review.reasoning.completed', 'review.error'],
     'flows': ['code-review-flow']
@@ -37,95 +40,86 @@ def convert_to_json_serializable(obj):
             # If not serializable, convert to string
             return str(obj)
 
-async def select_node_ucb1(
-    nodes: Dict[str, Node],
-    root_id: str,
-    current_node_id: str,
-    exploration_constant: float,
-    max_depth: int,
-    depth: int = 0,
-    output_url: str = None
-) -> Node:
+def select_node_ucb1(nodes: Dict[str, Any], 
+                     current_node_id: str, 
+                     exploration_constant: float,
+                     max_depth: int,
+                     explored_depth: int = 0) -> str:
     """
-    Selects a node using the UCB1 formula, which balances exploration and exploitation
-    UCB1 = (node.value / node.visits) + explorationConstant * sqrt(ln(parentVisits) / node.visits)
-    """
-    # Starting from the current node
-    if current_node_id not in nodes:
-        raise ValueError(f"Node with ID {current_node_id} not found in nodes dictionary")
+    Select a node to explore using the UCB1 algorithm, which balances
+    exploration and exploitation in the MCTS tree.
+    
+    If a node has unexplored children (visits=0), we prioritize exploring those.
+    Otherwise, we select the child with the highest UCB1 score.
+    
+    Args:
+        nodes: Dictionary of all nodes
+        current_node_id: ID of the current node
+        exploration_constant: Exploration constant for UCB1
+        max_depth: Maximum depth to explore
+        explored_depth: Current depth in the exploration
         
+    Returns:
+        The ID of the selected node
+    """
     current_node = nodes[current_node_id]
     
-    # Handle node based on dictionary or object access
+    # Safely get children attribute/key from node (dict or object)
     if isinstance(current_node, dict):
-        # Dictionary-based access
         children = current_node.get('children', [])
-        visits = current_node.get('visits', 0)
+        is_terminal = current_node.get('isTerminal', False)
     else:
-        # Object-based access
         children = getattr(current_node, 'children', [])
-        visits = getattr(current_node, 'visits', 0)
+        is_terminal = getattr(current_node, 'isTerminal', False)
     
-    # If we reached a leaf node or maximum depth, return it
-    if not children or depth >= max_depth:
-        return current_node
+    # If node is a leaf node (has no children) or reached max depth, return it
+    if not children or explored_depth >= max_depth:
+        return current_node_id
     
-    # Check if there are any unexplored children
+    # Check if the node has terminal state
+    if is_terminal:
+        return current_node_id
+    
+    # Check if any children have 0 visits (unexplored)
+    unexplored_children = []
+    for child_id in children:
+        if child_id in nodes:
+            child_node = nodes[child_id]
+            
+            # Get visits safely from dict or object
+            if isinstance(child_node, dict):
+                visits = child_node.get('visits', 0)
+            else:
+                visits = getattr(child_node, 'visits', 0)
+                
+            if visits == 0:
+                unexplored_children.append(child_id)
+    
+    # Prioritize exploring unexplored nodes
+    if unexplored_children:
+        return random.choice(unexplored_children)
+    
+    # No unexplored children, use UCB1 to select
+    best_score = float('-inf')
+    best_child_id = None
+    
     for child_id in children:
         if child_id not in nodes:
             continue
         
         child_node = nodes[child_id]
-        child_visits = child_node.get('visits', 0) if isinstance(child_node, dict) else getattr(child_node, 'visits', 0)
+        ucb1_score = calculate_ucb(child_node, current_node, exploration_constant)
         
-        if child_visits == 0:
-            # Always choose unexplored nodes first
-            return nodes[child_id]
+        if ucb1_score > best_score:
+            best_score = ucb1_score
+            best_child_id = child_id
     
-    # If all children have been explored, calculate UCB1 for each child
-    best_score = float('-inf')
-    best_node_id = ''
+    # If we found a best child, recurse
+    if best_child_id:
+        return select_node_ucb1(nodes, best_child_id, exploration_constant, max_depth, explored_depth + 1)
     
-    for child_id in children:
-        if child_id not in nodes:
-            continue
-            
-        child = nodes[child_id]
-        
-        # Handle object or dict access
-        if isinstance(child, dict):
-            child_visits = child.get('visits', 0)
-            child_value = child.get('value', 0)
-        else:
-            child_visits = getattr(child, 'visits', 0)
-            child_value = getattr(child, 'value', 0)
-        
-        # Ensure child_visits is at least 1 to avoid division by zero
-        if child_visits < 1:
-            child_visits = 1
-            
-        # UCB1 formula components
-        exploitation = child_value / child_visits
-        
-        # Ensure current_node visits is at least 1
-        current_visits = max(visits, 1)
-        
-        exploration = exploration_constant * math.sqrt(
-            math.log(current_visits) / child_visits
-        )
-        score = exploitation + exploration
-        
-        if score > best_score:
-            best_score = score
-            best_node_id = child_id
-    
-    # If we found a best child, continue traversing
-    if best_node_id and best_node_id in nodes:
-        # Recursively select from the best child node
-        return await select_node_ucb1(nodes, root_id, best_node_id, exploration_constant, max_depth, depth + 1)
-    
-    # Fallback to current node if no children are available
-    return current_node
+    # If no valid children were found, return current node
+    return current_node_id
 
 async def handler(input_data: Any, ctx):
     """Handler for the SelectNode step"""
@@ -230,13 +224,7 @@ async def handler(input_data: Any, ctx):
         # Get the node to expand using UCB1 selection
         try:
             ctx.logger.info('Starting node selection with UCB1')
-            selected_node = await select_node_ucb1(
-                nodes,
-                root_id,
-                current_node_id,
-                exploration_constant,
-                max_depth
-            )
+            selected_node_id = select_node_ucb1(nodes, current_node_id, exploration_constant, max_depth)
             
             ctx.logger.info('Successfully selected node')
             
@@ -300,12 +288,12 @@ async def handler(input_data: Any, ctx):
                     })
                     
                     # Use ID property appropriately based on type
-                    if not final_node_id and selected_node:
+                    if not final_node_id and selected_node_id:
                         try:
-                            if isinstance(selected_node, dict):
-                                final_node_id = selected_node.get('id', current_node_id)
+                            if isinstance(selected_node_id, dict):
+                                final_node_id = selected_node_id.get('id', current_node_id)
                             else:
-                                final_node_id = getattr(selected_node, 'id', current_node_id)
+                                final_node_id = getattr(selected_node_id, 'id', current_node_id)
                             ctx.logger.info('Using selected node ID as fallback', {
                                 'final_node_id': final_node_id
                             })
@@ -323,11 +311,11 @@ async def handler(input_data: Any, ctx):
                     })
                     # Fall back to selected node
                     try:
-                        if selected_node:
-                            if isinstance(selected_node, dict):
-                                final_node_id = selected_node.get('id', current_node_id)
+                        if selected_node_id:
+                            if isinstance(selected_node_id, dict):
+                                final_node_id = selected_node_id.get('id', current_node_id)
                             else:
-                                final_node_id = getattr(selected_node, 'id', current_node_id)
+                                final_node_id = getattr(selected_node_id, 'id', current_node_id)
                         else:
                             final_node_id = current_node_id
                     except Exception as fallback_error:
@@ -340,11 +328,11 @@ async def handler(input_data: Any, ctx):
                 return
                 
             # Get selected node ID based on object or dict
-            if selected_node:
-                if isinstance(selected_node, dict):
-                    selected_id = selected_node.get('id', current_node_id)
+            if selected_node_id:
+                if isinstance(selected_node_id, dict):
+                    selected_id = selected_node_id.get('id', current_node_id)
                 else:
-                    selected_id = getattr(selected_node, 'id', current_node_id)
+                    selected_id = getattr(selected_node_id, 'id', current_node_id)
             else:
                 selected_id = current_node_id
             

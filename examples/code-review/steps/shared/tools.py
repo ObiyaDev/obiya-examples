@@ -1,5 +1,6 @@
 from typing import Dict, Any
 from agno.tools import tool
+import math
 
 # ====================
 # Tool Definitions
@@ -7,30 +8,43 @@ from agno.tools import tool
 
 @tool("calculate_ucb")
 def calculate_ucb(
-    node_id: str, 
-    visits: int, 
-    value: float, 
-    parent_visits: int, 
+    node: Any,
+    parent_node: Any,
     exploration_constant: float
 ) -> float:
     """
     Calculate the UCB1 (Upper Confidence Bound) value for a node.
     
     Args:
-        node_id: The ID of the node
-        visits: Number of visits to this node
-        value: Current value of this node
-        parent_visits: Number of visits to the parent node
+        node: The node to calculate UCB for
+        parent_node: The parent node
         exploration_constant: The exploration constant for UCB1
         
     Returns:
         The UCB1 value for the node
     """
+    # Handle both dictionary and SimpleNamespace/object instances
+    if isinstance(node, dict):
+        visits = node.get('visits', 0)
+        value = node.get('value', 0)
+    else:
+        visits = getattr(node, 'visits', 0)
+        value = getattr(node, 'value', 0)
+    
+    if isinstance(parent_node, dict):
+        parent_visits = parent_node.get('visits', 0)
+    else:
+        parent_visits = getattr(parent_node, 'visits', 0)
+    
     if visits == 0:
         return float('inf')  # Prioritize unexplored nodes
     
+    # Ensure we don't divide by zero
+    visits = max(1, visits)
+    parent_visits = max(1, parent_visits)
+    
     exploitation = value / visits
-    exploration = exploration_constant * (2 * parent_visits / visits) ** 0.5
+    exploration = exploration_constant * math.sqrt(math.log(parent_visits) / visits)
     
     return exploitation + exploration
 
@@ -52,27 +66,31 @@ def find_node_with_highest_ucb(
         The ID of the node with highest UCB1 value
     """
     parent_node = nodes[parent_id]
-    if not parent_node.children:
+    
+    # Handle both dictionary and object access for children
+    if isinstance(parent_node, dict):
+        children = parent_node.get('children', [])
+    else:
+        children = getattr(parent_node, 'children', [])
+    
+    if not children:
         return parent_id
     
     max_ucb = -float('inf')
     best_node_id = None
     
-    for child_id in parent_node.children:
+    for child_id in children:
+        if child_id not in nodes:
+            continue
+        
         child = nodes[child_id]
-        ucb = calculate_ucb(
-            child_id, 
-            child.visits, 
-            child.value, 
-            parent_node.visits,
-            exploration_constant
-        )
+        ucb = calculate_ucb(child, parent_node, exploration_constant)
         
         if ucb > max_ucb:
             max_ucb = ucb
             best_node_id = child_id
     
-    return best_node_id or parent_node.children[0]
+    return best_node_id or (children[0] if children else parent_id)
 
 @tool("get_node_depth")
 def get_node_depth(nodes: Dict[str, Any], node_id: str) -> int:
@@ -89,8 +107,18 @@ def get_node_depth(nodes: Dict[str, Any], node_id: str) -> int:
     depth = 0
     current_id = node_id
     
-    while nodes[current_id].parent is not None:
+    while current_id in nodes:
+        node = nodes[current_id]
+        # Handle both dictionary and object access for parent
+        if isinstance(node, dict):
+            parent = node.get('parent')
+        else:
+            parent = getattr(node, 'parent', None)
+            
+        if parent is None:
+            break
+            
         depth += 1
-        current_id = nodes[current_id].parent
+        current_id = parent
     
     return depth 
