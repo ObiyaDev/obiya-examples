@@ -259,7 +259,7 @@ flowchart TD
     // Add node definition - handle potential missing fields
     const nodeVisits = node.visits !== undefined ? node.visits : 0;
     const nodeValue = node.value !== undefined ? node.value.toFixed(2) : "0.00";
-    const nodeLabel = `${nodeId}[${isSelected ? '💡 ' : ''}Node ${nodeId.substring(0, 4)}... (v:${nodeVisits}, val:${nodeValue})]`;
+    const nodeLabel = `${nodeId}[${isSelected ? '💡 ' : ''}Node ${nodeId.substring(0, 4)}... v:${nodeVisits}, val:${nodeValue}]`;
     visualization += `    ${nodeLabel}\n`;
 
     // Process parent relationship

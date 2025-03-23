@@ -2,81 +2,93 @@
 
 ## CLI Usage
 
-The Code Review Agent can be run in three different ways:
+During development, the agent will use mock data for its LLM responses unless you set the environment variable `SPEND=true` in your environment. You must also provide a `.env` file for the API keys with the following:
+
+```sh
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-...
+OPENROUTER_API_KEY=sk-...
+```
+
+The agent server must be running before you can run the code review.
 
 ```bash
-npm run dev             # Start Motia server in one terminal
-npm run review          # Run the code review in another terminal
+SPEND=true npm run dev  # Start Motia server with LLM spending enabled
+npm run review          # Run the code review process
 ```
 
-All commands will output a Review.md file in the project directory with a comprehensive code analysis.
+The `review` command will initiate a code review analysis of the current repository and generate a `Review.md` file containing the findings. In this version, the agent performs a simple MCTS loop to evaluate the best approach for evaluating the code, and generates a report illustrating its reasoning.
 
-NOTE: this version has disabled cycles for Claude until I can implement a cheaper model. The recursive expansions can easily eat $5 of Claude credits per report (or exponentially higher with greater depths and larger codebases).
-
-As a result, you'll see a false positive error when you run "npm run review":
-```
-Waiting for review to be generated at: examples/code-review/Review.md
-
-Detected errors in the review process:
-- Claude response is not valid JSON: Unexpected end of JSON input
-- Check file: /tmp/claude-prompts/output-7d83113c-821c-40cd-9455-5cbdc78a2175.json
-
-Review process encountered errors. See logs for details.
-The workflow might still be running in the background.
-Check examples/code-review/Review.md later to see if it completes.
-```
-This can be ignored. If you watch the Motia server terminal, you'll see the review process running until it outputs the Review.md file. The Review.md file will contain some artifacts that make it obvious the expansion was cut short, but will provide a one-shot review.
-
+This version focuses on a rewrite of agent code into python. The next version will re-introduce analytical code review expansion steps, generating a report with useful advice and analysis (e.g. a report card on how well the target commits it reviews satisfy the requirements it was given, and how to improve).
 
 ### Command-line Options
 
-The standalone review script accepts the following options:
+The CLI interface supports various configuration options:
 
 ```bash
-npm run standalone-review -- --requirements "Your custom requirements" --outputPath "./custom-path.md"
+npm run review -- --repository="/path/to/repo" --requirements="Focus on security and performance issues"
+
+npm run review -- --repository="https://github.com/myco/myrepo.git" --branch="issue-100" --requirements="Fix logging issues when running with the --verbose flag"
 ```
 
-This limited demonstration checks the last 14 commits of the git history of the current directory against the requirements.
+Available options:
+- `--repository`: Path or URL to the git repository (default: current directory)
+- `--branch`: Git branch to review (default: current branch)
+- `--requirements`: Custom requirements for the code review
+- `--depth`: The depth of the review analysis (default: 2)
+- `--reviewStartCommit`: Starting commit for review range
+- `--reviewEndCommit`: Ending commit for review range (default: HEAD)
+- `--reviewMaxCommits`: Maximum number of commits to review (default: 14)
+- `--maxIterations`: Maximum iterations for the MCTS process (default: 6)
+- `--outputPath`: Custom path for the review output
 
-## Workflow Visualization
+## Testing
 
-![MCTS Workflow](doc/screenshot.png)
+The code review agent can be tested using the `npm test` command. This will run the tests for both the Python and TypeScript components.
+
+## REST API
+
+The Code Review Agent can also be triggered via a RESTful API endpoint:
+
+```bash
+curl -X POST http://localhost:3000/api/review \
+  -H "Content-Type: application/json" \
+  -d '{
+    "repository": "/path/to/repo",
+    "branch": "main",
+    "requirements": "Focus on security issues",
+    "depth": 2,
+    "maxIterations": 10
+  }'
+```
 
 ## Project Description
 
-This project implements a Code Review flow to address the poor performance of Claude Code and other LLMs in real world code review scenarios. [Research suggests](doc/reasoning-models.pdf) Claude's lack of branched reasoning may be partially to blame, and outlines potential ways to enhance these capabilities. We implement a "monte carlo tree search"-based reasoning model as described in [this paper](doc/MCTS.pdf) to explore various thinking styles with human feedback, fast semantic search provided by [Probe](https://github.com/buger/probe) to help manage context through recursive iterations, and output an implementation plan for resolving the code review comments. The output plan should be sufficient context for an AI Implementation Agent to commit the changes to the codebase.
+This project implements a Code Review flow to enhance code analysis through a branched reasoning approach. Research suggests traditional LLMs lack sufficient branched reasoning capabilities, so we implement a "Monte Carlo Tree Search" (MCTS) based reasoning model to explore various thinking styles. This is combined with semantic search powered by [Probe](https://github.com/buger/probe) for efficient context management through recursive iterations.
 
-**Use cases:** Pre-reviewing code before submission to team, refactoring code before beginning new work.
+**Use cases:** Pre-reviewing code before team submission, refactoring code before beginning new work.
 
 ## Implementation Overview
 
-Our implementation follows the Monte Carlo Tree Search algorithm to enable more comprehensive and thoughtful code reviews:
+Our implementation follows the Monte Carlo Tree Search algorithm:
 
 1. **Controller**: Initializes the MCTS tree and manages the overall workflow
-2. **Selection**: Uses UCB1 algorithm to balance exploration and exploitation when selecting nodes to expand
+2. **Selection**: Uses UCB1 algorithm to balance exploration and exploitation when selecting nodes
 3. **Expansion**: Generates potential reasoning paths using LLM-generated suggestions
 4. **Simulation**: Evaluates the potential paths for quality and relevance
 5. **Backpropagation**: Updates node statistics based on simulation results
 6. **Best Path Selection**: Chooses the most promising reasoning path based on node visits and values
 7. **Report Generation**: Creates comprehensive markdown reports with Mermaid diagrams
 
-The system is built using Motia, an event-driven workflow framework, which allows for a modular, loosely-coupled architecture.
+The system is built using Motia, an event-driven workflow framework, enabling a modular, loosely-coupled architecture with a hybrid approach using both Python and TypeScript.
 
-## Major Features and Improvements
-
-- **Memory Management**: Implemented 1MB size limits for git diffs to prevent excessive memory usage
-- **Claude Integration**: Added flexible mocking capabilities for Claude API calls to enable testing
-- **Event Chaining**: Built a complete event-driven workflow with proper error handling
-- **Modular Architecture**: Separated all MCTS phases into independent, testable steps
-- **Visualization**: Generated comprehensive markdown reports with Mermaid diagrams
-- **CLI Interface**: Created multiple interfaces for running the code review process
-- **Test Coverage**: Added integration and unit tests for all components
 
 ### Step Flow
+
 ```mermaid
 flowchart TD
     A[Initialize MCTS Context] --> B[Start Iteration]
-    B --> C[Selection: Find Leaf Node]
+    B --> C[Selection: Find Leaf Node using UCB1]
     C --> D[Expansion: Add Child Nodes]
     D --> E[Simulation: Evaluate Path]
     E --> F[Backpropagation: Update Statistics]
@@ -85,33 +97,8 @@ flowchart TD
     G -->|Yes| H[Select Best Move]
     H --> I[Generate Report]
     
-    subgraph "Selection Phase"
-    C --> C1[Calculate UCB for Each Child]
-    C1 --> C2[Choose Node with Highest UCB]
-    C2 --> C3{Has Children?}
-    C3 -->|Yes| C1
-    C3 -->|No| D
-    end
-    
-    subgraph "Expansion Phase"
-    D --> D1[Query LLM for Possible Next Steps]
-    D1 --> D2[Create Child Nodes]
-    D2 --> D3[Add Children to Parent]
-    end
-    
-    subgraph "Simulation Phase"
-    E --> E1[Select Random Child]
-    E1 --> E2[Query LLM to Evaluate Path]
-    E2 --> E3[Extract Value & Check Terminal]
-    end
-    
-    subgraph "Backpropagation Phase"
-    F --> F1[Update Node Visits]
-    F1 --> F2[Update Node Value]
-    F2 --> F3[Move to Parent Node]
-    F3 --> F4{Is Root?}
-    F4 -->|No| F1
-    F4 -->|Yes| G
+    subgraph "Error Handling"
+    J[Error Handler] -.-> I
     end
 ```
 
@@ -119,60 +106,40 @@ flowchart TD
 
 ```
 code-review/
-├── scripts/              # CLI Scripts
-│   ├── cli-review.js     # Motia event-based script
-│   ├── test-review.js    # Test script with mock data
-│   └── run-standalone-review.js  # Standalone analysis script
+├── scripts/                # CLI Scripts
+│   ├── cli.js              # Enhanced CLI interface
+│   └── setup_python_env.sh # Python environment setup
 ├── steps/
-│   ├── code_review/      # Core MCTS implementation
-│   │   ├── backPropogate.step.ts
-│   │   ├── controller.step.ts
-│   │   ├── expandNode.step.ts
-│   │   ├── markdownReport.step.ts
-│   │   ├── reviewRequest.api.step.ts
-│   │   ├── selectBestMove.step.ts
-│   │   ├── selectNode.step.ts
-│   │   └── simulate.step.ts
-│   └── shared/           # Shared utilities and agents
-│       ├── agents/       # Claude and other LLM integration
-│       └── utils/        # Repository handling and utilities
-├── doc/                  # Documentation and resources
-├── jest.config.js
-├── package.json
-├── README.md
-└── tsconfig.json
+│   ├── code_review/        # Core MCTS implementation
+│   │   ├── controller.step.py        # Python implementation of controller
+│   │   ├── expand_node.step.py       # Python implementation of expansion
+│   │   ├── select_node.step.py       # Python implementation of selection
+│   │   ├── simulate.step.py          # Python implementation of simulation
+│   │   ├── backPropogate.step.ts     # TypeScript implementation of backpropagation
+│   │   ├── selectBestMove.step.ts    # TypeScript implementation of best move selection
+│   │   ├── errorHandler.step.ts      # Error handling and recovery
+│   │   ├── markdownReport.step.ts    # Report generation
+│   │   └── reviewRequest.api.step.ts # Authoritative API endpoint
+│   └── shared/              # Shared utilities and agents
+│       ├── agents.py        # LLM integration
+│       ├── actions.py       # Common actions
+│       ├── repositories.py  # Repository management
+│       ├── tools.py         # Utility tools
+│       ├── models.py        # Python data models
+│       ├── models.ts        # TypeScript data models
+│       └── utils/           # Additional utilities
+│           ├── repository.ts # Repository handling
+│           └── markdown.ts   # Markdown processing
+├── doc/                     # Documentation and resources
+└── README.md
 ```
 
-## Potential Future Improvements
+## Future Roadmap
 
-1. External (webhook & API based) reflection step with timeout enforcement
-2. Optional human-in-the-loop reflection step (full automation)
-3. Create a higher order composition that uses this agent along with an implementation agent to handle gitops and automate the developer PR workflow
-4. Implement persistent (in-repo) memory for learning and documenting coding standards enforced during review phase, but not yet documented in codebase
-5. Optimize context management and compression
-6. Improve and optimize coroutines and prompts in reasoning steps
-7. Integrate with GitHub/GitLab APIs for PR-based reviews
-8. Add support for more granular code analysis (function/class level)
-
-## Fallback Mechanism
-
-The code review system includes robust fallback mechanisms for when Claude is unavailable:
-
-1. **Direct CLI Detection**: The API step checks if Claude CLI is installed and generates a fallback review if not
-2. **JSON Parsing Robustness**: The Claude JSON parser handles various response formats and malformed JSON
-3. **Error Handler Fallbacks**: The error handler step generates contextual fallbacks based on the nature of errors
-4. **Standalone Fallback**: A dedicated script (`generate-fallback-review.js`) can be run independently:
-
-```bash
-# Manual fallback generation
-node generate-fallback-review.js [output-path] "Review requirements"
-
-# Using npm script
-npm run fallback-review -- "Review requirements" [output-path]
-```
-
-The fallback review includes:
-- Basic code structure analysis
-- Security review (if security-related requirements are detected)
-- Recommendations for common issues
-- Clear indication that it's a fallback report
+1. Human-in-the-loop reflection with timeout enforcement
+2. Higher-order composition with implementation agents for end-to-end automation
+3. Persistent in-repo memory for learning coding standards
+4. Integration with GitHub/GitLab APIs for PR-based reviews
+5. Support for more granular code analysis at function/class level
+6. Advanced report visualization with interactive components
+7. Configurable reasoning strategies beyond MCTS

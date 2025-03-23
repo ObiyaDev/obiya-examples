@@ -157,6 +157,14 @@ async def handler(input_data: Any, ctx):
                 'keys_count': len(input_dict.keys()) if hasattr(input_dict, 'keys') else 'No keys method',
                 'has_nodes': 'nodes' in input_dict
             })
+        
+        # Check if this is a backpropagation completion event
+        # We should only handle the 'mcts.iteration.started' event
+        # Let selectBestMove handle the final report for 'mcts.iterations.completed'
+        event_topic = input_dict.get('topic', '')
+        if event_topic and event_topic != 'mcts.iteration.started':
+            ctx.logger.info(f'Not handling event: {event_topic}. Let specialized handlers manage it.')
+            return
             
         # Extract required fields with fallbacks - ensure nodes is always a dict
         nodes = {}
@@ -234,18 +242,101 @@ async def handler(input_data: Any, ctx):
             
             # Continue with node selection only if we haven't reached maximum iterations
             if current_iteration >= max_iterations:
-                ctx.logger.info('Maximum iterations reached, skipping to report generation')
+                ctx.logger.info('Maximum iterations reached, skipping to report generation', {
+                    'current_iteration': current_iteration,
+                    'max_iterations': max_iterations
+                })
                 
-                # Use ID property appropriately based on type
-                if selected_node:
-                    if isinstance(selected_node, dict):
-                        selected_id = selected_node.get('id', current_node_id)
-                    else:
-                        selected_id = getattr(selected_node, 'id', current_node_id)
-                else:
-                    selected_id = current_node_id
+                # Find the best node based on value/visits ratio for the final report
+                try:
+                    best_node_id = None
+                    best_value_ratio = -1
+                    
+                    # Start from root and examine all nodes
+                    node_count = 0
+                    for node_id, node in nodes.items():
+                        node_count += 1
+                        try:
+                            # Skip nodes with no visits
+                            if isinstance(node, dict):
+                                node_visits = node.get('visits', 0)
+                                if node_visits == 0:
+                                    continue
+                                    
+                                node_value = node.get('value', 0)
+                            else:
+                                node_visits = getattr(node, 'visits', 0)
+                                if node_visits == 0:
+                                    continue
+                                    
+                                node_value = getattr(node, 'value', 0)
+                                
+                            value_ratio = node_value / max(node_visits, 1)  # Avoid division by zero
+                            
+                            if value_ratio > best_value_ratio:
+                                best_value_ratio = value_ratio
+                                best_node_id = node_id
+                        except Exception as node_error:
+                            ctx.logger.error(f'Error processing node {node_id}', {
+                                'error': str(node_error),
+                                'node_type': type(node).__name__
+                            })
+                            # Continue with other nodes
+                            continue
+                    
+                    ctx.logger.info('Examined nodes for best value ratio', {
+                        'total_nodes': node_count,
+                        'best_node_id': best_node_id,
+                        'best_value_ratio': best_value_ratio
+                    })
+                    
+                    # If we found a best node, use it for the report
+                    # Otherwise, fall back to the selected node (which might be based on UCB1)
+                    final_node_id = best_node_id if best_node_id else current_node_id
+                    
+                    ctx.logger.info('Selected best node for final report', {
+                        'final_node_id': final_node_id,
+                        'value_ratio': best_value_ratio if best_node_id else 'N/A'
+                    })
+                    
+                    # Use ID property appropriately based on type
+                    if not final_node_id and selected_node:
+                        try:
+                            if isinstance(selected_node, dict):
+                                final_node_id = selected_node.get('id', current_node_id)
+                            else:
+                                final_node_id = getattr(selected_node, 'id', current_node_id)
+                            ctx.logger.info('Using selected node ID as fallback', {
+                                'final_node_id': final_node_id
+                            })
+                        except Exception as id_error:
+                            ctx.logger.error('Error getting ID from selected node', {
+                                'error': str(id_error)
+                            })
+                            final_node_id = current_node_id
+                except Exception as best_node_error:
+                    ctx.logger.error('Error finding best node', {
+                        'error': str(best_node_error),
+                        'error_type': type(best_node_error).__name__,
+                        'nodes_type': type(nodes).__name__,
+                        'nodes_count': len(nodes) if hasattr(nodes, '__len__') else 'unknown'
+                    })
+                    # Fall back to selected node
+                    try:
+                        if selected_node:
+                            if isinstance(selected_node, dict):
+                                final_node_id = selected_node.get('id', current_node_id)
+                            else:
+                                final_node_id = getattr(selected_node, 'id', current_node_id)
+                        else:
+                            final_node_id = current_node_id
+                    except Exception as fallback_error:
+                        ctx.logger.error('Error getting fallback node ID', {
+                            'error': str(fallback_error)
+                        })
+                        final_node_id = str(current_node_id) if current_node_id else 'root-node'
                 
-                await generate_final_report(ctx, input_dict, selected_id)
+                await generate_final_report(ctx, input_dict, final_node_id)
                 return
                 
             # Get selected node ID based on object or dict
@@ -357,25 +448,120 @@ async def generate_final_report(ctx, input_dict, selected_node_id):
         # Get nodes and other relevant data
         nodes = input_dict.get('nodes', {})
         
+        # Log more extensive information to help diagnose issues
+        ctx.logger.info('Generating final report with nodes', {
+            'nodes_count': len(nodes) if isinstance(nodes, dict) else 'Not a dict',
+            'selected_node_id': selected_node_id,
+            'selected_node_in_nodes': selected_node_id in nodes if isinstance(nodes, dict) else False
+        })
+        
         state = "No state available"
         
         if selected_node_id in nodes:
-            selected_node = nodes[selected_node_id]
-            if isinstance(selected_node, dict):
-                state = selected_node.get('state', "No state available")
-            else:
-                state = getattr(selected_node, 'state', "No state available")
+            try:
+                selected_node = nodes[selected_node_id]
+                if isinstance(selected_node, dict):
+                    if 'state' in selected_node:
+                        state = selected_node.get('state', "No state available")
+                    else:
+                        ctx.logger.warn('Selected node has no state field', {'node_id': selected_node_id})
+                        # Try other relevant fields that might contain useful information
+                        if 'value' in selected_node:
+                            state = f"Node value: {selected_node.get('value')}"
+                elif hasattr(selected_node, 'state'):
+                    state = getattr(selected_node, 'state', "No state available")
+                else:
+                    ctx.logger.warn('Selected node has no state attribute', {'node_id': selected_node_id})
+                    # Try to get a meaningful alternative
+                    if hasattr(selected_node, 'value'):
+                        state = f"Node value: {getattr(selected_node, 'value')}"
+                
+                # If state is None or empty, try to get at least some information from the node
+                if not state:
+                    ctx.logger.warn('State is empty, constructing alternative', {'node_id': selected_node_id})
+                    
+                    # Get other node attributes as fallback
+                    state_parts = []
+                    
+                    if isinstance(selected_node, dict):
+                        # Try to get visits and value
+                        visits = selected_node.get('visits', 0)
+                        value = selected_node.get('value', 0)
+                        state_parts.append(f"Node statistics - visits: {visits}, value: {value}")
+                        
+                        # Try to get children info
+                        children = selected_node.get('children', [])
+                        state_parts.append(f"Node has {len(children)} children")
+                    else:
+                        # Try to get attributes
+                        attr_dict = vars(selected_node) if hasattr(selected_node, '__dict__') else {}
+                        state_parts.append(f"Node has attributes: {', '.join(attr_dict.keys())}")
+                    
+                    state = "\n".join(state_parts) or "No state information available"
+            except Exception as node_error:
+                ctx.logger.error('Error extracting state from selected node', {
+                    'error': str(node_error),
+                    'node_id': selected_node_id
+                })
+                state = f"Error extracting state: {str(node_error)}"
         else:
-            state = "Selected node not found in node map."
+            ctx.logger.warn('Selected node not found in nodes', {
+                'selected_node_id': selected_node_id,
+                'available_nodes': list(nodes.keys())[:5] if hasattr(nodes, 'keys') and len(nodes) > 0 else 'No nodes available'
+            })
+            
+            # If selected node is missing, try to use the root node or any other node
+            try:
+                root_id = input_dict.get('root_id')
+                if root_id and root_id in nodes:
+                    ctx.logger.info('Using root node state as fallback', {'root_id': root_id})
+                    
+                    root_node = nodes[root_id]
+                    if isinstance(root_node, dict):
+                        state = root_node.get('state', "Root node (no state available)")
+                    else:
+                        state = getattr(root_node, 'state', "Root node (no state available)")
+                elif nodes and len(nodes) > 0:
+                    # Use any node in the collection as a last resort
+                    random_id = next(iter(nodes.keys()))
+                    random_node = nodes[random_id]
+                    ctx.logger.info('Using random node state as fallback', {'random_id': random_id})
+                    
+                    if isinstance(random_node, dict):
+                        state = random_node.get('state', "Random node (no state available)")
+                    else:
+                        state = getattr(random_node, 'state', "Random node (no state available)")
+            except Exception as fallback_error:
+                ctx.logger.error('Error using fallback node for state', {
+                    'error': str(fallback_error)
+                })
+                state = "No state available. Failed to retrieve from any node."
         
         # Convert any non-serializable objects
-        serializable_nodes = convert_to_json_serializable(nodes)
+        try:
+            serializable_nodes = convert_to_json_serializable(nodes)
+            ctx.logger.info('Successfully converted nodes to serializable format')
+        except Exception as convert_error:
+            ctx.logger.error('Error converting nodes to serializable format', {'error': str(convert_error)})
+            # Create a simplified version with just the essential nodes
+            serializable_nodes = {}
+            # Include at least the selected node and root
+            root_id = input_dict.get('root_id')
+            if selected_node_id in nodes:
+                serializable_nodes[selected_node_id] = {'id': selected_node_id, 'state': state}
+            if root_id and root_id in nodes and root_id != selected_node_id:
+                root_node = nodes[root_id]
+                if isinstance(root_node, dict):
+                    root_state = root_node.get('state', 'Root node')
+                else:
+                    root_state = getattr(root_node, 'state', 'Root node')
+                serializable_nodes[root_id] = {'id': root_id, 'state': root_state}
         
         # Prepare report data
         report_data = {
             'selected_node_id': selected_node_id,
             'state': state,
-            'reasoning': f"MCTS completed after reaching maximum iterations. Selected final node {selected_node_id}",
+            'reasoning': f"Code review analysis completed after {input_dict.get('current_iteration', 0)} iterations. Selected best reasoning path.",
             'stats': {
                 'visits': 0,
                 'value': 0,
@@ -416,17 +602,63 @@ async def generate_final_report(ctx, input_dict, selected_node_id):
                     'total_visits': total_visits,
                     'children_count': len(children)
                 }
+                
+                ctx.logger.info('Successfully calculated stats for report', {
+                    'visits': visits,
+                    'value': value,
+                    'total_visits': total_visits
+                })
+            else:
+                ctx.logger.warn('Could not find selected node to calculate stats')
         except Exception as stats_error:
             ctx.logger.warn('Error calculating stats', {'error': str(stats_error)})
         
         # Log report data
-        ctx.logger.info('Generating final report', {'report_type': 'final', 'selected_node_id': selected_node_id})
+        ctx.logger.info('Prepared final report data', {
+            'report_type': 'final',
+            'selected_node_id': selected_node_id,
+            'state_length': len(state) if state else 0
+        })
         
         # Emit event to generate the report
-        await ctx.emit({
-            'topic': 'code-review.reasoning.completed',
-            'data': report_data
-        })
+        try:
+            await ctx.emit({
+                'topic': 'code-review.reasoning.completed',
+                'data': report_data
+            })
+            ctx.logger.info('Successfully emitted final report data')
+        except Exception as emit_error:
+            ctx.logger.error('Error emitting final report data', {'error': str(emit_error)})
+            # As a last resort, try to emit a much simpler report
+            simple_report = {
+                'selected_node_id': selected_node_id,
+                'state': state,
+                'reasoning': 'Code review analysis completed.',
+                'output_url': input_dict.get('output_url', 'file://Review.md'),
+                'requirements': input_dict.get('requirements', 'No requirements specified'),
+                'repository': input_dict.get('repository', 'Unknown repository')
+            }
+            await ctx.emit({
+                'topic': 'code-review.reasoning.completed',
+                'data': simple_report
+            })
     except Exception as report_error:
         ctx.logger.error('Failed to generate final report', {'error': str(report_error)})
-        await generate_error_report(ctx, input_dict) 
+        # Try to provide a very basic fallback that works
+        try:
+            simple_report = {
+                'selected_node_id': selected_node_id if selected_node_id else 'root',
+                'state': 'Code review completed with limited information available.',
+                'reasoning': f'The review process completed but encountered an error generating the final report: {str(report_error)}',
+                'output_url': input_dict.get('output_url', 'file://Review.md'),
+                'requirements': input_dict.get('requirements', 'No requirements specified'),
+                'repository': input_dict.get('repository', 'Unknown repository'),
+                'all_nodes': {}
+            }
+            await ctx.emit({
+                'topic': 'code-review.reasoning.completed',
+                'data': simple_report
+            })
+        except Exception:
+            # Last resort
+            await generate_error_report(ctx, input_dict) 
