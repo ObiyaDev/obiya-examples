@@ -1,0 +1,54 @@
+{
+  "default": {
+    "steps/api.step.ts": {
+      "x": 0,
+      "y": 0
+    },
+    "steps/one.step.ts": {
+      "x": 18,
+      "y": 236
+    },
+    "steps/two.step.ts": {
+      "x": 8,
+      "y": 412
+    }
+  },
+  "research": {
+    "steps/analyze-content.step.ts": {
+      "x": -181.67680078275114,
+      "y": -59.4130546547546
+    },
+    "steps/compile-report.step.ts": {
+      "x": -624.9945305476524,
+      "y": 108.06844349003528
+    },
+    "steps/extract-content.step.ts": {
+      "x": 18.343964233520012,
+      "y": 206.3089273229421
+    },
+    "steps/follow-up-research.step.ts": {
+      "x": -392.5271644543303,
+      "y": 297.1831779099625
+    },
+    "steps/generate-queries.step.ts": {
+      "x": 565.9134557935613,
+      "y": 202.5170526463974
+    },
+    "steps/report-api.step.ts": {
+      "x": 277.99357414977885,
+      "y": -183.43116254806148
+    },
+    "steps/research-api.step.ts": {
+      "x": 617.2619376336042,
+      "y": -183.68970344677325
+    },
+    "steps/search-web.step.ts": {
+      "x": 329.2240134476238,
+      "y": 520.7589339059788
+    },
+    "steps/status-api.step.ts": {
+      "x": 995.7925724861036,
+      "y": -191.9039851945507
+    }
+  }
+}
