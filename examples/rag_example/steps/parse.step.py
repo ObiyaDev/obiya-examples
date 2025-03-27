@@ -12,7 +12,9 @@ config = {
 }
 
 async def handler(req, ctx):
-    input_url = req.body.url
+    input_url = req.body['url']
+
+    ctx.logger.info("Received URL: {}".format(input_url))
     script_path = pathlib.Path().parent / "src" / "parse.py"
     
     try:
@@ -22,7 +24,7 @@ async def handler(req, ctx):
         ctx.logger.info(f"Error parsing website text: {e}")
     
     await ctx.emit({
-        'type': 'parse.complete',
+        'topic': 'parse.complete',
         'data': {'message': 'Parsing completed'}
     })
     

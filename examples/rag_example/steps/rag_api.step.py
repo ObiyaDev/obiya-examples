@@ -18,8 +18,8 @@ config = {
     }
 
 async def handler(req, ctx):
-    query = req.body.query
-    
+    query = req.body['query']
+    ctx.logger.info("Received query: {}".format(query))
     try:
         result = rag_reponse(query)
         message = "RAG response was provided to the user query : {}".format(query)
@@ -28,7 +28,7 @@ async def handler(req, ctx):
         ctx.logger.info("Error responding to user query")
     
     await ctx.emit({
-        'type':'rag.completed',
+        'topic':'rag.completed',
         'data':{'message':'rag response provided'}
         })
     

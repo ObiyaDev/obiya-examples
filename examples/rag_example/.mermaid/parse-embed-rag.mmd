@@ -1,0 +1,14 @@
+flowchart TD
+    classDef apiStyle fill:#f96,stroke:#333,stroke-width:2px,color:#fff
+    classDef eventStyle fill:#69f,stroke:#333,stroke-width:2px,color:#fff
+    classDef cronStyle fill:#9c6,stroke:#333,stroke-width:2px,color:#fff
+    classDef noopStyle fill:#3f3a50,stroke:#333,stroke-width:2px,color:#fff
+    steps_chunk_step_py["⚡ Chunk & Save"]:::eventStyle
+    steps_embed_step_py["⚡ Embed & Save"]:::eventStyle
+    steps_index_step_py["⚡ Index & Save"]:::eventStyle
+    steps_parse_step_py["🌐 Parser API"]:::apiStyle
+    steps_rag_api_step_py["🌐 Rag API"]:::apiStyle
+    steps_chunk_step_py -->|chunk.complete| steps_embed_step_py
+    steps_chunk_step_py -->|chunk.complete| steps_index_step_py
+    steps_embed_step_py -->|embed.complete| steps_index_step_py
+    steps_parse_step_py -->|parse.complete| steps_chunk_step_py
