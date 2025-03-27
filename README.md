@@ -17,7 +17,7 @@ Motia is a modern agent development platform that enables you to:
 
 A powerful research assistant that performs comprehensive web research on any topic or question, providing in-depth analysis and reports.
 
-![Finance Agent](examples/ai-deep-research-agent/docs/deep-research.png)
+![Finance Agent](examples/ai-deep-research-agent/docs/deep-research1.png)
 
 **Key Features:**
 - Deep Web Research: Searches the web, extracts content, and synthesizes findings
