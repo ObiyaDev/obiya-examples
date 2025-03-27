@@ -115,6 +115,23 @@ An agent that generates and evaluates AI images with feedback loops and quality 
 
 [View Example →](examples/vision-example)
 
+### AI Deep Research Agent
+
+A powerful research assistant that performs comprehensive web research on any topic or question, providing in-depth analysis and reports.
+
+![Finance Agent](examples/ai-deep-research-agent/docs/deep-research.png)
+
+
+**Key Features:**
+- Deep Web Research: Searches the web, extracts content, and synthesizes findings
+- Iterative Research Process: Supports multiple research depths for comprehensive exploration
+- API Endpoints: REST API for initiating research and retrieving reports
+- Parallel Processing: Efficiently processes search results and content extraction
+
+**Technologies:** TypeScript, OpenAI, Firecrawl API
+
+[View Example →](examples/ai-deep-research-agent)
+
 ## 🚀 Getting Started
 
 Each example includes its own README with detailed setup instructions. Generally, you'll need:
