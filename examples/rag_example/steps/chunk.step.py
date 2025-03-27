@@ -32,7 +32,7 @@ async def handler(req, ctx):
         ctx.logger.error(f"Error chunking parsed website data: {e}")
     
     await ctx.emit({
-        'type': 'chunk.complete',
+        'topic': 'chunk.complete',
         'data': {'message': 'chunking completed'}
     })
     return

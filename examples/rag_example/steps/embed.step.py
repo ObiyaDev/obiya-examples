@@ -20,7 +20,7 @@ async def handler(req, ctx):
         ctx.logger.info(f"Error embedding chunked text: {e}")
     
     await ctx.emit({
-        'type': 'embed.complete',
+        'topic': 'embed.complete',
         'data': {'message': 'embedding completed'}
     })
     return
