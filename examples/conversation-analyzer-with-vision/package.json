@@ -15,29 +15,29 @@
     "motia"
   ],
   "dependencies": {
-    "@motiadev/core": "0.1.0-beta.3",
-    "@motiadev/workbench": "0.1.0-beta.3",
-    "motia": "0.1.0-beta.3",
-    "openai": "^4.87.3",
+    "@motiadev/core": "0.1.0-beta.15",
+    "@motiadev/workbench": "0.1.0-beta.15",
+    "motia": "0.1.0-beta.15",
+    "openai": "^4.90.0",
     "react": "^19.0.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@types/jest": "^29.5.12",
-    "@types/node": "^22.13.10",
-    "@types/react": "^18.3.18",
-    "@typescript-eslint/eslint-plugin": "^8.26.1",
-    "@typescript-eslint/parser": "^8.26.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.14",
+    "@types/react": "^19.0.12",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
     "dotenv": "^16.4.7",
-    "eslint": "^9.22.0",
+    "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-prettier": "^5.2.5",
     "jest": "^29.7.0",
     "jest-environment-node": "^29.7.0",
     "prettier": "^3.5.3",
-    "ts-jest": "^29.1.2",
+    "ts-jest": "^29.3.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.2"
   }
 }
