@@ -1,0 +1,51 @@
+{
+  "default": {},
+  "resume-analysis": {
+    "steps/api-steps/trigger-resume-analysis.step.ts": {
+      "x": 0,
+      "y": 0
+    },
+    "steps/event-steps/analyze-resume.step.ts": {
+      "x": 26.5,
+      "y": 204
+    },
+    "steps/event-steps/match-positions.step.ts": {
+      "x": 24.5,
+      "y": 380
+    },
+    "steps/event-steps/generate-summary.step.ts": {
+      "x": 16,
+      "y": 556
+    }
+  },
+  "rag-workflow": {
+    "steps/api-steps/process-pdfs.step.ts": {
+      "x": 0,
+      "y": 0
+    },
+    "steps/api-steps/query-rag.step.ts": {
+      "x": 655.2918192098077,
+      "y": 2.4081930274456838
+    },
+    "steps/event-steps/load-weaviate.step.ts": {
+      "x": 320.030678585767,
+      "y": 431.2047413030638
+    },
+    "steps/event-steps/process-pdfs.step.py": {
+      "x": 34.50000000000003,
+      "y": 202.75718015665797
+    },
+    "steps/api-steps/trigger-pdf-processing.step.ts": {
+      "x": -96.56887191558423,
+      "y": 3.2109240365942426
+    },
+    "steps/event-steps/process-pdf.step.py": {
+      "x": 326.8149917789989,
+      "y": 192.3713494507399
+    },
+    "steps/event-steps/read-pdfs.step.ts": {
+      "x": -51.298623621459086,
+      "y": 184.0324017441776
+    }
+  }
+}

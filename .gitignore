@@ -17,6 +17,12 @@ pnpm-lock.yaml
 
 # Motia generated
 .motia/
+.mermaid/
+
+# IDE files
+.cursorignore
+.cursor/
+*.code-workspace
 
 # Python cache files
 */__pycache__/*
