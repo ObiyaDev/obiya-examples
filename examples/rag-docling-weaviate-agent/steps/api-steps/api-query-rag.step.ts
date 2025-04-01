@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 export const config: ApiRouteConfig = {
   type: 'api',
-  name: 'query-rag',
+  name: 'api-query-rag',
   path: '/api/rag/query',
   method: 'POST',
   emits: ['rag.query.completed'],

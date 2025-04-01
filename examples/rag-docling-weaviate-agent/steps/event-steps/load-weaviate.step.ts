@@ -1,4 +1,4 @@
-import weaviate, { WeaviateClient, vectorizer, generative } from 'weaviate-client';
+import weaviate from 'weaviate-client';
 import { DocumentChunkType } from '../../types';
 import { z } from 'zod';
 import { EventConfig, StepHandler, FlowContext } from 'motia';
@@ -16,42 +16,6 @@ export const config: EventConfig = {
   input: InputSchema,
 };
 
-const WEAVIATE_SCHEMA = {
-  name: 'Books',
-  description: 'Books',
-  vectorizers: vectorizer.text2VecOpenAI({
-    model: 'text-embedding-3-small',
-    sourceProperties: ['text'],
-  }),
-  generative: generative.openAI({
-    model: 'gpt-4o-mini',
-    maxTokens: 4096,
-  }),
-  properties: [
-    {
-      name: 'text',
-      dataType: 'text' as const,
-    },
-    {
-      name: 'title',
-      dataType: 'text' as const,
-    },
-    {
-      name: 'source',
-      dataType: 'text' as const,
-    },
-    {
-      name: 'page',
-      dataType: 'number' as const,
-    },
-  ],
-};
-
-const collectionExists = async (client: WeaviateClient) => client.collections.get('Books').exists();
-const deleteCollection = async (client: WeaviateClient) => client.collections.delete('Books');
-const createCollection = async (client: WeaviateClient) =>
-  client.collections.create(WEAVIATE_SCHEMA);
-
 export const handler: StepHandler<typeof config> = async (
   input: z.infer<typeof InputSchema>,
   { emit, logger, state }: FlowContext
@@ -63,9 +27,9 @@ export const handler: StepHandler<typeof config> = async (
   }
 
   logger.info('Retrieved chunks from state', { count: chunks.length });
-  logger.info('Initializing Weaviate client');
 
   // Initialize Weaviate client
+  logger.info('Initializing Weaviate client');
   const client = await weaviate.connectToWeaviateCloud(process.env.WEAVIATE_URL!, {
     authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY!),
     headers: {
@@ -75,13 +39,6 @@ export const handler: StepHandler<typeof config> = async (
   });
 
   try {
-    if (await collectionExists(client)) {
-      logger.info('Collection "Books" already exists.');
-      await deleteCollection(client);
-    }
-
-    await createCollection(client);
-
     // Process chunks in batches
     const batchSize = 100;
     for (let i = 0; i < chunks.length; i += batchSize) {

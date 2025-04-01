@@ -3,10 +3,10 @@ import { z } from 'zod';
 
 export const config: ApiRouteConfig = {
   type: 'api',
-  name: 'trigger-pdf-processing',
+  name: 'api-process-pdfs',
   path: '/api/rag/process-pdfs',
   method: 'POST',
-  emits: [{ topic: 'rag.read.pdfs', label: 'Start reading PDFs' }],
+  emits: [{ topic: 'rag.read.pdfs' }],
   flows: ['rag-workflow'],
   bodySchema: z.object({
     folderPath: z.string(),

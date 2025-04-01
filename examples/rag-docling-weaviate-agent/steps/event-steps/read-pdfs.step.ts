@@ -12,7 +12,7 @@ export const config: EventConfig = {
   name: 'read-pdfs',
   flows: ['rag-workflow'],
   subscribes: ['rag.read.pdfs'],
-  emits: [{ topic: 'rag.process.pdf', label: 'Start processing each PDF' }],
+  emits: [{ topic: 'rag.process.pdfs', label: 'Start processing PDFs' }],
   input: InputSchema,
 };
 
@@ -29,19 +29,29 @@ export const handler: StepHandler<typeof config> = async (
 
   logger.info(`Found ${pdfFiles.length} PDF files`);
 
-  // Process all PDF files in parallel
-  await Promise.all(
+  const filesInfo = await Promise.all(
     pdfFiles.map(async (pdfFile) => {
       const filePath = join(folderPath, pdfFile);
-
-      // Emit an event for each PDF
-      await emit({
-        topic: 'rag.process.pdf',
-        data: {
-          filePath,
-          fileName: pdfFile,
-        },
-      });
+      return {
+        filePath,
+        fileName: pdfFile,
+      };
     })
   );
+
+  // Process PDF files in parallel
+  /*await Promise.all(
+    filesInfo.map(async (file) => {
+      await emit({
+        topic: 'rag.process.pdf',
+        data: { files: [file] },
+      });
+    })
+  );*/
+
+  // Process PDF files sequentially
+  await emit({
+    topic: 'rag.process.pdfs',
+    data: { files: filesInfo },
+  });
 };

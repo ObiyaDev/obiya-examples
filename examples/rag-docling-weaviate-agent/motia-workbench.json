@@ -28,12 +28,12 @@
       "y": 2.4081930274456838
     },
     "steps/event-steps/load-weaviate.step.ts": {
-      "x": 320.030678585767,
-      "y": 431.2047413030638
+      "x": 305.0937068114117,
+      "y": 493.58856459595967
     },
     "steps/event-steps/process-pdfs.step.py": {
-      "x": 34.50000000000003,
-      "y": 202.75718015665797
+      "x": -98.46956788260296,
+      "y": 480.82815788552796
     },
     "steps/api-steps/trigger-pdf-processing.step.ts": {
       "x": -96.56887191558423,
@@ -44,8 +44,20 @@
       "y": 192.3713494507399
     },
     "steps/event-steps/read-pdfs.step.ts": {
-      "x": -51.298623621459086,
-      "y": 184.0324017441776
+      "x": -85.02320890063677,
+      "y": 205.36836385957574
+    },
+    "steps/api-steps/api-process-pdfs.step.ts": {
+      "x": 71.25,
+      "y": 0
+    },
+    "steps/api-steps/api-query-rag.step.ts": {
+      "x": 622.5285180150489,
+      "y": 2.064770527296588
+    },
+    "steps/event-steps/init-weaviate.step.ts": {
+      "x": 297.3269559307097,
+      "y": 203.99999999999997
     }
   }
 }

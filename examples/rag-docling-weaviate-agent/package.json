@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "source .venv/bin/activate && motia dev",
     "dev:debug": "source .venv/bin/activate && motia dev --debug",
+    "dev:init": "python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt",
+    "build": "source .venv/bin/activate && motia build",
     "generate:config": "motia get-config --output ./",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
