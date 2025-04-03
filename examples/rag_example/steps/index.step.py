@@ -21,7 +21,7 @@ async def handler(req, ctx):
         ctx.logger.info(f"Error indexing embedded text: {e}")
     
     await ctx.emit({
-        'type': 'index.complete',
+        'topic': 'index.complete',
         'data': {'message': 'indexing completed'}
     })
     return
