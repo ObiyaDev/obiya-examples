@@ -18,6 +18,7 @@ pnpm-lock.yaml
 # Motia generated
 .motia/
 .mermaid/
+dist/
 
 # IDE files
 .cursorignore

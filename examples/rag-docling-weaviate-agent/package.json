@@ -1,13 +1,14 @@
 {
-  "name": "pdf-rag-agent",
+  "name": "rag-docling-weaviate-agent",
   "version": "1.0.0",
-  "description": "PDF RAG Agent using Motia and Weaviate",
+  "description": "RAG Agent to process and vectorize PDF documents using Motia, Docling and Weaviate",
   "main": "index.js",
   "scripts": {
-    "dev": "source .venv/bin/activate && motia dev",
-    "dev:debug": "source .venv/bin/activate && motia dev --debug",
-    "dev:init": "python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt",
-    "build": "source .venv/bin/activate && motia build",
+    "prepare": "python3 -m venv python_modules && source python_modules/bin/activate && pip install -r requirements.txt",
+    "dev": "source python_modules/bin/activate && motia dev",
+    "dev:debug": "source python_modules/bin/activate && motia dev --debug",
+    "build": "source python_modules/bin/activate && motia build",
+    "clean": "rm -rf dist .motia .mermaid node_modules python_modules",
     "generate:config": "motia get-config --output ./",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
@@ -21,10 +22,10 @@
     "pdf",
     "weaviate"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Filipe Leandro <github:ffleandro>",
+  "license": "MIT",
   "dependencies": {
-    "motia": "0.1.0-beta.22",
+    "motia": "0.1.0-beta.25",
     "openai": "^4.91.0",
     "weaviate-client": "^3.4.2",
     "zod": "^3.24.2"

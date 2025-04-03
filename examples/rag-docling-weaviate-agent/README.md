@@ -1,89 +1,92 @@
-# Recruiter Agent
+# PDF RAG Agent using Motia and Weaviate
 
-An AI-powered recruiter agent built with Motia that analyzes resumes and matches them against open positions.
+An LLM chat-like question-answering system built with Motia Framework that uses RAG (Retrieval-Augmented Generation) to provide accurate answers from PDF documents.
+The system leverages Docling to parse and intelligently chunk PDF documents, Weaviate as a vector database to store vectorized chunks, and OpenAI for embeddings and text generation.
 
 ## Features
 
-- PDF resume parsing and analysis
-- AI-powered skill and experience extraction
-- Automatic matching against open positions
-- Detailed candidate summaries and recommendations
-- Position match percentages and analysis
+- PDF document processing and chunking
+- Built with Motia Framework for event-driven workflows
+- Vector storage using Weaviate
+- Docling for PDF parsing and hybrid chunking
+- Question answering using RAG pattern
+- OpenAI integration for embeddings and text generation
+
+## Prerequisites
+
+- Node.js 18+
+- Python 3.x
+- Weaviate instance
+- OpenAI API key
 
 ## Setup
 
-1. Install dependencies:
-
+1. Initialize the Node.js and Python dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
-2. Set up environment variables:
-   Create a `.env` file with:
-
+1. Create a `.env` file in the root directory with the following variables:
+```env
+OPENAI_API_KEY=your_openai_api_key
+WEAVIATE_URL=your_weaviate_instance_url
+WEAVIATE_API_KEY=your_weaviate_api_key
 ```
-OPENAI_API_KEY=your_api_key_here
-```
-
-3. Start the development server:
-
-```bash
-npm run dev
-```
-
-## Usage
-
-1. Send a POST request to `/api/analyze-resume` with:
-
-```json
-{
-  "resume": "<PDF file as Buffer>",
-  "candidateName": "John Doe",
-  "candidateEmail": "john@example.com"
-}
-```
-
-2. The agent will:
-
-   - Parse and analyze the resume
-   - Match against open positions
-   - Generate a comprehensive summary
-
-3. The final summary includes:
-   - Candidate overview
-   - Key strengths
-   - Areas of concern
-   - Position matches with percentages
-   - Recommendations
-
-## Open Positions
-
-Sample open positions are stored in `data/open-positions.json`. Modify this file to add or update positions.
-
-## Flow Steps
-
-1. `trigger-resume-analysis`: API endpoint for resume upload
-2. `analyze-resume`: AI analysis of resume content
-3. `match-positions`: Position matching and scoring
-4. `generate-summary`: Final summary generation
 
 ## Development
 
-- Build: `npm run build`
-- Test: `npm test`
-- Debug: Add console logs using `ctx.logger.info()`
+Start the development server:
+```bash
+pnpm dev
+```
+
+For debug mode:
+```bash
+pnpm dev:debug
+```
+
+## Building
+
+Build the project:
+```bash
+pnpm build
+```
+
+## Testing
+
+Run tests:
+```bash
+pnpm test
+```
+
+## Code Quality
+
+Lint code:
+```bash
+pnpm lint
+```
+
+Format code:
+```bash
+pnpm format
+```
 
 ## Project Structure
 
-- `steps/` - Contains all workflow steps
-  - `api-trigger.step.ts` - Entry point for the workflow
-  - `pdf-processing.step.ts` - Processes PDF resumes
-  - `resume-analysis.step.ts` - Analyzes resumes using OpenAI
-  - `position-matching.step.ts` - Matches resumes with positions
-- `types/` - TypeScript type definitions
-- `data/` - Sample data and configurations
-- `.motia/` - Workflow configuration
+## How it Works
+
+1. **Document Processing**: The system processes the PDF using Docling and uses Hybrind Chunking to split it into chunks
+1. **Vector Storage**: Text chunks are embedded using Open AI and stored in Weaviate
+1. **Query Processing**: User queries are processed using RAG:
+   - Query is embedded and similar chunks are retrieved from Weaviate
+   - Retrieved context and query are sent to OpenAI for answer generation
+   - Response is returned to the user
+
+## API Endpoints
+
+- `POST /api/rag/process-pdfs`: Start processing PDF documents
+- `POST /api/rag/query`: Submit questions about the documents
 
 ## License
 
-ISC
+MIT
