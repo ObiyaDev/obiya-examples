@@ -1,4 +1,4 @@
-# PDF RAG Agent using Motia and Weaviate
+# PDF RAG Agent using Motia, Docling and Weaviate
 
 An LLM chat-like question-answering system built with Motia Framework that uses RAG (Retrieval-Augmented Generation) to provide accurate answers from PDF documents.
 The system leverages Docling to parse and intelligently chunk PDF documents, Weaviate as a vector database to store vectorized chunks, and OpenAI for embeddings and text generation.
@@ -72,6 +72,29 @@ pnpm format
 ```
 
 ## Project Structure
+```
+src/
+├── steps/
+│   ├── api-steps/          # API endpoints for PDF processing and querying
+│   │   ├── api-process-pdfs.step.ts
+│   │   └── api-query-rag.step.ts
+│   └── event-steps/        # Background processing steps
+│       ├── init-weaviate.step.ts
+│       ├── load-weaviate.step.ts
+│       └── process-pdfs.step.py
+│       └── read-pdfs.step.tsion
+├── types/               # TypeScript type definitions
+```
+
+The project follows a modular structure aligned with Motia Framework conventions:
+
+- `steps/`: Contains all workflow steps
+  - `api-steps/`: HTTP endpoints for PDF processing and querying
+  - `event-steps/`: Background processing steps for chunking, embedding, and answer generation
+- `services/`: Core business logic modules
+- `types/`: TypeScript type definitions
+- `utils/`: Helper functions and utilities
+- `middlewares/`: API request/response middleware
 
 ## How it Works
 
