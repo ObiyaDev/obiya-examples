@@ -82,7 +82,7 @@ src/
 │       ├── init-weaviate.step.ts
 │       ├── load-weaviate.step.ts
 │       └── process-pdfs.step.py
-│       └── read-pdfs.step.tsion
+│       └── read-pdfs.step.ts
 ├── types/               # TypeScript type definitions
 ```
 
