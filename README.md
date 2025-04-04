@@ -131,6 +131,26 @@ An agent that generates and evaluates AI images with feedback loops and quality 
 
 [View Example →](examples/vision-example)
 
+### PDF RAG Agent using Motia, Docling and Weaviate
+
+An LLM chat-like question-answering system with RAG (Retrieval-Augmented Generation) to provide accurate answers from PDF documents.
+The system leverages Docling to parse and intelligently chunk PDF documents, Weaviate as a vector database to store vectorized chunks, and OpenAI for embeddings and text generation.
+
+<div style="display: flex; gap: 10px;">
+  <img src="examples/rag-docling-weaviate-agent/docs/images/workbench.png" alt="PDF RAG Docling Weaviate Agent" />
+</div>
+
+**Key Features:**
+- PDF document processing and chunking
+- Vector storage using Weaviate
+- Docling for PDF parsing and hybrid chunking
+- OpenAI integration for embeddings and text generation
+- Question answering using RAG pattern
+
+**Technologies:** TypeScript, Python, Docling, Weaviate, OpenAI
+
+[View Example →](examples/rag-docling-weaviate-agent)
+
 ## 🚀 Getting Started
 
 Each example includes its own README with detailed setup instructions. Generally, you'll need:
