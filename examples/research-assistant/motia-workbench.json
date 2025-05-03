@@ -1,0 +1,124 @@
+{
+  "research-assistant": {
+    "steps/analyzePaper.step.ts": {
+      "x": 52.311819172113275,
+      "y": 297.35130718954247
+    },
+    "steps/buildKnowledgeGraph.step.ts": {
+      "x": 590.5329520697168,
+      "y": 731.7527233115467
+    },
+    "steps/extractConcepts.step.ts": {
+      "x": 8.203703703703724,
+      "y": 635.023148148148
+    },
+    "steps/extractText.step.ts": {
+      "x": 606.271517597365,
+      "y": 282.70845324372505
+    },
+    "steps/generateSummary.step.ts": {
+      "x": 357.56944444444446,
+      "y": 534.0925925925926
+    },
+    "steps/queryConcepts.step.ts": {
+      "x": 119.71221729668675,
+      "y": -200.49893543692343
+    },
+    "steps/uploadPaper.step.ts": {
+      "x": 363.38126323596174,
+      "y": -221.57201139606258
+    },
+    "steps/analyzePaperWithGemini.step.ts": {
+      "x": 1409.4504357298476,
+      "y": 353.91639433551205
+    },
+    "steps/extractConceptsWithGemini.step.ts": {
+      "x": 803.6574074074073,
+      "y": 512.3148148148148
+    },
+    "steps/finalRenderedUI.step.ts": {
+      "x": 991.7362147978961,
+      "y": -191.0713497192927
+    },
+    "steps/generateSummaryWithGemini.step.ts": {
+      "x": 1163.1944444444443,
+      "y": 624.199074074074
+    },
+    "steps/queryPaper.step.ts": {
+      "x": 612.2012087389335,
+      "y": -246.87344664840174
+    },
+    "steps/serveUI.step.ts": {
+      "x": 713.7278644267357,
+      "y": -174.9244750951271
+    },
+    "steps/analyzeBenchmarks.step.ts": {
+      "x": 6.371820401541157,
+      "y": 96.83366522003512
+    },
+    "steps/analyzeCoreConcepts.step.ts": {
+      "x": 327.760348583878,
+      "y": 171.9384531590414
+    },
+    "steps/analyzeImplementationDetails.step.ts": {
+      "x": 702.2216935879194,
+      "y": 10.294868201991278
+    },
+    "steps/analyzeMethodology.step.ts": {
+      "x": 794.5124339195196,
+      "y": 182.39811061215931
+    },
+    "steps/analyzeResults.step.ts": {
+      "x": 1115.0254367876707,
+      "y": 35.846241376712555
+    },
+    "steps/buildEnhancedKnowledgeGraph.step.ts": {
+      "x": 1109.7799564270153,
+      "y": 230.07516339869284
+    },
+    "steps/extractEnhancedConcepts.step.ts": {
+      "x": 1392.0768793116438,
+      "y": 97.74392527739815
+    },
+    "steps/fixedUI.step.ts": {
+      "x": 1280.1401200143514,
+      "y": -232.78410916505376
+    },
+    "steps/serveCss.step.ts": {
+      "x": 794.1233774783916,
+      "y": -270.7604176240193
+    },
+    "steps/serveStatic.step.ts": {
+      "x": 1039.988178650014,
+      "y": -192.46983488993612
+    },
+    "steps/simpleUI.step.ts": {
+      "x": 1066.3065919182543,
+      "y": -198.69093886942014
+    },
+    "steps/staticUI.step.ts": {
+      "x": 3466,
+      "y": 0
+    },
+    "steps/analyzeRelatedLiterature.step.ts": {
+      "x": 1968.7769822309526,
+      "y": 536.0707189675474
+    },
+    "steps/generateCodeExamples.step.ts": {
+      "x": 1744.1823954354848,
+      "y": 472.65937022792525
+    },
+    "steps/evaluateResearchImpact.step.ts": {
+      "x": 1647.9712487366173,
+      "y": 673.7639333735838
+    },
+    "steps/recommendRelatedPapers.step.ts": {
+      "x": 3235.75,
+      "y": 553
+    },
+    "steps/generateMarkdownReport.step.ts": {
+      "x": 2915.75,
+      "y": 736
+    }
+  }
+}
