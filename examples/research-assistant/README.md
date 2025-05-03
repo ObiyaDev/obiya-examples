@@ -306,8 +306,3 @@ All Gemini API calls include robust error handling, case-insensitive key process
     <a href="https://discord.gg/motia">Discord</a>
   </p>
 </div>
-
-<div align="center">
-  <p>Created by</p>
-
-</div>
