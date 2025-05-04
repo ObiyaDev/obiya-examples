@@ -1,0 +1,36 @@
+{
+  "documentation-guardian": {
+    "steps/code-change-detector.step.js": {
+      "x": 104.5,
+      "y": 204
+    },
+    "steps/doc-analyzer.step.py": {
+      "x": 13,
+      "y": 380
+    },
+    "steps/doc-generator.step.py": {
+      "x": 8,
+      "y": 556
+    },
+    "steps/doc-integrator.step.js": {
+      "x": 8,
+      "y": 908
+    },
+    "steps/file-content-fetcher.step.ts": {
+      "x": 239,
+      "y": 380
+    },
+    "steps/github-webhook-receiver.step.js": {
+      "x": 96.5,
+      "y": 0
+    },
+    "steps/human-review-ui.step.ts": {
+      "x": 0,
+      "y": 732
+    },
+    "steps/workflow-connector.step.js": {
+      "x": 18,
+      "y": 556
+    }
+  }
+}
