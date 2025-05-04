@@ -37,10 +37,21 @@ export function cleanKnowledgeGraph(knowledgeGraphPath: string): KnowledgeGraph 
     });
 
     // Clean invalid relationships
-    knowledgeGraph.relationships = knowledgeGraph.relationships.filter(relationship => {
-      // Keep relationships that don't include "Unknown Title"
-      return !relationship.target.includes('Unknown Title');
-    });
+    if (Array.isArray(knowledgeGraph.relationships)) {
+      knowledgeGraph.relationships = knowledgeGraph.relationships.filter(relationship => {
+        // Ensure relationship and target exist and target is a string before checking includes
+        if (relationship && typeof relationship.target === 'string') {
+          return !relationship.target.includes('Unknown Title');
+        }
+        // Keep relationships that don't have a string target or are malformed for now, 
+        // or decide to filter them out by returning false here.
+        // Let's keep them for now by returning true.
+        return true; 
+      });
+    } else {
+      // Initialize relationships as an empty array if it's not an array
+      knowledgeGraph.relationships = [];
+    }
 
     return knowledgeGraph;
   } catch (error) {

@@ -29,14 +29,24 @@ export const handler = async (input: any, { emit }: { emit: any }) => {
     Analysis: ${JSON.stringify(analysis)}
     
     Please provide the following:
-    1. Short Summary: A one-sentence summary of the paper (max 30 words)
-    2. Detailed Summary: A paragraph summarizing the key points (max 150 words)
-    3. Key Points: A bullet list of 3-5 main takeaways from the paper
     
-    Format your response as a JSON object with these fields.
+    ## Short Summary
+    A one-sentence summary of the paper (max 30 words)
+    
+    ## Detailed Summary
+    A paragraph summarizing the key points (max 150 words)
+    
+    ## Key Points
+    - Bullet point 1
+    - Bullet point 2
+    - Bullet point 3
+    - Bullet point 4 (optional)
+    - Bullet point 5 (optional)
+    
+    Use markdown formatting with headers as shown above.
     `;
     
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-03-25:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -52,7 +62,7 @@ export const handler = async (input: any, { emit }: { emit: any }) => {
           temperature: 0.2,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024
+          maxOutputTokens: 4096
         }
       })
     });
@@ -68,25 +78,84 @@ export const handler = async (input: any, { emit }: { emit: any }) => {
     
     let summary;
     try {
+      if (!responseData.candidates || 
+          responseData.candidates.length === 0 || 
+          !responseData.candidates[0].content || 
+          !responseData.candidates[0].content.parts || 
+          responseData.candidates[0].content.parts.length === 0 || 
+          !responseData.candidates[0].content.parts[0].text ||
+          responseData.candidates[0].content.parts[0].text.trim() === '') {
+        
+        console.error('GenerateSummaryWithGemini: Invalid or empty response structure received from Gemini API.', responseData);
+        
+        if (responseData.candidates && 
+            responseData.candidates.length > 0 && 
+            responseData.candidates[0].finishReason === 'MAX_TOKENS' &&
+            responseData.candidates[0].content?.parts?.[0]?.text) {
+            
+          console.log('GenerateSummaryWithGemini: MAX_TOKENS reached, attempting to use partial response');
+        } else {
+          throw new Error('Invalid or empty response structure from Gemini API');
+        }
+      }
+      
       const responseText = responseData.candidates[0].content.parts[0].text;
+      console.log('GenerateSummaryWithGemini raw response:', responseText.substring(0, 200) + '...');
       
-      const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/) || 
-                        responseText.match(/```\s*([\s\S]*?)\s*```/) ||
-                        [null, responseText];
+      if (!responseText || responseText.length < 10) {
+        console.error('GenerateSummaryWithGemini: Empty or too short response received');
+        throw new Error('Empty or too short response from Gemini API');
+      }
+
+      const shortSummary = extractSection(responseText, 
+        /(?:^|\n)## Short Summary\s*\n/i, 
+        /(?:^|\n)##/i
+      ) || `Summary of ${title}`;
       
-      const jsonText = jsonMatch[1].trim();
-      summary = JSON.parse(jsonText);
+      const detailedSummary = extractSection(responseText, 
+        /(?:^|\n)## Detailed Summary\s*\n/i, 
+        /(?:^|\n)##/i
+      ) || `Analysis of ${title}`;
+      
+      const keyPointsSection = extractSection(responseText, 
+        /(?:^|\n)## Key Points\s*\n/i, 
+        /(?:^|\n)##|$/i
+      );
+      
+      const keyPoints = extractBulletPoints(keyPointsSection);
+      
+      summary = {
+        shortSummary: shortSummary.trim(),
+        detailedSummary: detailedSummary.trim(),
+        keyPoints: keyPoints.length > 0 ? keyPoints : ["No key points identified"]
+      };
+      
+      if (!summary.shortSummary || summary.shortSummary.trim() === '') {
+        summary.shortSummary = `Summary of ${title}`;
+      }
+      
+      if (!summary.detailedSummary || summary.detailedSummary.trim() === '') {
+        summary.detailedSummary = `Analysis of ${title}`;
+      }
+      
+      if (!summary.keyPoints || !Array.isArray(summary.keyPoints) || summary.keyPoints.length === 0) {
+        summary.keyPoints = [
+          "Key point 1",
+          "Key point 2",
+          "Key point 3"
+        ];
+      }
+      
     } catch (error) {
       console.error('Error parsing Gemini response:', error);
       
       summary = {
-        shortSummary: "This paper introduces a novel approach to improve machine learning models for NLP tasks while reducing computational requirements.",
-        detailedSummary: "The research presents an innovative method for feature extraction in NLP tasks. The authors demonstrate improved performance on several benchmark datasets while significantly reducing the computational resources required. Their approach combines techniques from transfer learning and knowledge distillation. The paper acknowledges limitations in dataset diversity and real-world testing, suggesting future work in multilingual applications and system integration.",
+        shortSummary: `Analysis of ${title || 'research paper'}`,
+        detailedSummary: "This research paper explores important concepts and methodologies in its field. Due to processing limitations, a detailed summary could not be generated at this time.",
         keyPoints: [
-          "Novel feature extraction method",
-          "Improved benchmark performance",
-          "Reduced computational requirements",
-          "Combined transfer learning and knowledge distillation"
+          "The paper presents novel research findings",
+          "It builds upon existing work in the field",
+          "It suggests directions for future research"
         ]
       };
     }
@@ -112,5 +181,38 @@ export const handler = async (input: any, { emit }: { emit: any }) => {
     
   } catch (error) {
     console.error('Error generating summary with Gemini:', error);
+  }
+}
+
+function extractSection(text: string, startPattern: RegExp, endPattern: RegExp): string {
+  const startMatch = text.match(startPattern);
+  if (!startMatch) return "";
+  
+  const startIndex = startMatch.index! + startMatch[0].length;
+  const endMatch = text.slice(startIndex).match(endPattern);
+  
+  if (endMatch && endMatch.index !== undefined) {
+    return text.slice(startIndex, startIndex + endMatch.index).trim();
+  } else {
+    return text.slice(startIndex).trim();
+  }
+}
+
+function extractBulletPoints(sectionText: string): string[] {
+  if (!sectionText) return [];
+  
+  const bulletMatches = sectionText.match(/(?:^|\n)(?:[-•*]|\d+\.)\s+([^\n]+)/g);
+  
+  if (bulletMatches && bulletMatches.length > 0) {
+    return bulletMatches.map(line => {
+      return line.replace(/(?:^|\n)(?:[-•*]|\d+\.)\s+/, '').trim();
+    }).filter(line => line.length > 0);
+  } else {
+    const lines = sectionText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    if (lines.length > 0) {
+      return lines;
+    } else {
+      return [sectionText.trim()];
+    }
   }
 }

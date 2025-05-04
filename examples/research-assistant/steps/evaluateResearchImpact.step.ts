@@ -11,7 +11,7 @@ export const config = {
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
 
 const modelConfig = {
-  model: 'gemini-1.5-pro',
+  model: 'gemini-2.5-pro-preview-03-25',
   safetySettings: [
     {
       category: HarmCategory.HARM_CATEGORY_HARASSMENT,

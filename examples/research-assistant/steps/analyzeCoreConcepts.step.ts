@@ -21,7 +21,7 @@ export const handler = async (event: any, { emit }: any) => {
       // Use Gemini for advanced analysis
       const { GoogleGenerativeAI } = require('@google/generative-ai');
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro-preview-03-25" });
       
       const prompt = `
         Analyze the following research paper and identify its core concepts, theoretical frameworks, and fundamental innovations.

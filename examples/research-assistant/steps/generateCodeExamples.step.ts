@@ -10,6 +10,19 @@ export const config = {
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
 
+interface CodeExample {
+  title: string;
+  description: string;
+  language: string;
+  code: string;
+  dependencies: string[];
+  usageNotes?: string;
+}
+
+interface CodeExamplesResult {
+  examples: CodeExample[];
+}
+
 const modelConfig = {
   model: 'gemini-1.5-pro',
   safetySettings: [
@@ -32,11 +45,10 @@ const modelConfig = {
   ],
 };
 
-async function generateCodeExamples(title: string, abstract: string, fullText: string, analysis: any) {
+async function generateCodeExamples(title: string, abstract: string, fullText: string, analysis: any): Promise<CodeExamplesResult> {
   try {
     const model = genAI.getGenerativeModel(modelConfig);
     
-    // Normalize analysis keys to be case-insensitive
     const normalizedAnalysis: Record<string, any> = {};
     if (analysis) {
       Object.keys(analysis).forEach(key => {
@@ -44,7 +56,6 @@ async function generateCodeExamples(title: string, abstract: string, fullText: s
       });
     }
     
-    // Get values with fallbacks from either direct access or normalized keys
     const mainTopic = analysis?.mainTopic || analysis?.['Main Topic'] || normalizedAnalysis?.maintopic || 'Not specified';
     const disciplines = Array.isArray(analysis?.disciplines) ? analysis.disciplines : 
                        Array.isArray(analysis?.['Disciplines']) ? analysis['Disciplines'] : 
@@ -72,59 +83,99 @@ async function generateCodeExamples(title: string, abstract: string, fullText: s
     3. Use modern programming practices and libraries
     4. Could be useful for practitioners implementing the paper's ideas
     
-    Format your response as a valid JSON object with the following structure:
-    {
-      "examples": [
-        {
-          "title": "string",
-          "description": "string",
-          "language": "string", 
-          "code": "string",
-          "dependencies": ["string"],
-          "usageNotes": "string"
-        }
-      ]
-    }
+    Format your response as code blocks in markdown with titles and descriptions for each example.
+    For each example, start with a ## Title followed by a description, then the code in a \`\`\`language ... \`\`\` block.
     `;
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
-    
-    console.log('Raw Gemini response for code examples:\n', text.substring(0, 500) + '...');
-    
-    // Try multiple approaches to extract valid JSON
-    try {
-      // Approach 1: Try to extract JSON using regex with balanced braces
-      const jsonRegex = /\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/g;
-      const jsonMatches = text.match(jsonRegex);
-      
-      if (jsonMatches && jsonMatches.length > 0) {
-        // Try to find the match that contains "examples"
-        const validMatches = jsonMatches.filter(match => match.includes('"examples"') || match.includes('"Examples"'));
-        if (validMatches.length > 0) {
-          return JSON.parse(validMatches[0]);
-        }
-        
-        // Otherwise use the longest match as it's likely the complete JSON
-        const longestMatch = jsonMatches.reduce((a, b) => a.length > b.length ? a : b);
-        return JSON.parse(longestMatch);
+
+    if (!response?.text || response.text().trim() === '') {
+      if (response?.candidates && 
+          response.candidates.length > 0 && 
+          response.candidates[0].finishReason === 'MAX_TOKENS' &&
+          response.candidates[0].content?.parts?.[0]?.text) {
+          
+        console.log('GenerateCodeExamples: MAX_TOKENS reached, attempting to use partial response');
+      } else {
+        console.error('GenerateCodeExamples: Invalid or empty response structure received from Gemini API.');
+        throw new Error('Invalid or empty response structure from Gemini API');
       }
-      
-      // Approach 2: Try to extract content between markdown code fences if present
-      const markdownJsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (markdownJsonMatch && markdownJsonMatch[1]) {
-        return JSON.parse(markdownJsonMatch[1]);
-      }
-      
-      // Approach 3: As a last resort, try to parse the entire text as JSON
-      return JSON.parse(text);
-    } catch (error) {
-      console.error('JSON parsing error:', error);
-      console.log('Attempted to parse text:', text.substring(0, 200) + '...');
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to extract valid JSON from Gemini response: ${errorMessage}`);
     }
+
+    const responseText = response.text();
+    console.log('Raw Gemini response for code examples:\n', responseText.substring(0, 500) + '...');
+    
+    let examples: CodeExamplesResult = { examples: [] };
+    
+    const codeBlockMatches = responseText.match(/## (.*?)[\r\n]+([\s\S]*?)```(\w*)([\s\S]*?)```/g);
+    
+    if (codeBlockMatches && codeBlockMatches.length > 0) {
+      console.log(`Found ${codeBlockMatches.length} formatted code blocks in response`);
+      
+      codeBlockMatches.forEach((block, index) => {
+        const titleMatch = block.match(/## (.*?)[\r\n]+/);
+        const title = titleMatch ? titleMatch[1].trim() : `Example ${index + 1}`;
+        
+        const descMatch = block.match(/## .*?[\r\n]+([\s\S]*?)```\w*/);
+        const description = descMatch ? descMatch[1].trim() : 'Implementation example';
+        
+        const langMatch = block.match(/```(\w*)/);
+        const language = langMatch && langMatch[1] ? langMatch[1] : 'python';
+        
+        const codeMatch = block.match(/```\w*([\s\S]*?)```/);
+        const code = codeMatch ? codeMatch[1].trim() : '';
+        
+        if (code && code.length > 20) {
+          examples.examples.push({
+            title,
+            description,
+            language,
+            code,
+            dependencies: extractDependenciesFromCode(code, language)
+          });
+        }
+      });
+    } else {
+      const bareCodeBlocks = responseText.match(/```(?:\w+)?\s*([\s\S]*?)\s*```/g);
+      if (bareCodeBlocks && bareCodeBlocks.length > 0) {
+        console.log(`Found ${bareCodeBlocks.length} bare code blocks as fallback`);
+        
+        bareCodeBlocks.forEach((block, index) => {
+          const langMatch = block.match(/```(\w+)/);
+          const language = langMatch ? langMatch[1] : 'python';
+          
+          const codeMatch = block.match(/```(?:\w+)?\s*([\s\S]*?)\s*```/);
+          const code = codeMatch ? codeMatch[1].trim() : '';
+          
+          if (code && code.length > 20) {
+            examples.examples.push({
+              title: `Example ${index + 1}`,
+              description: `Implementation example for ${mainTopic}`,
+              language,
+              code,
+              dependencies: extractDependenciesFromCode(code, language)
+            });
+          }
+        });
+      }
+    }
+    
+    if (examples.examples.length === 0) {
+      console.log('No code examples found, using fallback example');
+      examples.examples.push({
+        title: 'Example Implementation',
+        description: 'A basic implementation example for ' + mainTopic,
+        code: '# Implementation for ' + mainTopic + '\n# Based on key concepts: ' + 
+              (Array.isArray(disciplines) ? disciplines.join(', ') : 'research concepts') + 
+              '\n\ndef main():\n    # TODO: Implement main functionality\n    print("Implementing ' + 
+              mainTopic + '")\n\nif __name__ == "__main__":\n    main()',
+        language: 'python',
+        dependencies: []
+      });
+    }
+    
+    return examples;
   } catch (error) {
     console.error('Error generating code examples with Gemini:', error);
     return {
@@ -148,6 +199,34 @@ async function generateCodeExamples(title: string, abstract: string, fullText: s
       ]
     };
   }
+}
+
+function extractDependenciesFromCode(code: string, language: string): string[] {
+  const dependencies = new Set<string>();
+  
+  if (language === 'python') {
+    const importMatches = code.match(/(?:^|\n)(?:import|from)\s+([^\s.]+)/g);
+    if (importMatches) {
+      importMatches.forEach(match => {
+        const lib = match.replace(/(?:^|\n)(?:import|from)\s+/, '').split(/\s|\.|\,/)[0].trim();
+        if (lib && !lib.startsWith('_') && lib !== 'os' && lib !== 'sys' && lib !== 're') {
+          dependencies.add(lib);
+        }
+      });
+    }
+  } else if (language === 'javascript' || language === 'typescript') {
+    const importMatches = code.match(/(?:^|\n)(?:import|require\()\s*['"]([^'".\s]+)/g);
+    if (importMatches) {
+      importMatches.forEach(match => {
+        const lib = match.replace(/(?:^|\n)(?:import|require\()\s*['"]/, '').trim();
+        if (lib && !lib.startsWith('.')) {
+          dependencies.add(lib);
+        }
+      });
+    }
+  }
+  
+  return Array.from(dependencies);
 }
 
 export const handler = async (input: any, { emit }: { emit: any }) => {

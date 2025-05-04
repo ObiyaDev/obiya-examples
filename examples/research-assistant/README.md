@@ -4,16 +4,16 @@
   <img src="https://img.shields.io/badge/Motia-Framework-blue" alt="Motia Framework"/>
   <img src="https://img.shields.io/badge/Gemini_2.5-AI-green" alt="Powered by Gemini AI"/>
   <img src="https://img.shields.io/badge/TypeScript-5.0-blue" alt="TypeScript 5.0"/>
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License"/>
 </div>
 
-<p align="center">
-  <img src="https://www.motia.dev/logos/logo-black.svg" width="120" alt="Motia Logo"/>
-</p>
+<div align="center" style="display: flex; justify-content: center; align-items: center; gap: 40px;">
+  <img src="https://www.motia.dev/logos/logo-black.svg" width="120" height="100" alt="Motia Logo"/>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Google_Gemini_logo.svg/2560px-Google_Gemini_logo.svg.png" width="100" alt="Google Gemini Logo"/>
+</div>
 
 ## 🔍 Overview
 
-The Research Paper Assistant is a powerful tool built with the Motia framework that helps researchers and students efficiently process academic literature. It automatically analyzes research papers, generates summaries, extracts key concepts, recommends related papers, generates code examples, and builds a knowledge graph to visualize connections between papers - all powered by Google's Gemini 2.5 Pro model.
+The Research Paper Assistant is a powerful tool built with the Motia framework that helps researchers and students efficiently process academic literature. It automatically analyzes research papers, generates summaries, extracts key concepts, recommends related papers, generates code examples, analyzes research gaps, and builds a knowledge graph to visualize connections between papers - all powered by Google's Gemini 2.5 Pro model.
 
 ## ✨ Features
 
@@ -28,6 +28,7 @@ The Research Paper Assistant is a powerful tool built with the Motia framework t
   - Evaluate research impact and significance
   - Analyze related literature and research context
   - Generate practical code examples based on research
+  - Identify research gaps and future opportunities
   - Recommend related papers from internet searches
 
 - **Knowledge Organization**
@@ -45,11 +46,12 @@ The Research Paper Assistant is a powerful tool built with the Motia framework t
 5. **Extract** key concepts and technical terminology
 6. **Evaluate** research impact and significance
 7. **Analyze** related literature and research context
-8. **Generate** practical code examples for implementation
-9. **Recommend** related papers from internet searches
-10. **Build** knowledge graph with new information and connections
-11. **Generate** markdown reports for easy consumption
-12. **Query** the knowledge graph to explore relationships
+8. **Identify** research gaps and future opportunities
+9. **Generate** practical code examples for implementation
+10. **Recommend** related papers from internet searches
+11. **Build** knowledge graph with new information and connections
+12. **Generate** markdown reports for easy consumption
+13. **Query** the knowledge graph to explore relationships
 
 ## 🔧 Implementation Details
 
@@ -69,13 +71,37 @@ This agent leverages Motia's powerful event-driven architecture with the followi
 - `generateSummary` & `generateSummaryWithGemini`: Creates concise, well-structured summaries
 - `extractConcepts` & `extractConceptsWithGemini`: Identifies key concepts with descriptions
 - `analyzeRelatedLiterature`: Places paper in broader research context
+- `analyzeResearchGaps`: Identifies unexplored areas and future research opportunities
 - `evaluateResearchImpact`: Assesses significance and potential implications
 - `generateCodeExamples`: Creates practical implementation examples
 - `recommendRelatedPapers`: Finds related papers from internet searches
+- `researchMonitor`: Monitors the flow of research paper processing (NOOP)
+- `paperUploadWebhook`: Handles paper upload events (NOOP)
+- `humanReview`: Simulates human review process (NOOP)
 
 ### Knowledge Management
 - `buildKnowledgeGraph` & `buildEnhancedKnowledgeGraph`: Maintains connections between papers and concepts
 - `generateMarkdownReport`: Creates readable reports from the knowledge graph
+
+### Technical Components
+
+- **Event System**: The application uses Motia's event-driven architecture where components communicate through events. Each step subscribes to specific events and emits new events upon completion.
+
+- **NOOP Steps**: "No Operation" steps that don't perform actual processing but serve as placeholders or monitoring points in the workflow. Examples include:
+  - `researchMonitor`: Monitors the research paper processing flow
+  - `paperUploadWebhook`: Acts as an event handler for paper uploads
+  - `humanReview`: Simulates human review process integration
+
+- **Gemini Integration**: Robust integration with Google's Gemini AI that includes:
+  - JSON parsing and error handling
+  - Text extraction with regex patterns
+  - Direct extraction of structured data
+
+- **UI Components**: The system includes a simple web interface for:
+  - Paper upload
+  - Result visualization
+  - Knowledge graph exploration
+  - Report generation
 
 The implementation uses Google's Gemini 2.5 Pro model for all AI tasks, with robust error handling and case-insensitive key processing to ensure reliability. The knowledge graph is stored using file-based persistence in a JSON file, making it accessible across different steps and API endpoints.
 
@@ -257,6 +283,8 @@ This implementation leverages Google's cutting-edge Gemini 2.5 Pro model for adv
 
 - **Context-Aware Literature Analysis**: Places papers within their broader research context by analyzing related literature and research lineage.
 
+- **Research Gap Analysis**: Identifies unexplored areas, methodological limitations, and promising future research directions in the field.
+
 - **Code Example Generation**: Creates practical implementation examples based on research methodologies and techniques described in papers.
 
 - **Internet-Enabled Paper Recommendations**: Leverages internet search capabilities to recommend relevant, recent papers related to the analyzed content.
@@ -284,7 +312,6 @@ All Gemini API calls include robust error handling, case-insensitive key process
 - **Domain Specialization**: Fine-tuned models for specific research domains
 - **Multi-lingual Support**: Analysis of papers in multiple languages
 - **Cross-paper Synthesis**: Generating insights across multiple related papers
-- **Research Gap Identification**: Highlighting unexplored areas in current research
 - **Question Answering**: Direct Q&A about papers in the knowledge base
 
 ## 🙏 Acknowledgements

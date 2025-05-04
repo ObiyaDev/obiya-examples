@@ -11,7 +11,10 @@ export const config = {
     'paper-results-analyzed',
     'paper-benchmarks-analyzed',
     'paper-implementation-analyzed',
-    'paper-enhanced-concepts-extracted'
+    'paper-enhanced-concepts-extracted',
+    'research-gaps-analyzed',
+    'code-examples-generated',
+    'related-papers-recommended'
   ],
   emits: ['knowledge-graph-updated'],
   flows: ['research-assistant']
@@ -32,6 +35,8 @@ interface EnhancedKnowledgeGraph extends KnowledgeGraph {
       uploadedAt: string;
       mainTopic?: string;
       disciplines?: string[];
+      researchGaps?: any;
+      researchGapsAnalyzedAt?: string | null;
       analysis: {
         mainTopic?: string;
         disciplines?: string[];
@@ -206,17 +211,74 @@ interface EnhancedKnowledgeGraph extends KnowledgeGraph {
 
 export const handler = async (event: any, { emit }: any) => {
   try {
-    const { topic, data } = event;
-    const { id: paperId, title, authors, pdfUrl, doi, uploadedAt } = data;
+    console.log('BuildEnhancedKnowledgeGraph: Received event:', JSON.stringify(event, null, 2));
     
-    console.log(`BuildEnhancedKnowledgeGraph: Processing paper '${title}' for event ${topic}`);
+    // Check if event exists and has the expected structure
+    if (!event) {
+      console.error('BuildEnhancedKnowledgeGraph: Event is null or undefined');
+      return { success: false, error: 'Event is null or undefined' };
+    }
+
+    // Handle both direct data and event.data patterns
+    const eventData = event.data || event;
+    const topic = event.topic || 'unknown';
+    
+    if (!eventData || typeof eventData !== 'object') {
+      console.error('BuildEnhancedKnowledgeGraph: No valid data in event:', event);
+      return { success: false, error: 'No valid data in event' };
+    }
+
+    const paperId = eventData.id;
+    if (!paperId) {
+      console.error('BuildEnhancedKnowledgeGraph: No paper ID in data:', eventData);
+      return { success: false, error: 'No paper ID in data' };
+    }
+
+    // Extract all possible fields from eventData
+    const {
+      title,
+      authors,
+      pdfUrl,
+      doi,
+      uploadedAt,
+      analysis = {},
+      researchGaps,
+      researchGapsAnalyzedAt
+    } = eventData;
+
+    console.log(`BuildEnhancedKnowledgeGraph: Processing paper '${title || paperId}' for event ${topic}`);
     
     // Initialize data directory if it doesn't exist
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
     
-    // Clean up existing data for this paper if it exists
+    // Initialize knowledgeGraph with proper typing
+    let knowledgeGraph: EnhancedKnowledgeGraph = { 
+      papers: {}, 
+      concepts: {},
+      entities: {}, 
+      relationships: []
+    };
+
+    try {
+      if (fs.existsSync(graphPath)) {
+        const graphContent = fs.readFileSync(graphPath, 'utf-8');
+        // Add error handling for JSON parsing
+        try {
+          knowledgeGraph = JSON.parse(graphContent);
+          console.log(`BuildEnhancedKnowledgeGraph: Loaded existing knowledge graph: Papers: ${Object.keys(knowledgeGraph.papers).length} Concepts: ${Object.keys(knowledgeGraph.concepts).length}`);
+        } catch (jsonError) {
+          console.error('BuildEnhancedKnowledgeGraph: Error parsing knowledge graph JSON:', jsonError);
+          // Keep using the initialized empty graph
+        }
+      }
+    } catch (fsError) {
+      console.error('BuildEnhancedKnowledgeGraph: Error reading knowledge graph file:', fsError);
+      // Keep using the initialized empty graph
+    }
+    
+    // NOW use knowledgeGraph for cleanup
     if (knowledgeGraph.papers[paperId]) {
       console.log(`BuildEnhancedKnowledgeGraph: Cleaning up existing data for paper '${title}'`);
       
@@ -238,23 +300,17 @@ export const handler = async (event: any, { emit }: any) => {
       });
       
       // Clean up entities that only referenced this paper
-      Object.keys(knowledgeGraph.entities || {}).forEach(entityKey => {
-        const entity = knowledgeGraph.entities[entityKey];
-        if (entity.papers && entity.papers.includes(paperId)) {
-          entity.papers = entity.papers.filter((pid: string) => pid !== paperId);
-          if (entity.papers.length === 0) {
-            delete knowledgeGraph.entities[entityKey];
+      if (knowledgeGraph.entities) {
+        Object.keys(knowledgeGraph.entities).forEach(entityKey => {
+          const entity = knowledgeGraph.entities?.[entityKey];
+          if (entity?.papers && entity.papers.includes(paperId)) {
+            entity.papers = entity.papers.filter((pid: string) => pid !== paperId);
+            if (entity.papers.length === 0 && knowledgeGraph.entities) {
+              delete knowledgeGraph.entities[entityKey];
+            }
           }
-        }
-      });
-    }
-    
-    let knowledgeGraph: EnhancedKnowledgeGraph = { papers: {}, concepts: {} };
-    
-    if (fs.existsSync(graphPath)) {
-      const graphContent = fs.readFileSync(graphPath, 'utf-8');
-      knowledgeGraph = JSON.parse(graphContent);
-      console.log(`BuildEnhancedKnowledgeGraph: Loaded existing knowledge graph: Papers: ${Object.keys(knowledgeGraph.papers).length} Concepts: ${Object.keys(knowledgeGraph.concepts).length}`);
+        });
+      }
     }
     
     // Ensure the paper exists in the knowledge graph
@@ -278,7 +334,7 @@ export const handler = async (event: any, { emit }: any) => {
     // Update the knowledge graph based on the event topic
     switch (topic) {
       case 'paper-core-concepts-analyzed':
-        const { coreConcepts } = event.data;
+        const { coreConcepts } = eventData;
         knowledgeGraph.papers[paperId].analysis.coreConcepts = coreConcepts;
         
         // Add main concepts to the concepts section of the knowledge graph
@@ -319,7 +375,7 @@ export const handler = async (event: any, { emit }: any) => {
         break;
         
       case 'paper-methodology-analyzed':
-        const { methodologyAnalysis } = event.data;
+        const { methodologyAnalysis } = eventData;
         knowledgeGraph.papers[paperId].analysis.methodologyDetails = methodologyAnalysis;
         
         // Add algorithm details to the entities section
@@ -360,7 +416,7 @@ export const handler = async (event: any, { emit }: any) => {
         break;
         
       case 'paper-results-analyzed':
-        const { resultsAnalysis } = event.data;
+        const { resultsAnalysis } = eventData;
         knowledgeGraph.papers[paperId].analysis.results = resultsAnalysis;
         
         // Add performance metrics to concepts
@@ -399,7 +455,7 @@ export const handler = async (event: any, { emit }: any) => {
         break;
         
       case 'paper-benchmarks-analyzed':
-        const { benchmarksAnalysis } = event.data;
+        const { benchmarksAnalysis } = eventData;
         knowledgeGraph.papers[paperId].analysis.benchmarks = benchmarksAnalysis;
         
         // Add benchmark datasets to concepts
@@ -439,7 +495,7 @@ export const handler = async (event: any, { emit }: any) => {
         break;
         
       case 'paper-implementation-analyzed':
-        const { implementationAnalysis } = event.data;
+        const { implementationAnalysis } = eventData;
         knowledgeGraph.papers[paperId].analysis.implementation = implementationAnalysis;
         
         // Add system architecture components to entities
@@ -487,7 +543,7 @@ export const handler = async (event: any, { emit }: any) => {
         break;
         
       case 'paper-enhanced-concepts-extracted':
-        const { enhancedConcepts } = event.data;
+        const { enhancedConcepts } = eventData;
         
         // Add entities
         if (enhancedConcepts?.entities) {
@@ -601,18 +657,59 @@ export const handler = async (event: any, { emit }: any) => {
           }
         }
         break;
+        
+      case 'research-gaps-analyzed':
+        const { researchGaps } = eventData;
+        
+        // Update paper data with research gaps
+        knowledgeGraph.papers[paperId].researchGaps = researchGaps || null;
+        knowledgeGraph.papers[paperId].researchGapsAnalyzedAt = researchGapsAnalyzedAt || null;
+
+        // Process research gaps if present
+        if (researchGaps) {
+          // Process unexplored aspects
+          researchGaps.unexploredAspects?.forEach((aspect: string) => {
+            const conceptId = `gap-${aspect.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+            if (!knowledgeGraph.concepts[conceptId]) {
+              knowledgeGraph.concepts[conceptId] = {
+                name: aspect,
+                description: `Unexplored research aspect: ${aspect}`,
+                papers: [paperId],
+                type: 'research_gap'
+              };
+            } else if (!knowledgeGraph.concepts[conceptId].papers.includes(paperId)) {
+              knowledgeGraph.concepts[conceptId].papers.push(paperId);
+            }
+          });
+
+          // Process future research directions
+          researchGaps.futureResearchDirections?.forEach((direction: string) => {
+            const conceptId = `direction-${direction.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+            if (!knowledgeGraph.concepts[conceptId]) {
+              knowledgeGraph.concepts[conceptId] = {
+                name: direction,
+                description: `Future research direction: ${direction}`,
+                papers: [paperId],
+                type: 'future_direction'
+              };
+            } else if (!knowledgeGraph.concepts[conceptId].papers.includes(paperId)) {
+              knowledgeGraph.concepts[conceptId].papers.push(paperId);
+            }
+          });
+        }
+        break;
     }
     
-    // Also update the basic fields for compatibility
-    const mainTopic = knowledgeGraph.papers[paperId].analysis.mainTopic || 
-                     (knowledgeGraph.papers[paperId].analysis.coreConcepts?.mainConcepts?.[0]);
+    // Also update the basic fields for compatibility with null checks
+    const mainTopic = knowledgeGraph.papers[paperId]?.analysis?.mainTopic || 
+                     (knowledgeGraph.papers[paperId]?.analysis?.coreConcepts?.mainConcepts?.[0]);
                      
     if (mainTopic) {
       knowledgeGraph.papers[paperId].mainTopic = mainTopic;
     }
     
-    const disciplines = knowledgeGraph.papers[paperId].analysis.disciplines || 
-                      (knowledgeGraph.papers[paperId].analysis.coreConcepts?.theoreticalFrameworks);
+    const disciplines = knowledgeGraph.papers[paperId]?.analysis?.disciplines || 
+                      (knowledgeGraph.papers[paperId]?.analysis?.coreConcepts?.theoreticalFrameworks);
                       
     if (disciplines) {
       knowledgeGraph.papers[paperId].disciplines = disciplines;
@@ -622,19 +719,22 @@ export const handler = async (event: any, { emit }: any) => {
     fs.writeFileSync(graphPath, JSON.stringify(knowledgeGraph, null, 4));
     console.log(`BuildEnhancedKnowledgeGraph: Knowledge graph saved to file with ${Object.keys(knowledgeGraph.papers).length} papers`);
     
-    // Emit event
+    // Emit the updated knowledge graph
     await emit({
       topic: 'knowledge-graph-updated',
       data: {
-        paperId,
+        id: paperId,
         title,
-        paperCount: Object.keys(knowledgeGraph.papers).length,
-        conceptCount: Object.keys(knowledgeGraph.concepts).length,
-        entityCount: Object.keys(knowledgeGraph.entities).length
+        authors,
+        pdfUrl,
+        doi,
+        uploadedAt,
+        knowledgeGraph,
+        updatedAt: new Date().toISOString()
       }
     });
-    
-    console.log(`BuildEnhancedKnowledgeGraph: Knowledge graph updated for paper: ${title}`);
+
+    console.log(`BuildEnhancedKnowledgeGraph: Successfully processed paper '${title || paperId}'`);
     return { success: true };
   } catch (error) {
     console.error(`BuildEnhancedKnowledgeGraph: Error updating knowledge graph:`, error);

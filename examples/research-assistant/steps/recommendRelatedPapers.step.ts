@@ -50,7 +50,7 @@ export const handler = async (input: any, { emit }: { emit: any }) => {
     If possible, include papers published within the last 3 years to ensure recency.
     `;
     
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-03-25:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
