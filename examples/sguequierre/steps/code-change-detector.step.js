@@ -1,13 +1,13 @@
 // steps/code-change-detector.step.js
-exports.config = {
+const config = {
   type: 'event',
   name: 'code-change-detector',
   subscribes: ['repository-webhook'],
   emits: ['code-file-changed'],
-  flows: ['documentation-guardian'], // Name of the flow this step belongs to
-}
+  flows: ['documentation-guardian'],
+};
 
-exports.handler = async (payload, { emit, logger }) => {
+const handler = async (payload, { emit, logger }) => {
   logger.info("Received repository webhook");
   
   // Extract relevant information from the webhook
@@ -47,3 +47,5 @@ exports.handler = async (payload, { emit, logger }) => {
     });
   }
 }
+
+module.exports = { config, handler };

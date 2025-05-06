@@ -1,6 +1,6 @@
 // steps/human-review-ui.step.ts
-// NEEDS WORK TO IMPLEMENT REAL UI
-import { createServer } from 'http';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface DocReviewPayload {
   file: string;
@@ -35,71 +35,142 @@ export const handler = async (payload: DocReviewPayload, context: any) => {
     
     for (let i = 0; i < lines.length; i++) {
       if (pattern.test(lines[i])) {
-        return { ...gap, lineNumber: i };
+        return { ...gap, lineNumber: i + 1 };
       }
     }
     
     return gap;
   });
   
-  // In a real implementation, you would:
-  // 1. Create a pull request with the changes
-  // 2. Or use a web UI for approval
-  
-  // For this example, we'll use a simple HTTP server
-  // That presents the changes and waits for approval
-  const server = createServer((req, res) => {
-    if (req.url === '/approve') {
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('Changes approved!');
-      
-      // Close the server and emit approval event
-      server.close();
-      emit({
-        topic: "documentation-approved",
-        data: {
-          ...payload,
-          gaps: gapsWithLineNumbers
-        }
-      });
-      return;
-    }
+  // Display documentation changes in the console
+  logger.info(`
+    ====== DOCUMENTATION REVIEW ======
+    File: ${payload.file}
     
-    // Render a simple UI for review
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(`
-      <html>
-        <head>
-          <title>Documentation Review</title>
-          <style>
-            body { font-family: sans-serif; margin: 20px; }
-            pre { background: #f5f5f5; padding: 10px; border-radius: 5px; }
-            .doc-item { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; }
-            .approve-btn { background: green; color: white; padding: 10px 20px; border: none; cursor: pointer; }
-          </style>
-        </head>
-        <body>
-          <h1>Documentation Review: ${payload.file}</h1>
-          <div>
-            ${gapsWithLineNumbers.map((gap, i) => `
-              <div class="doc-item">
-                <h3>${gap.type}: ${gap.name}</h3>
-                <p>Issue: ${gap.issue}</p>
-                <p>Line number: ${gap.lineNumber || 'Unknown'}</p>
-                <h4>Generated Documentation:</h4>
-                <pre>${gap.generated_doc}</pre>
-              </div>
-            `).join('')}
-          </div>
-          <button class="approve-btn" onclick="window.location.href='/approve'">Approve All Changes</button>
-        </body>
-      </html>
-    `);
-  });
+    ${gapsWithLineNumbers.map((gap, i) => `
+    ${gap.type}: ${gap.name}
+    Issue: ${gap.issue}
+    Line number: ${gap.lineNumber || 'Unknown'}
+    Generated Documentation:
+    ${gap.generated_doc}
+    
+    `).join('\n')}
+  `);
   
-  server.listen(3001, () => {
-    logger.info('Review UI available at http://localhost:3001');
-  });
+  // Create a temporary approval file
+  const tempDir = process.env.TEMP || process.env.TMP || '/tmp';
+  const reviewFilePath = path.join(tempDir, `doc-review-${Date.now()}.txt`);
   
-  // In a real implementation, you'd have a timeout and error handling
+  // Write instructions to the file
+  fs.writeFileSync(
+    reviewFilePath,
+    `# Documentation Review for ${payload.file}
+# To approve these changes, replace this text with "APPROVED"
+# To reject these changes, replace this text with "REJECTED"
+# Then save the file and close it.
+
+Status: PENDING
+
+# Documentation changes to review:
+${gapsWithLineNumbers.map((gap, i) => `
+${gap.type}: ${gap.name}
+Issue: ${gap.issue}
+Line number: ${gap.lineNumber || 'Unknown'}
+Generated Documentation:
+${gap.generated_doc}
+
+`).join('\n')}
+`
+  );
+  
+  logger.info(`
+    A review file has been created at: ${reviewFilePath}
+    
+    To approve or reject the changes:
+    1. Open the file in any text editor
+    2. Change "Status: PENDING" to either "Status: APPROVED" or "Status: REJECTED"
+    3. Save and close the file
+    
+    The workflow will continue once you've made your decision.
+  `);
+  
+  // Function to check if the file has been modified
+  const checkApprovalStatus = () => {
+    try {
+      const fileContent = fs.readFileSync(reviewFilePath, 'utf8');
+      
+      if (fileContent.includes('Status: APPROVED')) {
+        logger.info('Documentation changes approved');
+        
+        // Clean up the file
+        try { fs.unlinkSync(reviewFilePath); } catch (e) {}
+        
+        emit({
+          topic: "documentation-approved",
+          data: {
+            ...payload,
+            gaps: gapsWithLineNumbers,
+            approved: true
+          }
+        });
+        
+        return true;
+      } else if (fileContent.includes('Status: REJECTED')) {
+        logger.info('Documentation changes rejected');
+        
+        // Clean up the file
+        try { fs.unlinkSync(reviewFilePath); } catch (e) {}
+        
+        emit({
+          topic: "documentation-approved",
+          data: {
+            ...payload,
+            gaps: gapsWithLineNumbers,
+            approved: false
+          }
+        });
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      logger.error(`Error checking approval status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return false;
+    }
+  };
+  
+  // Poll for changes every second
+  const maxWaitTime = 30 * 60 * 1000; // 30 minutes
+  const startTime = Date.now();
+  
+  return new Promise<void>((resolve) => {
+    const interval = setInterval(() => {
+      const approved = checkApprovalStatus();
+      
+      if (approved) {
+        clearInterval(interval);
+        resolve();
+      } else if (Date.now() - startTime > maxWaitTime) {
+        // Timeout after maxWaitTime
+        logger.warn('Review timed out after 30 minutes. Auto-approving changes.');
+        
+        // Clean up the file
+        try { fs.unlinkSync(reviewFilePath); } catch (e) {}
+        
+        emit({
+          topic: "documentation-approved",
+          data: {
+            ...payload,
+            gaps: gapsWithLineNumbers,
+            approved: true,
+            timedOut: true
+          }
+        });
+        
+        clearInterval(interval);
+        resolve();
+      }
+    }, 1000);
+  });
 };

@@ -2,7 +2,7 @@
   "documentation-guardian": {
     "steps/code-change-detector.step.js": {
       "x": 104.5,
-      "y": 204
+      "y": 286.9139849550561
     },
     "steps/doc-analyzer.step.py": {
       "x": 13,
@@ -13,24 +13,36 @@
       "y": 556
     },
     "steps/doc-integrator.step.js": {
-      "x": 8,
-      "y": 908
+      "x": -205.9401755490663,
+      "y": 957.1519240460285
     },
     "steps/file-content-fetcher.step.ts": {
-      "x": 239,
-      "y": 380
+      "x": 215.8612135009146,
+      "y": 501.47862912019843
     },
     "steps/github-webhook-receiver.step.js": {
       "x": 96.5,
       "y": 0
     },
     "steps/human-review-ui.step.ts": {
-      "x": 0,
-      "y": 732
+      "x": -208.68023255813955,
+      "y": 729.0813953488373
     },
     "steps/workflow-connector.step.js": {
       "x": 18,
       "y": 556
+    },
+    "steps/doc-analyzer.step.ts": {
+      "x": 33,
+      "y": 706
+    },
+    "steps/doc-generator.step.ts": {
+      "x": 28,
+      "y": 882
+    },
+    "steps/webhook-debug.step.js": {
+      "x": 292,
+      "y": 204
     }
   }
 }
