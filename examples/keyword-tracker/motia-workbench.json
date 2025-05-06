@@ -21,16 +21,28 @@
       "y": 0
     },
     "steps/redditMotiaMentions.step.ts": {
-      "x": 1,
-      "y": -134.5
+      "x": -561.9643513468995,
+      "y": -622.2395385679771
     },
     "steps/validateMentions.step.ts": {
       "x": 0,
       "y": 0
     },
     "steps/validateMotiaMentions.step.ts": {
-      "x": -59,
-      "y": 150
+      "x": -549.1218850653095,
+      "y": -328.49596799359324
+    },
+    "steps/noop.step.ts": {
+      "x": -400.0460089364429,
+      "y": -946.5574165734649
+    },
+    "steps/api.step.ts": {
+      "x": 98.85386340449853,
+      "y": -838.2887217215903
+    },
+    "steps/start.step.ts": {
+      "x": -321.8189216487024,
+      "y": -1622.307991915295
     }
   }
 }
