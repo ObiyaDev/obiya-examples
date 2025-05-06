@@ -94,7 +94,7 @@ exports.handler = async (payload, context) => {
       }
     });
     
-    logger.info(`Documentation integration complete, emitted event`);
+    logger.info(`Documentation integration complete, emitted regular and virtual event`);
   } catch (error) {
     logger.error(`Error integrating documentation: ${error.message}`);
     logger.error(`Error stack: ${error.stack}`);
