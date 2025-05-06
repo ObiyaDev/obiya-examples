@@ -13,6 +13,7 @@
   "dependencies": {
     "@motiadev/core": "0.1.0-beta.28",
     "@motiadev/workbench": "0.1.0-beta.28",
+    "@xyflow/react": "^12.6.0",
     "axios": "^1.9.0",
     "motia": "0.1.0-beta.28",
     "openai": "^4.97.0",

@@ -45,8 +45,7 @@ exports.handler = async (payload, context) => {
       );
     }
     
-    // In a real implementation, you'd commit this back to the repository
-    // Here we'll just demonstrate writing to a local file
+    // Writes to a local file
     const localPath = path.join('output', file);
     
     // Get absolute path for better debugging
