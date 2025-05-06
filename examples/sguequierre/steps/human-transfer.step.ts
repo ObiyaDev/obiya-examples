@@ -1,10 +1,10 @@
-// human-transfer-file-with-docs.step.ts
+// human-transfer.step.ts
 import { NoopConfig } from 'motia'
 
 export const config: NoopConfig = {
     type: 'noop',
-    name: 'human-transfer-file-with-docs',
+    name: 'human-transfer',
     virtualEmits: ['docs-transferred'],
     virtualSubscribes: ['documentation-integrated'],
     flows: ['documentation-guardian'],
-  }
+}

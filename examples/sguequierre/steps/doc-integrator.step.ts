@@ -1,16 +1,40 @@
-// steps/doc-integrator.step.js
-const fs = require('fs').promises;
-const path = require('path');
+import { promises as fs } from 'fs';
+import path from 'path';
 
-exports.config = {
+// Define types for the payload and context
+interface DocumentationGap {
+  lineNumber: number;
+  type: string;
+  name: string;
+  generated_doc: string;
+}
+
+interface PayloadData {
+  file: string;
+  content: string;
+  gaps: DocumentationGap[];
+}
+
+interface Context {
+  emit: (event: { topic: string; data: any }) => void;
+  logger: {
+    info: (message: string) => void;
+    error: (message: string) => void;
+  };
+}
+
+// Export configuration
+export const config = {
   type: 'event',
   name: 'doc-integrator',
   subscribes: ['documentation-approved'],
-  emits: ['documentation-integrated'],
+  emits: [],
+  virtualEmits: ['documentation-integrated'],
   flows: ['documentation-guardian']
 };
 
-exports.handler = async (payload, context) => {
+// Export handler function
+export const handler = async (payload: PayloadData, context: Context): Promise<void> => {
   const { emit, logger } = context;
   logger.info(`Integrating documentation for ${payload.file}`);
   
@@ -64,7 +88,7 @@ exports.handler = async (payload, context) => {
       const dirStat = await fs.stat(path.dirname(localPath)).catch(() => null);
       logger.info(`Output directory exists: ${!!dirStat}`);
     } catch (e) {
-      logger.info(`Error checking directory: ${e.message}`);
+      logger.info(`Error checking directory: ${e instanceof Error ? e.message : String(e)}`);
     }
     
     // Create directory with verbose logging
@@ -82,9 +106,10 @@ exports.handler = async (payload, context) => {
       const stats = await fs.stat(localPath);
       logger.info(`File verification - exists: true, size: ${stats.size} bytes`);
     } catch (e) {
-      logger.info(`File verification failed: ${e.message}`);
+      logger.info(`File verification failed: ${e instanceof Error ? e.message : String(e)}`);
     }
     
+    // Emit the virtual event to connect to the next step
     emit({
       topic: "documentation-integrated",
       data: {
@@ -94,14 +119,14 @@ exports.handler = async (payload, context) => {
       }
     });
     
-    logger.info(`Documentation integration complete, emitted regular and virtual event`);
+    logger.info(`Documentation integration complete, emitted documentation-integrated event`);
   } catch (error) {
-    logger.error(`Error integrating documentation: ${error.message}`);
-    logger.error(`Error stack: ${error.stack}`);
+    logger.error(`Error integrating documentation: ${error instanceof Error ? error.message : String(error)}`);
+    logger.error(`Error stack: ${error instanceof Error ? error.stack : 'No stack trace available'}`);
   }
 };
 
-function insertDocumentation(content, lineNumber, docComment) {
+function insertDocumentation(content: string, lineNumber: number, docComment: string): string {
   const lines = content.split('\n');
   lines.splice(lineNumber, 0, docComment);
   return lines.join('\n');

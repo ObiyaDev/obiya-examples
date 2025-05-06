@@ -25,8 +25,8 @@
       "y": 0
     },
     "steps/human-review-ui.step.ts": {
-      "x": -208.68023255813955,
-      "y": 729.0813953488373
+      "x": 21.31976744186045,
+      "y": 1077.0813953488373
     },
     "steps/workflow-connector.step.js": {
       "x": 18,
@@ -45,8 +45,20 @@
       "y": 204
     },
     "steps/human-transfer-file-with-docs.step.ts": {
-      "x": -545.3819533364502,
-      "y": 1113.5239920473623
+      "x": 10.618046663549762,
+      "y": 1261.5239920473623
+    },
+    "steps/doc-integrator.step.ts": {
+      "x": 337,
+      "y": 1084
+    },
+    "steps/transfer-file.step.js": {
+      "x": 278,
+      "y": 1385
+    },
+    "steps/human-transfer.step.ts": {
+      "x": -25,
+      "y": 1506
     }
   }
 }

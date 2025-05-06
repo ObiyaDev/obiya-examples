@@ -1,14 +1,15 @@
 function sortByProperty(array, property) {
 /**
-   * Sorts an array of objects by a specific property in ascending order.
-   * 
-   * @param {Object[]} array - The array of objects to be sorted.
-   * @param {string} property - The property of the objects by which the array should be sorted.
-   * @returns {Object[]} A new array sorted by the specified property.
+   * Sorts an array of objects by a specific property.
    *
+   * @function sortByProperty
+   * @param {Object[]} array - The array of objects to be sorted.
+   * @param {string} property - The property of the object to sort by.
+   * @returns {Object[]} A new array sorted by the specified property.
    * @example
-   * // returns [{name: 'Alice', age: 25}, {name: 'Bob', age: 30}]
-   * sortByProperty([{name: 'Bob', age: 30}, {name: 'Alice', age: 25}], 'name')
+   * 
+   * sortByProperty([{name: 'John', age: 30}, {name: 'Jane', age: 20}], 'age');
+   * // returns [{name: 'Jane', age: 20}, {name: 'John', age: 30}]
    */
     return [...array].sort((a, b) => {
       if (a[property] < b[property]) return -1;
@@ -22,9 +23,9 @@ function sortByProperty(array, property) {
    * Filters an array of objects by a specific key-value pair.
    *
    * @param {Object[]} array - The array of objects to be filtered.
-   * @param {string} key - The key of the object to filter by.
-   * @param {string|number|boolean} value - The value of the key to filter by.
-   * @returns {Object[]} The filtered array of objects.
+   * @param {string} key - The key of the object to match the value against.
+   * @param {*} value - The value to match against the object's key.
+   * @returns {Object[]} Returns a new array consisting of objects from the input array that have a matching key-value pair.
    */
     return array.filter(item => item[key] === value);
   }
@@ -32,19 +33,14 @@ function sortByProperty(array, property) {
   function groupByProperty(array, property) {
 ```js
 /**
- * This function groups an array of objects by a specified property.
- * 
- * @param {Array} array - The array of objects to be grouped.
+ * Groups an array of objects by a specified property.
+ *
+ * @param {Object[]} array - The array of objects to be grouped.
  * @param {string} property - The property on which to group the objects.
- * 
- * @returns {Object} An object where each property is an array of objects from the input array that have the same value for the specified property.
- * 
+ * @returns {Object} An object with keys representing the property values and values being arrays of objects that have that property value.
  * @example
- * 
- * groupByProperty([{a: 1, b: 2}, {a: 2, b: 3}, {a: 1, b: 4}], 'a');
- * // returns {1: [{a: 1, b: 2}, {a: 1, b: 4}], 2: [{a: 2, b: 3}]}
- * 
- * @module groupByProperty
+ * // returns { '1': [{ id: 1, name: 'John' }], '2': [{ id: 2, name: 'Jane' }] }
+ * groupByProperty([{ id: 1, name: 'John' }, { id: 2, name: 'Jane' }], 'id');
  */
 ```
     return array.reduce((grouped, item) => {

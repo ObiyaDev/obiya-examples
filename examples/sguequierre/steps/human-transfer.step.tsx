@@ -1,4 +1,4 @@
-// human-transfer-file-with-docs.step.tsx
+// human-transfer.step.tsx
 import React from 'react'
 import { BaseHandle, Position } from 'motia/workbench'
 import '@xyflow/react/dist/style.css'
