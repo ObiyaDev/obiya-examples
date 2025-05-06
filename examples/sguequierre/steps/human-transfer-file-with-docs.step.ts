@@ -6,5 +6,5 @@ export const config: NoopConfig = {
     name: 'human-transfer-file-with-docs',
     virtualEmits: ['docs-transferred'],
     virtualSubscribes: ['documentation-integrated'],
-    flows: ['documentation-guardian']
+    flows: ['documentation-guardian'],
   }
