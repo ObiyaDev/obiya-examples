@@ -26,7 +26,7 @@ pnpm install
 
 Create a .env file containing your OpenAPI key and your GitHub personal access token.
 You'll add your webhook secret in a moment.
-Refer to <file>.env.example</file> for an example as such:
+Refer to .env.example for an example as such:
 
 ```bash
 # GitHub configuration
@@ -47,9 +47,9 @@ pnpm run dev
 Set up a GitHub webhook on the repository you wish to monitor for code changes.
 Use [ngrok](https://ngrok.com/docs/getting-started/) to forward your `localhost:3000` to a public URL and set that + `/webhook/github` as the payload URL for your webhook.
 Set the content type of your webhook as `application/json`.
-Add a secret of your choice and then add that to your <file>.env</file> file.
+Add a secret of your choice and then add that to your .env file.
 For the events you would like to trigger the webhook, select "Just the `push` event."
 
-Run your Motia project again with the updated <file>.env</file>.
+Run your Motia project again with the updated .env.
 
 Now, trigger the workflow by pushing some code changes to your repository.

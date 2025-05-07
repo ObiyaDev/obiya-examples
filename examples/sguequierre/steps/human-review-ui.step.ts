@@ -20,6 +20,7 @@ export const config = {
   name: 'human-review-ui',
   subscribes: ['documentation-generated'],
   emits: ['documentation-approved', 'documentation-rejected'],
+  virtualEmits: ['documentation-review-completed'],
   flows: ['documentation-guardian']
 };
 
