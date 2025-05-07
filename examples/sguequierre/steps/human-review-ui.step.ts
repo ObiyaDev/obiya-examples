@@ -19,7 +19,8 @@ export const config = {
   type: 'event',
   name: 'human-review-ui',
   subscribes: ['documentation-generated'],
-  emits: ['documentation-approved'],
+  emits: ['documentation-approved', 'documentation-rejected'],
+  virtualEmits: ['documentation-review-completed'],
   flows: ['documentation-guardian']
 };
 
@@ -122,7 +123,7 @@ ${gap.generated_doc}
         try { fs.unlinkSync(reviewFilePath); } catch (e) {}
         
         emit({
-          topic: "documentation-approved",
+          topic: "documentation-rejected",
           data: {
             ...payload,
             gaps: gapsWithLineNumbers,

@@ -9,7 +9,7 @@ export default function HumanTransferFileWithDocs() {
       <h3 className="text-lg font-semibold mb-3">Documentation Transfer Guide</h3>
       
       <div className="mb-4 text-sm">
-        The documentation has been generated and saved to the output directory.
+        If you approved the documentation, it has been generated and saved to the output directory.
         Please follow these steps to complete the process:
       </div>
       
