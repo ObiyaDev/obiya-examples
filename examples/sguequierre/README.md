@@ -7,6 +7,7 @@ It analyzes codebases to identify 'documentation gaps' (functions, classes, or m
 
 - Node.js 18+
 - OpenAI API key
+- Git, pnpm
 
 ## Setup
 
@@ -14,7 +15,7 @@ Clone this repository:
 
 ```bash
 git clone https://github.com/sguequierre/motia-examples.git
-cd examples/sguequierre
+cd motia-examples/examples/sguequierre
 ```
 
 Install dependencies:
@@ -23,8 +24,32 @@ Install dependencies:
 pnpm install
 ```
 
-Set up your Motia project:
+Create a .env file containing your OpenAPI key and your GitHub personal access token.
+You'll add your webhook secret in a moment.
+Refer to <file>.env.example</file> for an example as such:
 
 ```bash
-npx motia setup
+# GitHub configuration
+GITHUB_WEBHOOK_SECRET=your_webhook_secret_here
+GITHUB_TOKEN=your_personal_access_token_here
+
+# OpenAI API configuration
+OPENAI_API_KEY=your_openai_api_key_here
 ```
+
+Save the file.
+Run your Motia project:
+
+```bash
+pnpm run dev
+```
+
+Set up a GitHub webhook on the repository you wish to monitor for code changes.
+Use [ngrok](https://ngrok.com/docs/getting-started/) to forward your `localhost:3000` to a public URL and set that + `/webhook/github` as the payload URL for your webhook.
+Set the content type of your webhook as `application/json`.
+Add a secret of your choice and then add that to your <file>.env</file> file.
+For the events you would like to trigger the webhook, select "Just the `push` event."
+
+Run your Motia project again with the updated <file>.env</file>.
+
+Now, trigger the workflow by pushing some code changes to your repository.
