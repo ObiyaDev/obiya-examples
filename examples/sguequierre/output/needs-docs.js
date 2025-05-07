@@ -1,15 +1,16 @@
 function sortByProperty(array, property) {
 /**
    * Sorts an array of objects by a specific property.
-   *
-   * @function sortByProperty
-   * @param {Object[]} array - The array of objects to be sorted.
-   * @param {string} property - The property of the object to sort by.
-   * @returns {Object[]} A new array sorted by the specified property.
-   * @example
    * 
-   * sortByProperty([{name: 'John', age: 30}, {name: 'Jane', age: 20}], 'age');
-   * // returns [{name: 'Jane', age: 20}, {name: 'John', age: 30}]
+   * This function creates a new array from the input array and sorts the new array.
+   * The sorting is based on the property value of each object in the array.
+   * If the property value of the first object is less than the second object, it will return -1.
+   * If the property value of the first object is greater than the second object, it will return 1.
+   * If the property values are equal, it will return 0.
+   * 
+   * @param {Object[]} array - The array of objects to be sorted.
+   * @param {string} property - The property of the objects by which the array will be sorted.
+   * @returns {Object[]} The sorted array.
    */
     return [...array].sort((a, b) => {
       if (a[property] < b[property]) return -1;
@@ -20,12 +21,12 @@ function sortByProperty(array, property) {
   
   function filterByValue(array, key, value) {
 /**
-   * Filters an array of objects by a specific key-value pair.
+   * Filters an array of objects based on a specified key-value pair.
    *
    * @param {Object[]} array - The array of objects to be filtered.
-   * @param {string} key - The key of the object to match the value against.
-   * @param {*} value - The value to match against the object's key.
-   * @returns {Object[]} Returns a new array consisting of objects from the input array that have a matching key-value pair.
+   * @param {string} key - The key of the key-value pair to filter by.
+   * @param {string|number} value - The value of the key-value pair to filter by.
+   * @returns {Object[]} The filtered array of objects.
    */
     return array.filter(item => item[key] === value);
   }
@@ -33,11 +34,12 @@ function sortByProperty(array, property) {
   function groupByProperty(array, property) {
 ```js
 /**
- * Groups an array of objects by a specified property.
+ * Groups an array of objects by a specific property.
  *
- * @param {Object[]} array - The array of objects to be grouped.
- * @param {string} property - The property on which to group the objects.
- * @returns {Object} An object with keys representing the property values and values being arrays of objects that have that property value.
+ * @function groupByProperty
+ * @param {Array} array - The array to be grouped.
+ * @param {string} property - The property on which to group the array.
+ * @returns {Object} An object where each key is a unique value from the specified property and the value is an array of objects that have that value for the specified property.
  * @example
  * // returns { '1': [{ id: 1, name: 'John' }], '2': [{ id: 2, name: 'Jane' }] }
  * groupByProperty([{ id: 1, name: 'John' }, { id: 2, name: 'Jane' }], 'id');
