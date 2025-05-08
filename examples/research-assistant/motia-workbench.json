@@ -1,0 +1,156 @@
+{
+  "research-assistant": {
+    "steps/analyzePaper.step.ts": {
+      "x": 55.057305988048014,
+      "y": 304.2150242293793
+    },
+    "steps/buildKnowledgeGraph.step.ts": {
+      "x": 779.3274053117667,
+      "y": 680.7887655987043
+    },
+    "steps/extractConcepts.step.ts": {
+      "x": 45.26777571882275,
+      "y": 663.8507597154628
+    },
+    "steps/extractText.step.ts": {
+      "x": 613.135234637202,
+      "y": -19.29509650909673
+    },
+    "steps/generateSummary.step.ts": {
+      "x": 260.1046624787611,
+      "y": 455.8462183384524
+    },
+    "steps/queryConcepts.step.ts": {
+      "x": 201.52844800767753,
+      "y": -205.12881408750428
+    },
+    "steps/uploadPaper.step.ts": {
+      "x": 412.55129614366825,
+      "y": -334.97552935874387
+    },
+    "steps/analyzePaperWithGemini.step.ts": {
+      "x": 1412.2749598084588,
+      "y": 333.97104281896145
+    },
+    "steps/extractConceptsWithGemini.step.ts": {
+      "x": 557.9363373812477,
+      "y": 553.497117053836
+    },
+    "steps/finalRenderedUI.step.ts": {
+      "x": 991.7362147978961,
+      "y": -191.0713497192927
+    },
+    "steps/generateSummaryWithGemini.step.ts": {
+      "x": 915.0006954207295,
+      "y": 498.2604446206242
+    },
+    "steps/queryPaper.step.ts": {
+      "x": 686.3293527691716,
+      "y": -326.4925643105093
+    },
+    "steps/serveUI.step.ts": {
+      "x": 713.7278644267357,
+      "y": -174.9244750951271
+    },
+    "steps/analyzeBenchmarks.step.ts": {
+      "x": 118.34257889626289,
+      "y": -13.239283808674372
+    },
+    "steps/analyzeCoreConcepts.step.ts": {
+      "x": 314.03291450420426,
+      "y": 254.3030576370837
+    },
+    "steps/analyzeImplementationDetails.step.ts": {
+      "x": 802.8055952865677,
+      "y": -40.945987380339
+    },
+    "steps/analyzeMethodology.step.ts": {
+      "x": 827.4582757107365,
+      "y": 256.52625464239736
+    },
+    "steps/analyzeResults.step.ts": {
+      "x": 1223.200576350368,
+      "y": -51.45299405985014
+    },
+    "steps/buildEnhancedKnowledgeGraph.step.ts": {
+      "x": 1119.3891602827869,
+      "y": 234.19339362259495
+    },
+    "steps/extractEnhancedConcepts.step.ts": {
+      "x": 1479.4362538285443,
+      "y": -55.51815420455798
+    },
+    "steps/fixedUI.step.ts": {
+      "x": 1280.1401200143514,
+      "y": -232.78410916505376
+    },
+    "steps/serveCss.step.ts": {
+      "x": 911.0040719862789,
+      "y": -396.5277450989726
+    },
+    "steps/serveStatic.step.ts": {
+      "x": 1162.8223596172072,
+      "y": -310.9372591774139
+    },
+    "steps/simpleUI.step.ts": {
+      "x": 1066.3065919182543,
+      "y": -198.69093886942014
+    },
+    "steps/staticUI.step.ts": {
+      "x": 3466,
+      "y": 0
+    },
+    "steps/analyzeRelatedLiterature.step.ts": {
+      "x": 1896.6235182756432,
+      "y": 314.1505571740969
+    },
+    "steps/generateCodeExamples.step.ts": {
+      "x": 1625.834747393104,
+      "y": 173.98311866753792
+    },
+    "steps/evaluateResearchImpact.step.ts": {
+      "x": 1659.637811188388,
+      "y": 550.6112688666531
+    },
+    "steps/recommendRelatedPapers.step.ts": {
+      "x": 1937.2138745564648,
+      "y": 126.31912709637552
+    },
+    "steps/generateMarkdownReport.step.ts": {
+      "x": 1987.3607656561317,
+      "y": 638.1959347694925
+    },
+    "steps/analyzeResearchGaps.step.ts": {
+      "x": 1442.4846057977202,
+      "y": 638.1099762651538
+    },
+    "steps/basic-noop.step.ts": {
+      "x": 1705.75,
+      "y": 553
+    },
+    "steps/noop.step.ts": {
+      "x": 2879.5699181238538,
+      "y": 743.6359247068522
+    },
+    "steps/simple-noop.step.ts": {
+      "x": 3208.8532957724888,
+      "y": 364.71966039223764
+    },
+    "steps/correct-noop.step.ts": {
+      "x": 1801.5560989994133,
+      "y": -83.48654612804117
+    },
+    "steps/webhook-simulator.step.ts": {
+      "x": 1421.8820358904757,
+      "y": -384.5702147995363
+    },
+    "steps/human-review.step.ts": {
+      "x": 1600.3885133324222,
+      "y": 806.688436181598
+    },
+    "steps/research-monitor.step.ts": {
+      "x": 2216.5896974041634,
+      "y": -144.20390416316854
+    }
+  }
+}
