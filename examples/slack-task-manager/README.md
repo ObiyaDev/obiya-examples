@@ -136,6 +136,168 @@ The Slack Task Manager is a powerful Slack bot application that helps teams mana
 /list
 ```
 
+## How It Works
+
+### Under the Hood: Command Processing
+
+#### 1. Task Creation Flow (`/task`)
+```mermaid
+sequenceDiagram
+    participant User
+    participant Slack
+    participant App
+    participant Storage
+    participant Logger
+
+    User->>Slack: /task Buy groceries
+    Slack->>App: POST /slack/command
+    Note over App: 1. Request received
+    App->>Logger: Log request details
+    Note over Logger: [INFO] Received Slack command
+    App->>App: Verify Slack token
+    Note over App: 2. Token verification
+    App->>Logger: Log verification status
+    Note over Logger: [INFO] Token verification
+    App->>Storage: Store task
+    Note over Storage: 3. Task stored in memory
+    Storage-->>App: Task stored
+    App-->>Slack: Task created confirmation
+    Slack-->>User: "✅ Task created: Buy groceries"
+```
+
+#### 2. Reminder Flow (`/reminder`)
+```mermaid
+sequenceDiagram
+    participant User
+    participant Slack
+    participant App
+    participant Storage
+    participant Logger
+
+    User->>Slack: /reminder 1h Call mom
+    Slack->>App: POST /slack/command
+    Note over App: 1. Request received
+    App->>Logger: Log request details
+    Note over Logger: [INFO] Received Slack command
+    App->>App: Parse time format
+    Note over App: 2. Time parsing
+    App->>Storage: Store reminder
+    Note over Storage: 3. Reminder scheduled
+    Storage-->>App: Reminder stored
+    App-->>Slack: Reminder set confirmation
+    Slack-->>User: "⏰ Reminder set for 1h: Call mom"
+```
+
+### Detailed Process Flow
+
+#### 1. Request Reception
+```typescript
+// When a command is received
+logger.info('Received Slack command:', {
+  headers: req.headers,
+  body: req.body
+});
+```
+- Slack sends a POST request to `/slack/command`
+- Request includes command, text, user_id, channel_id
+- Headers contain verification tokens
+
+#### 2. Token Verification
+```typescript
+const slackToken = process.env.SLACK_VERIFICATION_TOKEN;
+const requestToken = req.headers['x-slack-request-token'] || req.headers['x-slack-signature'];
+logger.info('Token verification:', {
+  hasSlackToken: !!slackToken,
+  requestToken: requestToken
+});
+```
+- Verifies request authenticity
+- Checks against environment variables
+- Logs verification status
+
+#### 3. Command Processing
+```typescript
+switch (body.command) {
+  case '/task':
+    const taskData = {
+      topic: 'task_created',
+      data: {
+        text: body.text,
+        user: body.user_id,
+        channel: body.channel_id,
+        timestamp: new Date().toISOString(),
+      }
+    };
+```
+- Parses command type
+- Extracts relevant information
+- Prepares data structure
+
+#### 4. Storage Operations
+```typescript
+const tasks: Array<{
+  id: string;
+  text: string;
+  user: string;
+  channel: string;
+  status: 'pending' | 'completed';
+  createdAt: string;
+}> = [];
+```
+- In-memory array storage
+- Task structure with metadata
+- Status tracking
+
+#### 5. Response Generation
+```typescript
+return {
+  status: 200,
+  body: {
+    response_type: 'in_channel',
+    text: `✅ Task created: ${body.text}`,
+  },
+};
+```
+- Formats response
+- Sets response type
+- Includes emoji indicators
+
+### Logging and Debugging
+
+The application includes comprehensive logging:
+
+1. **Request Logging**
+   ```
+   [INFO] Received Slack command:
+   {
+     headers: {...},
+     body: {
+       command: '/task',
+       text: 'Buy groceries',
+       user_id: 'U123456',
+       channel_id: 'C123456'
+     }
+   }
+   ```
+
+2. **Token Verification**
+   ```
+   [INFO] Token verification:
+   {
+     hasSlackToken: true,
+     requestToken: '...'
+   }
+   ```
+
+3. **Error Handling**
+   ```
+   [ERROR] Error processing Slack command:
+   {
+     message: 'Invalid token',
+     stack: '...'
+   }
+   ```
+
 ## 🧪 Testing
 
 ### Local Development Testing
