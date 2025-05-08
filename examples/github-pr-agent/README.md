@@ -87,8 +87,8 @@ The GitHub PR Agent is a powerful tool built with the Motia framework that helps
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/swarna1101/github-pr-agent.git
-   cd github-pr-agent
+   git clone https://github.com/MotiaDev/motia-examples.git
+   cd motia-examples/examples/github-pr-agent
    ```
 
 2. Install dependencies:
