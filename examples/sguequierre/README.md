@@ -3,6 +3,21 @@
 Documentation Guardian is a Motia-powered workflow that streamlines the process of documenting code.
 It analyzes codebases to identify 'documentation gaps' (functions, classes, or methods lacking proper documentation), uses AI to generate appropriate documentation, and provides a human-in-the-loop review process before integrating the documentation back into the original codebase.
 
+## Flow
+
+The flow is titled `documentation-guardian`.
+The steps are as follows:
+- `github-webhook-receiver`
+- `code-change-detector`
+- `file-content-fetcher`
+- `doc-analyzer`
+- `doc-generator`
+- `human-review-ui`
+- `doc-integrator`
+- `Documentation Transfer Guide`
+
+<img width="446" alt="Screenshot 2025-05-09 at 3 02 56 PM" src="https://github.com/user-attachments/assets/ab826bd8-4e27-4d72-a0a8-d4a8f0c5883f" />
+
 ## Prerequisites ☑️
 
 - Node.js 18+
