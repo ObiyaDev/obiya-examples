@@ -1,0 +1,106 @@
+{
+  "default": {
+    "steps/twitter-stream.ts": {
+      "x": 0,
+      "y": 0
+    },
+    "steps/trend-analysis.ts": {
+      "x": 200,
+      "y": 0
+    },
+    "steps/slack-notification.ts": {
+      "x": 400,
+      "y": 0
+    },
+    "steps/api.step.ts": {
+      "x": -23.029529639345128,
+      "y": 187.41325182967245
+    },
+    "steps/noop.step.ts": {
+      "x": 46.5,
+      "y": 0
+    },
+    "steps/one.step.ts": {
+      "x": 18,
+      "y": 422
+    },
+    "steps/two.step.ts": {
+      "x": 8,
+      "y": 598
+    },
+    "steps/slack-notification.step.ts": {
+      "x": 273.67208396818745,
+      "y": 477.7724733361257
+    },
+    "steps/trend-analysis.step.ts": {
+      "x": 285,
+      "y": 307.6262061950637
+    },
+    "steps/twitter-stream.step.ts": {
+      "x": 34.3517860192468,
+      "y": 184.2686642946898
+    },
+    "steps/noop-twitter.step.ts": {
+      "x": 192,
+      "y": 8
+    }
+  },
+  "tw": {
+    "steps/twitter-stream.step.ts": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "twitter": {
+    "steps/twitter-stream.step.ts": {
+      "x": -232.06038642823071,
+      "y": 14.125285858194275
+    },
+    "steps/slack-notification.step.ts": {
+      "x": -268.8980547919082,
+      "y": 678.6678475957833
+    },
+    "steps/trend-analysis.step.ts": {
+      "x": -122.16060095319558,
+      "y": 406.3069498935059
+    },
+    "steps/noop-twitter.step.ts": {
+      "x": -0.41954513429715234,
+      "y": -197.19321012132446
+    },
+    "steps/api.step.ts": {
+      "x": 396.2323698927449,
+      "y": 0.908582158751571
+    },
+    "steps/farcaster-stream.step.ts": {
+      "x": -91.0783116008409,
+      "y": -3.7492514715559473
+    },
+    "steps/noop-farcaster.step.ts": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "farcaster": {
+    "steps/trend-analysis.step.ts": {
+      "x": 328.5,
+      "y": 204
+    },
+    "steps/api.step.ts": {
+      "x": -36.31050827257425,
+      "y": -90.42843843975035
+    },
+    "steps/farcaster-stream.step.ts": {
+      "x": 290,
+      "y": 14
+    },
+    "steps/slack-notification.step.ts": {
+      "x": 315,
+      "y": 380
+    },
+    "steps/noop-farcaster.step.ts": {
+      "x": 344.0323024646865,
+      "y": -206.5436856522615
+    }
+  }
+}
