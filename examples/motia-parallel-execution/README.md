@@ -85,7 +85,7 @@ curl -X POST http://localhost:3000/process-data \
 ## 📁 Project Structure
 
 ```
-my-agent/
+motia-parallel-execution/
 ├── steps/
 │   ├── data-processing-api.step.ts    # API trigger endpoint
 │   ├── word-count.step.ts             # Word counting processor
