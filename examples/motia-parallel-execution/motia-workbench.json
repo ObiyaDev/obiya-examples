@@ -1,0 +1,66 @@
+{
+  "default": {
+    "steps/03-check-state-change.step.ts": {
+      "x": 20,
+      "y": 634
+    },
+    "steps/02-test-state.step.ts": {
+      "x": 4.818698394670406,
+      "y": 388.0566456408603
+    },
+    "steps/01-api.step.ts": {
+      "x": 17.5,
+      "y": 188
+    },
+    "steps/00-noop.step.ts": {
+      "x": 56,
+      "y": 0
+    }
+  },
+  "parallel-processing": {
+    "steps/word-count.step.ts": {
+      "x": 117.75,
+      "y": 237
+    },
+    "steps/sentiment-analysis.step.ts": {
+      "x": 451.7726781857451,
+      "y": 231.4114470842332
+    },
+    "steps/noop.step.ts": {
+      "x": 387.18592219939006,
+      "y": -207.1875529841634
+    },
+    "steps/keyword-extraction.step.ts": {
+      "x": 808.1495680345572,
+      "y": 237
+    },
+    "steps/data-processing-api.step.ts": {
+      "x": 410,
+      "y": 0
+    },
+    "steps/data-aggregator.step.ts": {
+      "x": 409.3153347732182,
+      "y": 444.75809935205183
+    },
+    "steps/08-data-aggregator.step.ts": {
+      "x": 1445,
+      "y": 446
+    },
+    "steps/07-keyword-extraction.step.ts": {
+      "x": 911,
+      "y": 237
+    },
+    "steps/06-sentiment-analysis.step.ts": {
+      "x": 1183,
+      "y": 237
+    },
+    "steps/05-word-count.step.ts": {
+      "x": 1513.5,
+      "y": 237
+    },
+    "steps/04-data-processing-api.step.ts": {
+      "x": 907,
+      "y": 0
+    }
+  }
+}
