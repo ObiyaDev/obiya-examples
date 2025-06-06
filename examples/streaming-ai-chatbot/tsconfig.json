@@ -14,12 +14,13 @@
     "baseUrl": ".",
     "jsx": "react-jsx"
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx"
-  ],
+"include": [
+     "**/*.ts",
+     "**/*.tsx",
+     "**/*.js",
+     "**/*.jsx",
+    "types.d.ts"
+   ],
   "exclude": [
     "node_modules",
     "dist",
