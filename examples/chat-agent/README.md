@@ -237,12 +237,15 @@ export const config: EventConfig = {
 
 ## 🔍 Example Output
 
-### Input
+### Send a Message
+
+**POST** `/send-message`
+
 ```json
 {
-  "message": "Hello everyone! This is an amazing chat system!",
+  "message": "Hello everyone!",
   "username": "testuser",
-  "roomId": "general"
+  "roomId": "general"  // Optional: Defaults to "general" if not provided
 }
 ```
 
@@ -356,15 +359,3 @@ This example showcases how **Motia transforms complex real-time chat systems** i
 ---
 
 **Built with ❤️ using [Motia Framework](https://github.com/MotiaDev/motia)**
-
-### Send a Message
-
-**POST** `/send-message`
-
-```json
-{
-  "message": "Hello everyone!",
-  "username": "testuser",
-  "roomId": "general"  // Optional: Defaults to "general" if not provided
-}
-```
