@@ -15,7 +15,7 @@
 
 The Research Paper Assistant is a powerful tool built with the Motia framework that helps researchers and students efficiently process academic literature. It automatically analyzes research papers, generates summaries, extracts key concepts, recommends related papers, generates code examples, analyzes research gaps, and builds a knowledge graph to visualize connections between papers - all powered by Google's Gemini 2.5 Pro model.
 
-![research-assistant-demo](data/workbench-image.png)
+![research-assistant-demo](docs/images/workbench-image.png)
 
 ## ✨ Features
 
