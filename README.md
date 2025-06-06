@@ -151,6 +151,92 @@ The system leverages Docling to parse and intelligently chunk PDF documents, Wea
 
 [View Example →](examples/rag-docling-weaviate-agent)
 
+### Real time Chat Implementation
+
+A real-time chat agent implementation showcasing interactive conversational capabilities.
+
+<div style="display: flex; gap: 10px;">
+  <img src="examples/chat-agent/docs/images/chat-agent.gif" alt="Chat Agent" />
+</div>
+
+**Key Features:**
+- Real-time chat interactions
+- Natural language processing
+- Context-aware responses
+- Customizable conversation flows
+
+**Technologies:** TypeScript, OpenAI
+
+[View Example →](examples/chat-agent)
+
+### Motia Parallel Execution
+
+A demonstration of parallel task execution capabilities in Motia agents.
+
+<div style="display: flex; gap: 10px;">
+  <img src="examples/motia-parallel-execution/docs/images/motia-parallel-exec.gif" alt="Motia Parallel Execution" />
+</div>
+
+**Key Features:**
+- Concurrent task processing
+- Workload distribution
+- Performance optimization
+- Resource management
+
+**Technologies:** TypeScript
+
+[View Example →](examples/motia-parallel-execution)
+
+### Research Assistant
+
+An intelligent research assistant that helps gather and analyze information.
+
+<div style="display: flex; gap: 10px;">
+  <img src="examples/research-assistant/docs/images/workbench-image.png" alt="Research Assistant" />
+</div>
+
+**Key Features:**
+- Information gathering
+- Data analysis
+- Research synthesis
+- Citation management
+
+**Technologies:** TypeScript, OpenAI
+
+[View Example →](examples/research-assistant)
+
+### Streaming AI Chatbot
+
+A real-time streaming chatbot implementation with AI capabilities.
+
+<div style="display: flex; gap: 10px;">
+  <img src="examples/streaming-ai-chatbot/docs/images/streaming-ai-chatbot.gif" alt="Streaming AI Chatbot" />
+</div>
+
+**Key Features:**
+- Real-time message streaming
+- Interactive responses
+- Token-by-token output
+- WebSocket integration
+
+**Technologies:** TypeScript, OpenAI Streaming
+
+[View Example →](examples/streaming-ai-chatbot)
+
+### Conversation Analyzer with Vision
+
+An advanced agent that analyzes conversations with both text and visual understanding capabilities.
+
+**Key Features:**
+- Multi-modal conversation analysis
+- Visual content processing
+- Sentiment analysis
+- Contextual understanding
+
+**Technologies:** TypeScript, OpenAI Vision, Natural Language Processing
+
+[View Example →](examples/conversation-analyzer-with-vision)
+
 ## 🚀 Getting Started
 
 Each example includes its own README with detailed setup instructions. Generally, you'll need:
