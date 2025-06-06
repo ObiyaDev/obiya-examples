@@ -2,7 +2,7 @@
 
 A simple example of **parallel execution** and **data aggregation** using [Motia](https://github.com/MotiaDev/motia) - showcasing how complex workflows can be built with elegant simplicity.
 
-![Motia Parallel Execution](/docs/images/motia-parallel-exec.gif)
+![Motia Parallel Execution](docs/images/motia-parallel-exec.gif)
 
 ## 🎯 Why This Matters
 
