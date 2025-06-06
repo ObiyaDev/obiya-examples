@@ -12,7 +12,7 @@ declare module 'motia' {
   }
 
   type Handlers = {
-    'SendMessageApi': ApiRouteHandler<{ message: string; username: string; roomId?: string }, ApiResponse<200, { success: boolean; messageId: string; timestamp: string }>, { topic: 'new-message'; data: { messageId: string; message: string; username: string; roomId: string; timestamp: string } }>
+    'SendMessageApi': ApiRouteHandler<{ message: string; username: string; roomId?: string }, ApiResponse<200, { success: boolean; messageId: string; timestamp: string; message: { id: string; content: string; username: string; roomId: string; timestamp: string } }>, { topic: 'new-message'; data: { messageId: string; message: string; username: string; roomId: string; timestamp: string } }>
     'MessageValidator': EventHandler<{ messageId: string; message: string; username: string; roomId: string; timestamp: string }, { topic: 'processed-message'; data: { type: string; messageId: string; message: string; username: string; roomId: string; timestamp: string; result: unknown } }>
     'MessageSentiment': EventHandler<{ messageId: string; message: string; username: string; roomId: string; timestamp: string }, { topic: 'processed-message'; data: { type: string; messageId: string; message: string; username: string; roomId: string; timestamp: string; result: unknown } }>
     'MessageModerator': EventHandler<{ messageId: string; message: string; username: string; roomId: string; timestamp: string }, { topic: 'processed-message'; data: { type: string; messageId: string; message: string; username: string; roomId: string; timestamp: string; result: unknown } }>

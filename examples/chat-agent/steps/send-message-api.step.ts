@@ -17,7 +17,14 @@ export const config: ApiRouteConfig = {
     200: z.object({ 
       success: z.boolean(),
       messageId: z.string(),
-      timestamp: z.string()
+      timestamp: z.string(),
+      message: z.object({
+        id: z.string(),
+        content: z.string(),
+        username: z.string(),
+        roomId: z.string(),
+        timestamp: z.string()
+      })
     })
   },
   flows: ['chat'],
