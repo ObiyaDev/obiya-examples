@@ -23,12 +23,12 @@ export const handler: Handlers['AiResponse'] = async (input, context) => {
 
   logger.info('Generating AI response', { conversationId })
 
-//  For Azure OpenAI
+  // For Azure OpenAI
   // const openai = new AzureOpenAI({
   //   endpoint: process.env.AZURE_OPENAI_ENDPOINT || 'demo-key',
   //   apiKey: process.env.AZURE_OPENAI_API_KEY || 'demo-key',
   //   deployment: 'gpt-4o-mini',
-  //   apiVersion: '2024-04-01-preview'
+  //   apiVersion: '2024-12-01-preview'
   // })
 
   const openai = new OpenAI({ 

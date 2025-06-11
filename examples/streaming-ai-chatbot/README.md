@@ -19,7 +19,7 @@ streaming-ai-chatbot/
 │   ├── chat-api.step.ts         # Simple chat API endpoint  
 │   └── ai-response.step.ts      # Streaming AI response handler
 ├── package.json                 # Dependencies
-├── .env.example                 # Configuration template
+├── tsconfig.json               # TypeScript configuration
 └── README.md                    # This file
 ```
 
@@ -106,7 +106,7 @@ for await (const chunk of stream) {
 
 ### 2. **Real-time State Management**
 ```typescript
-export const config: StateStreamConfig = {
+export const config: StreamConfig = {
   name: 'conversation',
   schema: z.object({
     message: z.string(),
@@ -114,7 +114,7 @@ export const config: StateStreamConfig = {
     status: z.enum(['created', 'streaming', 'completed']),
     timestamp: z.string(),
   }),
-  baseConfig: { storageType: 'state' },
+  baseConfig: { storageType: 'default' },
 }
 ```
 
@@ -147,7 +147,8 @@ Perfect for demonstrating how Motia makes complex real-time applications simple 
 ## 🔑 Environment Variables
 
 - `OPENAI_API_KEY`: Your OpenAI API key (required)
-- `AZURE_OPENAI_API_KEY`: Azure OpenAI key (optional, commented out)
+- `AZURE_OPENAI_ENDPOINT`: Your Azure OpenAI endpoint URL (optional)
+- `AZURE_OPENAI_API_KEY`: Your Azure OpenAI API key (optional)
 
 ## 📝 Notes
 
