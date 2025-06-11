@@ -146,8 +146,9 @@ Perfect for demonstrating how Motia makes complex real-time applications simple 
 
 ## 🔑 Environment Variables
 
-- `AZURE_OPENAI_ENDPOINT`: Your Azure OpenAI endpoint URL (required)
-- `AZURE_OPENAI_API_KEY`: Your Azure OpenAI API key (required)
+- `OPENAI_API_KEY`: Your OpenAI API key (required)
+- `AZURE_OPENAI_ENDPOINT`: Your Azure OpenAI endpoint URL (optional)
+- `AZURE_OPENAI_API_KEY`: Your Azure OpenAI API key (optional)
 
 ## 📝 Notes
 
