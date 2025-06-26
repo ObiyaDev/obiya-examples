@@ -7,7 +7,7 @@ exports.config = {
   emits:[],
   flows: ['content-pipeline'],
   method: 'GET',
-  description: 'Returns a simple greeting message.',
+  description: 'Returns the retrieved tweets for the given trace ID',
   responseSchema: {
     200: z.object({
       message: z.array(z.object({
