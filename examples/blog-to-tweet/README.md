@@ -33,7 +33,7 @@ This Motia application demonstrates the power of AI-native backend development b
 4. **📊 Provides** APIs to retrieve and manage generated content
 
 ## 🏗️ Architecture Overview
-![Architecture Overview](./assets/architecture.png)
+![Architecture Overview](./assets/architecture.gif)
 
 Built with **4 composable Motia Steps**:
 - 🌐 **API Step**: Article detection endpoint
