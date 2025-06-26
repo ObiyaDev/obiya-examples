@@ -18,8 +18,7 @@ const tweetGenerator = new TweetGeneratorService()
 
 const tweets = await tweetGenerator.generateTweetsFromArticle({markdown: body})
 
-
-console.log(tweets)
+logger.info('Tweets generated:', tweets)
 
 await state.set(traceId, 'tweets', tweets)
 
