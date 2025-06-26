@@ -33,7 +33,7 @@ This Motia application demonstrates the power of AI-native backend development b
 4. **📊 Provides** APIs to retrieve and manage generated content
 
 ## 🏗️ Architecture Overview
-![Architecture Overview](https://private-user-images.githubusercontent.com/62152915/459364601-e7b61689-4532-40b4-8c31-f1064477561a.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTA5MzM5MjUsIm5iZiI6MTc1MDkzMzYyNSwicGF0aCI6Ii82MjE1MjkxNS80NTkzNjQ2MDEtZTdiNjE2ODktNDUzMi00MGI0LThjMzEtZjEwNjQ0Nzc1NjFhLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA2MjYlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNjI2VDEwMjcwNVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTQzNGQ0YjhlYWU3NGNhYjdiZjc1NDEzYmY1NDFhZTFmODA1NTI3YjMzNjE1YTkwNmNjNTYzY2Q2ZmQwNWI4ZmUmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.YsQAWqG6Y2MYwNStgemgkyDRqIE_gAz97lOjB4Xn3D8)
+![Architecture Overview](./assets/architecture.png)
 
 Built with **4 composable Motia Steps**:
 - 🌐 **API Step**: Article detection endpoint
