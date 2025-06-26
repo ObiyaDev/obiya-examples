@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import axios from 'axios'
 
-const trace_id = process.env.TRACE_ID
+const traceId = process.env.TRACE_ID
 const devToApiKey = process.env.DEVTO_API_KEY
 
 exports.config = {
@@ -31,7 +31,7 @@ const list =  await axios.get('https://dev.to/api/articles/me/published?page=1&p
 
 
 
-const lastId = await state.get(trace_id,'lastPublishedArticle')
+const lastId = await state.get(traceId,'lastPublishedArticle')
 
 if(lastId===list.data[0].id) {
   logger.info('No new articles found, skipping emit')
@@ -41,8 +41,8 @@ if(lastId===list.data[0].id) {
   }
 }else{
   logger.info('New article found, proceeding with emit')
-  await state.clear(trace_id, 'lastPublishedArticle')
-  await state.set(trace_id, 'lastPublishedArticle', list.data[0].id)
+  await state.clear(traceId, 'lastPublishedArticle')
+  await state.set(traceId, 'lastPublishedArticle', list.data[0].id)
 
   await emit({
      topic: 'article.submitted',
