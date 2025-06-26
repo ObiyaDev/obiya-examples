@@ -1,8 +1,6 @@
 import { z } from 'zod'
-import axios from 'axios'
-
+const { DevToService } = require('../services/dev-to-api-service.js')
 const trace_id = process.env.TRACE_ID
-const devToApiKey = process.env.DEVTO_API_KEY
 
 exports.config = {
   type: 'api',
@@ -21,34 +19,33 @@ exports.config = {
  
 exports.handler = async (req, { emit, logger, state, traceId }) => {
   logger.info('Get last published article endpoint was called')
- 
 
-const list =  await axios.get('https://dev.to/api/articles/me/published?page=1&per_page=1', {
-  headers: {
-    "api-key": devToApiKey,
+const devto = new DevToService();
+  const latestArticle = await devto.getLastPublishedArticle();
+
+  if (!latestArticle) {
+    return {
+      status: 500,
+      body: { message: 'Failed to fetch article' },
+    };
   }
-});
+
 
 const lastId = await state.get(trace_id,'lastPublishedArticle')
-
-if(lastId===list.data[0].id) {
-  logger.info('No new articles found, skipping emit')
-  return {
-    status: 200,
-    body: { message: 'No new articles found' },
+if (lastId === latestArticle.id) {
+    logger.info('No new articles found, skipping emit');
+    return {
+      status: 200,
+      body: { message: 'No new articles found' },
+    };
   }
-}else{
-  logger.info('New article found, proceeding with emit')
-  await state.clear(trace_id, 'lastPublishedArticle')
-  await state.set(trace_id, 'lastPublishedArticle', list.data[0].id)
+
+  await state.set(trace_id, 'lastPublishedArticle', latestArticle.id);
 
   await emit({
-     topic: 'article.submitted',
-     data: {
-       body: list.data[0].body_markdown
-     }
-   })
-}
+    topic: 'article.submitted',
+    data: { body: latestArticle.body_markdown },
+  });
 
   return {
     status: 200,
