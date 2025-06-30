@@ -26,16 +26,6 @@ exports.handler = async (req, { emit, logger, state, traceId }) => {
   }
 });
 
-// const devto = new DevToService();
-//   const latestArticle = await devto.getLastPublishedArticle();
-
-//   if (!latestArticle) {
-//     return {
-//       status: 500,
-//       body: { message: 'Failed to fetch article' },
-//     };
-//   }
-
 const lastId = await state.get(trace_id,'lastPublishedArticle')
 if (lastId === latestArticle.id) {
     logger.info('No new articles found, skipping emit');
