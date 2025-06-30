@@ -20,16 +20,21 @@ exports.config = {
 exports.handler = async (req, { emit, logger, state, traceId }) => {
   logger.info('Get last published article endpoint was called')
 
-const devto = new DevToService();
-  const latestArticle = await devto.getLastPublishedArticle();
-
-  if (!latestArticle) {
-    return {
-      status: 500,
-      body: { message: 'Failed to fetch article' },
-    };
+  const list =  await axios.get('https://dev.to/api/articles/me/published?page=1&per_page=1', {
+  headers: {
+    "api-key": devToApiKey,
   }
+});
 
+// const devto = new DevToService();
+//   const latestArticle = await devto.getLastPublishedArticle();
+
+//   if (!latestArticle) {
+//     return {
+//       status: 500,
+//       body: { message: 'Failed to fetch article' },
+//     };
+//   }
 
 const lastId = await state.get(trace_id,'lastPublishedArticle')
 if (lastId === latestArticle.id) {
