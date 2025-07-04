@@ -36,11 +36,7 @@ exports.handler = async (input, { state, emit, logger }) => {
       .map(kw => `#${kw}`)
       .join(' ');
 
-    const finalPost = `
-${post}
-
-${hashtags}
-`.trim();
+    const finalPost = [post, hashtags].map(str => str.trim()).join('\n\n');
 
     logger.info('✅ Final LinkedIn post ready to publish');
 
