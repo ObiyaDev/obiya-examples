@@ -1,0 +1,44 @@
+[
+  {
+    "id": "default",
+    "config": {
+      "steps/03-check-state-change.step.ts": {
+        "x": 20,
+        "y": 636
+      }
+    }
+  },
+  {
+    "id": "LinkedIn-content-agent",
+    "config": {
+      "steps/merge-everything.step.js": {
+        "x": 20,
+        "y": 708
+      },
+      "steps/generate-seo-keywords.step.js": {
+        "x": -416,
+        "y": 500
+      },
+      "steps/generate-image.step.js": {
+        "x": 434,
+        "y": 478
+      },
+      "steps/generate-content-using-idea.step.js": {
+        "x": 3,
+        "y": 208
+      },
+      "steps/final.step.js": {
+        "x": 95,
+        "y": 946
+      },
+      "steps/create-idea.step.js": {
+        "x": 14,
+        "y": 6
+      },
+      "steps/api.step.js": {
+        "x": 3,
+        "y": -214
+      }
+    }
+  }
+]
