@@ -239,13 +239,74 @@ An advanced agent that analyzes conversations with both text and visual understa
 
 ## 🚀 Getting Started
 
-Each example includes its own README with detailed setup instructions. Generally, you'll need:
+Each example includes its own README with detailed setup instructions. To get started with any example:
 
-1. Clone this repository
-2. Navigate to the example directory
-3. Install dependencies
-4. Configure environment variables
-5. Run the agent with Motia
+### Quick Setup
+
+1. **Clone this repository**
+   ```bash
+   git clone https://github.com/MotiaDev/motia-examples.git
+   cd motia-examples
+   ```
+
+2. **Navigate to the example directory**
+   ```bash
+   cd examples/[example-name]
+   ```
+   
+   > **Important**: Make sure to use the correct directory name:
+   > - ✅ `gmail-workflow` (correct)
+   > - ❌ `gmail-flow` (incorrect)
+   > - ✅ `trello-flow` (correct)
+   > - ✅ `github-integration-workflow` (correct)
+
+3. **Install dependencies**
+   
+   We recommend using pnpm for consistent dependency management:
+   ```bash
+   # Install pnpm if you haven't already
+   npm install -g pnpm
+   
+   # Install dependencies
+   pnpm install
+   ```
+   
+   Alternatively, you can use npm:
+   ```bash
+   npm install
+   ```
+
+4. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+5. **Run the agent with Motia**
+   ```bash
+   pnpm dev
+   # or
+   npm run dev
+   ```
+
+### Available Examples
+
+Browse our examples by directory name:
+- `ai-deep-research-agent` - AI research assistant
+- `blog-to-tweet` - Content transformation agent
+- `chat-agent` - Real-time chat implementation
+- `conversation-analyzer-with-vision` - Multi-modal analysis
+- `finance-agent` - Financial analysis workflow
+- `github-integration-workflow` - GitHub automation
+- `gmail-workflow` - Gmail processing ⚠️ *Note: use `gmail-workflow`, not `gmail-flow`*
+- `linkedIn-content-agent` - LinkedIn content automation
+- `motia-parallel-execution` - Parallel processing demo
+- `rag-docling-weaviate-agent` - PDF RAG with Weaviate
+- `rag_example` - Basic RAG implementation
+- `research-assistant` - Research analysis tool
+- `streaming-ai-chatbot` - Real-time streaming chat
+- `trello-flow` - Trello workflow automation
+- `vision-example` - AI image generation and evaluation
 
 ## 🤝 Contributing
 
