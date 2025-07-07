@@ -35,8 +35,8 @@ An intelligent Gmail account manager built with the Motia framework. This workfl
 
 1. **Clone this repository**
    ```bash
-   git clone https://github.com/yourusername/gmail-flow.git
-   cd gmail-flow
+   git clone https://github.com/motia-examples/gmail-workflow.git
+   cd gmail-workflow
    ```
 
 2. **Install Node.js dependencies**
