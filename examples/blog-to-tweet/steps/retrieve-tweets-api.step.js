@@ -1,6 +1,6 @@
-const { z } = require('zod')
+import { z } from 'zod'
 
-exports.config = {
+export const config = {
   type: 'api',
   name: 'retrieve-tweets-api',
   path: '/retrieve-tweets/:traceId',
@@ -19,7 +19,7 @@ exports.config = {
   },
 }
 
-exports.handler = async (req, { logger, state}) => {
+export const handler = async (req, { logger, state}) => {
   logger.info('Retrieve endpoint was called')
 
   const tweets = await state.get(req.pathParams.traceId, 'tweets')

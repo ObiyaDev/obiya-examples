@@ -33,16 +33,18 @@
     "id": "content-pipeline",
     "config": {
       "steps/retrieve-tweets-api.step.js": {
-        "x": 443,
-        "y": 31
+        "x": 663,
+        "y": 106
       },
       "steps/event.step.js": {
-        "x": -10,
-        "y": 223
+        "x": 204,
+        "y": 138,
+        "targetHandlePosition": "left"
       },
       "steps/api.step.js": {
-        "x": -1,
-        "y": -17
+        "x": -254,
+        "y": 112,
+        "sourceHandlePosition": "right"
       }
     }
   }

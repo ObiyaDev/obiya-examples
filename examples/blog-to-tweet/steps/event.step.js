@@ -1,7 +1,7 @@
-const z = require('zod');
-const OpenAI = require('openai');
+import { z } from 'zod';
+import OpenAI from 'openai';
 
-exports.config = {
+export const config = {
   type: 'event',
   name: 'processArticle',
   description: 'Processes an article and emits a processed event',
@@ -11,7 +11,7 @@ exports.config = {
   flows: ['content-pipeline'],
 };
 
-exports.handler = async ({ body }, { emit, logger, state, traceId }) => {
+export const handler = async ({ body }, { emit, logger, state, traceId }) => {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
@@ -37,9 +37,9 @@ Output a JSON array like:
   ...
 ]
 
-Audience: Developers, engineers, tech influencers. Optimize for shareability, clarity, and specificity. Don’t copy paste the article. Distill and remix.
+Audience: Developers, engineers, tech influencers. Optimize for shareability, clarity, and specificity. Don't copy paste the article. Distill and remix.
 
-Only return the JSON. Here’s the article:
+Only return the JSON. Here's the article:
 
 \`\`\`md
 ${body}
