@@ -1,8 +1,11 @@
 import { z } from 'zod'
-const { DevToService } = require('../services/dev-to-api-service.js')
+import axios from 'axios'
+import 'dotenv/config'
+
+const devToApiKey = process.env.DEVTO_API_KEY
 const trace_id = process.env.TRACE_ID
 
-exports.config = {
+export const config = {
   type: 'api',
   name: 'fetch devto articles',
   emits: ['article.submitted'],
@@ -17,7 +20,7 @@ exports.config = {
   },
 }
 
-exports.handler = async (req, { emit, logger, state, traceId }) => {
+export const handler = async (req, { emit, logger, state, traceId }) => {
   logger.info('Get last published article endpoint was called')
 
   const list = await axios.get('https://dev.to/api/articles/me/published?page=1&per_page=1', {

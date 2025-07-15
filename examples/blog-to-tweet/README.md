@@ -54,8 +54,8 @@ Built with **4 composable Motia Steps**:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/content-amplification-pipeline
-cd content-amplification-pipeline
+git clone https://github.com/motiadev/blog-to-tweet
+cd blog-to-tweet
 
 # Install dependencies
 npm install
@@ -81,7 +81,7 @@ NODE_ENV=development
 
 ```bash
 # Start development server
-motia dev
+npx motia dev
 
 # Your application will be running at http://localhost:3000
 ```
