@@ -1,0 +1,25 @@
+{
+  "name": "docker-example",
+  "description": "",
+  "scripts": {
+    "postinstall": "motia install",
+    "build": "motia build",
+    "clean": "rm -rf dist node_modules python_modules .motia .mermaid",
+    "dev": "motia dev",
+    "dev:debug": "motia dev --verbose",
+    "generate-types": "motia generate-types",
+    "start": "motia start"
+  },
+  "keywords": [
+    "motia"
+  ],
+  "dependencies": {
+    "motia": "^0.4.3-beta.96",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.23",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

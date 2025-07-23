@@ -1,0 +1,27 @@
+[
+  {
+    "id": "default",
+    "config": {
+      "steps/03-check-state-change.step.ts": {
+        "x": 18,
+        "y": 559
+      },
+      "steps/02-test-state.step.ts": {
+        "x": 0,
+        "y": 377
+      },
+      "steps/01-api.step.ts": {
+        "x": 3,
+        "y": 162
+      },
+      "steps/00-noop.step.ts": {
+        "x": 32,
+        "y": 0
+      },
+      "steps/MyPythonStep.step.py": {
+        "x": 375,
+        "y": 559
+      }
+    }
+  }
+]
