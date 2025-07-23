@@ -67,3 +67,33 @@ make status
 ```bash
 make logs
 ```
+
+
+## Deploy to Railway
+
+### Prerequisites
+
+- Docker
+- Railway CLI
+
+### Link to a project
+
+```bash
+railway link
+```
+
+### Update Dockerfile
+
+Remove this line from the Dockerfile `CMD ["npm", "run", "dev"]` since this is already configured in the railway.json file
+
+### Deploy
+
+```bash
+railway up
+```
+
+### After your deployment completes, make sure to perform the following steps:
+
+- Setup a domain and configure it to point to the exposed PORT in your Dockerfile
+- Configure the environment variables in Railway
+
