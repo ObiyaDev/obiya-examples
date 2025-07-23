@@ -6,15 +6,17 @@
     "build": "motia build",
     "clean": "rm -rf dist node_modules python_modules .motia .mermaid",
     "dev": "motia dev",
+    "dev:docker": "motia dev --host 0.0.0.0",
     "dev:debug": "motia dev --verbose",
     "generate-types": "motia generate-types",
-    "start": "motia start"
+    "start": "motia start",
+    "start:docker": "motia start --host 0.0.0.0"
   },
   "keywords": [
     "motia"
   ],
   "dependencies": {
-    "motia": "^0.4.3-beta.96",
+    "motia": "0.5.1-beta.100",
     "zod": "^3.25.76"
   },
   "devDependencies": {
