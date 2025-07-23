@@ -14,4 +14,4 @@ RUN npx motia@latest install
 EXPOSE 3000
 
 # Run your application
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start:docker"]
