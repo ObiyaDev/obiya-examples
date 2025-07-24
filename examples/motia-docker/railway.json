@@ -5,6 +5,6 @@
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "npm run dev"
+    "startCommand": "npm run start"
   }
 }
