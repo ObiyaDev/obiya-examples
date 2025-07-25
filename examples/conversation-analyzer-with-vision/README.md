@@ -3,6 +3,7 @@
 A workflow application built with [Motia](https://motia.dev) that processes conversation screenshots, transcribes them using AI vision models, and generates intelligent summaries with action items and sentiment analysis.
 
 ## Overview
+![Conversation Analyzer](docs/images/conversation-analyzer-with-vision.png)
 
 This application provides an end-to-end workflow for analyzing conversations from screenshots:
 

@@ -1,4 +1,4 @@
-import { EventConfig, StepHandler } from '@motiadev/core'
+import { EventConfig, StepHandler } from 'motia'
 import { z } from 'zod'
 import { OpenAIService } from '../services/openai.service'
 import { ResearchConfig } from './types/research-config'

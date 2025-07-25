@@ -43,7 +43,9 @@ export const handler: Handlers['MessageAggregator'] = async (input, { traceId, l
     const moderation = currentProcessing.moderation
 
     if (validation.isValid && !moderation.shouldBlock) {
-      const currentChat = await streams.chatMessages.get(traceId, roomId) || {
+      // Get current chat state from state management instead of streams
+      const chatStateKey = `chat-${roomId}`
+      const currentChat = await state.get(traceId, chatStateKey) as any || {
         roomId,
         messages: [],
         totalMessages: 0,
@@ -64,7 +66,9 @@ export const handler: Handlers['MessageAggregator'] = async (input, { traceId, l
       currentChat.totalMessages = currentChat.messages.length
       currentChat.lastActivity = timestamp
 
-      await streams.chatMessages.set(traceId, roomId, currentChat)
+      // Update both state and stream
+      await state.set(traceId, chatStateKey, currentChat)
+      await streams.chatMessages.set(roomId, 'room-state', currentChat)
 
       logger.info('Message added to chat', { 
         messageId, 

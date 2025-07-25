@@ -1,5 +1,5 @@
 import FirecrawlApp from '@mendable/firecrawl-js';
-import { Logger } from '@motiadev/core'
+import { Logger } from 'motia'
 
 export interface SearchResult {
   url: string

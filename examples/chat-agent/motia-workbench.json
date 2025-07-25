@@ -1,24 +1,27 @@
-{
-  "chat": {
-    "steps/send-message-api.step.ts": {
-      "x": 343,
-      "y": 0
-    },
-    "steps/message-validator.step.ts": {
-      "x": 0,
-      "y": 238
-    },
-    "steps/message-sentiment.step.ts": {
-      "x": 309,
-      "y": 238
-    },
-    "steps/message-moderator.step.ts": {
-      "x": 641,
-      "y": 238
-    },
-    "steps/message-aggregator.step.ts": {
-      "x": 270,
-      "y": 448
+[
+  {
+    "id": "chat",
+    "config": {
+      "steps/send-message-api.step.ts": {
+        "x": 417,
+        "y": 0
+      },
+      "steps/message-validator.step.ts": {
+        "x": 0,
+        "y": 214
+      },
+      "steps/message-sentiment.step.ts": {
+        "x": 410,
+        "y": 214
+      },
+      "steps/message-moderator.step.ts": {
+        "x": 820,
+        "y": 214
+      },
+      "steps/message-aggregator.step.ts": {
+        "x": 410,
+        "y": 396
+      }
     }
   }
-}
+]
