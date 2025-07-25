@@ -35,8 +35,8 @@ This example is using AWS Lightsail to deploy the container. It is up to you to 
 ### Prerequisites
 
 - Docker
-- AWS CLI (setup your credentials, the `default` profile will be used if no `AWS_PROFILE` is provided in the `make full-deploy` command)
-- AWS Lightsail
+- [AWS CLI](https://aws.amazon.com/cli/) (setup your credentials, the `default` profile will be used if no `AWS_PROFILE` is provided in the `make full-deploy` command)
+- [AWS Lightsail Plugin](https://docs.aws.amazon.com/en_us/lightsail/latest/userguide/amazon-lightsail-install-software.html#install-software-lightsailctl)
 
 Follow [these](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) instructions to install these dependencies.
 
