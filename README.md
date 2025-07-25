@@ -1,15 +1,20 @@
 # Motia Examples 🚀
 
-Welcome to the official examples repository for [Motia](https://motia.dev/) - the powerful agent development platform that helps you build, visualize, and deploy AI-powered agents with ease.
+Welcome to the official examples repository for [Motia](https://motia.dev/) - a modern backend framework for building event-driven applications with built-in observability and state management.
 
-## What is Motia?
+## 🤔 How it Works
 
-Motia is a modern agent development platform that enables you to:
+Motia uses **Steps** as its core building block. Steps can be:
+- **API Steps** (`api`) - HTTP endpoints for REST/GraphQL APIs
+- **Event Steps** (`event`) - Background workers triggered by events
+- **Cron Steps** (`cron`) - Scheduled tasks that run automatically
 
-- **Build versatile agents** - Connect APIs, databases, AI services, and custom logic in a visual interface
-- **Create event-driven architectures** - Build reactive systems that respond to webhooks, scheduled tasks, and internal events
-- **Leverage AI capabilities** - Integrate with LLMs and other AI services to build intelligent agents
-- **Deploy with confidence** - Run your agents reliably in any environment with robust testing and monitoring
+Each Step has access to:
+- **State Management** - Traced key-value store shared across steps
+- **Event System** - Emit and subscribe to decouple your logic
+- **Observability** - Built-in tracing and structured logging
+
+A single Motia app can replace multiple tools like Nest.js, Temporal, and Celery/BullMQ - it's all just steps and events.
 
 ## 🗂 Examples
 
@@ -17,7 +22,7 @@ Motia is a modern agent development platform that enables you to:
 
 A powerful research assistant that performs comprehensive web research on any topic or question, providing in-depth analysis and reports.
 
-![Finance Agent](examples/ai-deep-research-agent/docs/deep-research1.png)
+![Finance Agent](examples/ai-deep-research-agent/docs/deep-research.png)
 
 **Key Features:**
 - Deep Web Research: Searches the web, extracts content, and synthesizes findings
@@ -151,6 +156,23 @@ The system leverages Docling to parse and intelligently chunk PDF documents, Wea
 
 [View Example →](examples/rag-docling-weaviate-agent)
 
+### Real-Time Chat Application
+
+A comprehensive demonstration of real-time chat functionality with asynchronous message processing using the Motia Framework.
+
+![Chat Agent](examples/chat-agent/docs/images/chat-agent.png)
+
+**Key Features:**
+- Real-time messaging with WebSocket streaming
+- Concurrent message processing (validation, sentiment analysis, moderation)
+- Event-driven architecture with pub/sub messaging
+- Type-safe message handling with Zod validation
+- Live chat state updates and message aggregation
+
+**Technologies:** TypeScript, Motia Streams, Event System
+
+[View Example →](examples/chat-agent)
+
 ### Real time Chat Implementation
 
 A real-time chat agent implementation showcasing interactive conversational capabilities.
@@ -227,6 +249,10 @@ A real-time streaming chatbot implementation with AI capabilities.
 
 An advanced agent that analyzes conversations with both text and visual understanding capabilities.
 
+<div style="display: flex; gap: 10px;">
+  <img src="examples/conversation-analyzer-with-vision/docs/images/conversation-analyzer-with-vision.png" alt="Conversation Analyzer with Vision" />
+</div>
+
 **Key Features:**
 - Multi-modal conversation analysis
 - Visual content processing
@@ -258,5 +284,4 @@ This repository and its contents are licensed under the MIT License - see the [L
 ## 📚 Learn More
 
 - [Motia Documentation](https://motia.dev/docs)
-- [API Reference](https://motia.dev/docs/api)
-- [Tutorial Videos](https://motia.dev/resources)
+- [Motia Tutorials](https://blog.motia.dev)
