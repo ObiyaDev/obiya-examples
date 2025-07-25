@@ -4,12 +4,13 @@
   "description": "RAG Agent to process and vectorize PDF documents using Motia, Docling and Weaviate",
   "main": "index.js",
   "scripts": {
+    "postinstall": "motia install",
     "prepare": "python3 -m venv python_modules && source python_modules/bin/activate && pip install -r requirements.txt",
     "dev": "source python_modules/bin/activate && motia dev",
-    "dev:debug": "source python_modules/bin/activate && motia dev --debug",
+    "dev:debug": "source python_modules/bin/activate && motia dev --verbose",
+    "generate-types": "motia generate-types",
     "build": "source python_modules/bin/activate && motia build",
     "clean": "rm -rf dist .motia .mermaid node_modules python_modules",
-    "generate:config": "motia get-config --output ./",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
@@ -25,15 +26,17 @@
   "author": "Filipe Leandro <github:ffleandro>",
   "license": "MIT",
   "dependencies": {
-    "motia": "0.1.0-beta.25",
-    "openai": "^4.91.0",
+    "dotenv": "^16.5.0",
+    "motia": "^0.4.2-beta.95",
+    "openai": "^5.7.0",
     "weaviate-client": "^3.4.2",
-    "zod": "^3.24.2"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.17.28",
+    "@types/react": "^18.3.23",
     "@typescript-eslint/parser": "^8.29.0",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
@@ -41,7 +44,8 @@
     "globals": "^16.0.0",
     "jest": "^29.7.0",
     "prettier": "^3.5.3",
-    "typescript": "^5.8.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.29.0"
   }
 }

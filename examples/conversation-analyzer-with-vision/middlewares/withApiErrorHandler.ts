@@ -6,7 +6,7 @@ import {
   CronHandler,
   EventHandler,
   FlowContext,
-} from '@motiadev/core';
+} from 'motia';
 import { ZodObject } from 'zod';
 
 /**

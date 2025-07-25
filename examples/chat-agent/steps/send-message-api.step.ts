@@ -30,7 +30,7 @@ export const config: ApiRouteConfig = {
   flows: ['chat'],
 }
 
-export const handler: Handlers['SendMessageApi'] = async (req, { traceId, logger, emit, streams }) => {
+export const handler: Handlers['SendMessageApi'] = async (req, { traceId, logger, emit, streams, state }) => {
   const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   const timestamp = new Date().toISOString()
   const roomId = req.body.roomId ?? 'general'
@@ -41,15 +41,23 @@ export const handler: Handlers['SendMessageApi'] = async (req, { traceId, logger
     roomId 
   })
 
-  try {
-    await streams.chatMessages.set(traceId, roomId, {
+  // Initialize chat state if it doesn't exist
+  const chatStateKey = `chat-${roomId}`
+  const existingChat = await state.get(traceId, chatStateKey)
+  if (!existingChat) {
+    const initialChatState = {
       roomId,
       messages: [],
       totalMessages: 0,
       lastActivity: timestamp
-    })
-  } catch (error) {
-    logger.warn('Stream not available, continuing without real-time updates', { error })
+    }
+    await state.set(traceId, chatStateKey, initialChatState)
+    
+    try {
+      await streams.chatMessages.set(roomId, 'room-state', initialChatState)
+    } catch (error) {
+      logger.warn('Stream not available, continuing without real-time updates', { error })
+    }
   }
 
   await emit({

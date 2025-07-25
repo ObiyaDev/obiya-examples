@@ -2,9 +2,12 @@
   "name": "motia-conversation-analyzer",
   "description": "Motia workflow for conversation transcription, summarizing, and sentiment analysis",
   "scripts": {
+    "postinstall": "motia install",
     "dev": "motia dev",
-    "dev:debug": "motia dev --debug",
-    "generate:config": "motia get-config --output ./",
+    "dev:debug": "motia dev --verbose",
+    "generate-types": "motia generate-types",
+    "build": "motia build",
+    "clean": "rm -rf dist node_modules python_modules .motia .mermaid",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
@@ -15,21 +18,20 @@
     "motia"
   ],
   "dependencies": {
-    "@motiadev/core": "0.1.0-beta.15",
-    "@motiadev/workbench": "0.1.0-beta.15",
-    "motia": "0.1.0-beta.15",
-    "openai": "^4.90.0",
+    "dotenv": "^16.5.0",
+    "motia": "^0.4.2-beta.95",
+    "openai": "^5.7.0",
     "react": "^19.0.0",
-    "zod": "^3.24.2"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.13.14",
-    "@types/react": "^19.0.12",
+    "@types/react": "^18.3.23",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.5.0",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.5",
@@ -38,6 +40,6 @@
     "prettier": "^3.5.3",
     "ts-jest": "^29.3.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }

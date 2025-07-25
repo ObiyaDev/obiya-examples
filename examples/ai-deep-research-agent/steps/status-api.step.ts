@@ -1,4 +1,4 @@
-import { ApiRouteConfig, StepHandler } from '@motiadev/core'
+import { ApiRouteConfig, StepHandler } from 'motia'
 import { z } from 'zod'
 import { ResearchConfig } from './types/research-config'
 

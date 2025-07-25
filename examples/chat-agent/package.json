@@ -2,8 +2,9 @@
   "name": "chat-agent",
   "description": "Real-time chat application using Motia framework",
   "scripts": {
-    "dev": "motia dev --verbose",
-    "dev:debug": "motia dev --debug",
+    "postinstall": "motia install",
+    "dev": "motia dev",
+    "dev:debug": "motia dev --verbose",
     "generate-types": "motia generate-types",
     "build": "motia build",
     "clean": "rm -rf dist node_modules python_modules .motia .mermaid"
@@ -14,8 +15,9 @@
     "real-time"
   ],
   "dependencies": {
-    "motia": "^0.2.1-beta.73",
-    "zod": "^3.25.49"
+    "dotenv": "^16.5.0",
+    "motia": "^0.5.2-beta.103",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@types/react": "^18.3.23",

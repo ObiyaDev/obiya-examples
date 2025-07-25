@@ -1,7 +1,7 @@
 # 🚀 Motia Framework: Real-Time Chat Application
 
 A comprehensive demonstration of **real-time chat functionality** with **asynchronous message processing** using the [Motia Framework](https://github.com/MotiaDev/motia) - showcasing how complex event-driven chat systems can be built with elegant simplicity.
-![chat-agent](docs/images/chat-agent.gif)
+![chat-agent](docs/images/chat-agent.png)
 
 ## 🎯 Why This Example Matters
 
@@ -16,18 +16,6 @@ Modern chat applications require **real-time messaging** with sophisticated proc
 ## 🏗️ Architecture Overview
 
 This example demonstrates a **real-time chat system** that processes messages through multiple concurrent processors:
-
-```mermaid
-graph TD
-    A[Send Message API] --> B[New Message Topic]
-    B --> C[Message Validator]
-    B --> D[Sentiment Analyzer] 
-    B --> E[Content Moderator]
-    C --> F[Message Aggregator]
-    D --> F
-    E --> F
-    F --> G[Chat Messages Stream + Real-Time Updates]
-```
 
 ### 🔄 Event Flow
 
