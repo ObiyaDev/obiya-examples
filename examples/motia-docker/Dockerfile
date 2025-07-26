@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 motiadev/motia-docker:latest
+FROM --platform=linux/amd64 motiadev/motia:latest
 
 # Install Dependencies
 COPY package*.json ./
