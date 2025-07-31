@@ -38,11 +38,56 @@
     }
   },
   {
+    "id": "StatusTracking",
+    "config": {
+      "steps/status-tracker.step.js": {
+        "x": -47,
+        "y": 59
+      }
+    }
+  },
+  {
+    "id": "API",
+    "config": {
+      "steps/api-status.step.js": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "id": "Alerting",
+    "config": {
+      "steps/alerter.step.js": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "id": "Dashboard",
+    "config": {
+      "steps/dashboard.step.js": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "id": "System",
+    "config": {
+      "steps/health.step.js": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
     "id": "Monitor",
     "config": {
       "steps/monitor.step.js": {
-        "x": 0,
-        "y": 0
+        "x": 683,
+        "y": -6
       }
     }
   }

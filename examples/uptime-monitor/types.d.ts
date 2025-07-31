@@ -12,9 +12,11 @@ declare module 'motia' {
   }
 
   type Handlers = {
-    'Uptime Monitor': CronHandler<never>
-    'CheckStateChange': EventHandler<{ key: string; expected: string }, never>
-    'SetStateChange': EventHandler<{ message: string }, { topic: 'check-state-change'; data: { key: string; expected: string } }>
-    'ApiTrigger': ApiRouteHandler<{ message: string }, ApiResponse<200, { message: string; traceId: string }>, { topic: 'test-state'; data: { message: string } }>
+    'Status Tracker': EventHandler<never, never>
+    'Smart Uptime Monitor': CronHandler<never>
+    'Health Check': ApiRouteHandler<Record<string, unknown>, unknown, never>
+    'Dashboard': ApiRouteHandler<Record<string, unknown>, unknown, never>
+    'Status API': ApiRouteHandler<Record<string, unknown>, unknown, never>
+    'Smart Alerter': EventHandler<never, never>
   }
 }

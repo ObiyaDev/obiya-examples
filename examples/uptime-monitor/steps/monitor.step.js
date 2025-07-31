@@ -76,16 +76,55 @@ async function checkAll() {
 
 exports.config = {
   type: "cron",
-  name: "Uptime Monitor",
-  cron: "* * * * *", // every 1 minute
-  emits: [],
+  name: "Smart Uptime Monitor", 
+  cron: "* * * * *",
+  emits: ["site.checked", "incident.detected"],
   flows: ["Monitor"],
 };
 
-exports.handler = async () => {
-  await checkAll();
+exports.handler = async (context) => {
+  console.log("Checking websites...");
+  
+  const results = await Promise.all(WEBSITES.map(checkSite));
+  
+  // Emit events for each check
+  for (const result of results) {
+    await context.emit({
+      topic: "site.checked",
+      data: {
+        website: result.url,
+        status: result.isUp ? "up" : "down",
+        responseTime: result.responseTime || 0,
+        timestamp: new Date()
+      }
+    });
+    console.log(`Emitted site.checked for ${result.url}`);
+  }
+
+  const downSites = results.filter((r) => !r.isUp);
+  
+  // Emit incident events instead of sending alerts directly
+  for (const site of downSites) {
+    await context.emit({
+      topic: "incident.detected", 
+      data: {
+        website: site.url,
+        error: site.error,
+        timestamp: new Date()
+      }
+    });
+    console.log(`Emitted incident.detected for ${site.url}`);
+  }
+
   return {
     status: 200,
-    body: { message: "Websites checked!" },
+    body: { 
+      message: "Check completed",
+      summary: {
+        total: results.length,
+        up: results.filter(r => r.isUp).length,
+        down: downSites.length
+      }
+    },
   };
 };

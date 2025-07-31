@@ -13,6 +13,7 @@
     "motia"
   ],
   "dependencies": {
+    "mongodb": "^6.18.0",
     "motia": "^0.5.2-beta.103",
     "zod": "^3.25.72"
   },
