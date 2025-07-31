@@ -4,23 +4,25 @@ A high-performance image processing pipeline built with the Motia framework that
 
 ## Features
 
+- **Cloud Storage**: Uses AWS S3 for scalable file storage with adapter pattern for easy switching
 - **Parallel Processing**: Simultaneous resize operations for optimal performance
 - **Multiple Output Formats**: Desktop (1920px), Mobile (720px), and Low-quality (480px) variants
 - **Format Support**: JPEG, PNG, and WebP images
 - **Event-Driven Architecture**: Uses Motia's event system for scalable processing
 - **Comprehensive Logging**: Detailed tracing and error handling
 - **File Validation**: Format and size validation with clear error messages
+- **Extensible Storage**: Adapter pattern allows easy integration with other storage providers
 
 ## Architecture
 
 The application uses an event-driven architecture with the following components:
 
 ```
-Upload Image → Image Saved Event → Parallel Resize Operations → Completion Tracking
-     ↓              ↓                        ↓                        ↓
-  Validation    Event Emission         Desktop Resize           Status Updates
-  File Save                           Mobile Resize
-                                   Low-Quality Resize
+Upload Image → Save to S3 → Image Saved Event → Parallel Resize Operations → Completion Tracking
+     ↓              ↓              ↓                        ↓                        ↓
+  Validation    S3 Storage    Event Emission         Desktop Resize           Status Updates
+  Base64 Decode              (with S3 URLs)         Mobile Resize            (S3 URLs)
+                                                  Low-Quality Resize
 ```
 
 ## Quick Start
@@ -30,6 +32,8 @@ Upload Image → Image Saved Event → Parallel Resize Operations → Completion
 - Node.js 18+
 - npm or yarn
 - Motia CLI
+- AWS S3 bucket (or compatible storage service)
+- AWS credentials configured
 
 ### Installation
 
@@ -40,6 +44,10 @@ cd motia-image-resizer
 
 # Install dependencies
 npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your AWS S3 credentials
 
 # Set up the project
 npm run postinstall
@@ -65,14 +73,12 @@ npm run dev
      }'
    ```
 
-3. **Check the output directory**:
-   ```bash
-   ls -la output/
-   # output/original/     - Original uploaded images
-   # output/desktop/      - Desktop-sized images (1920px width)
-   # output/mobile/       - Mobile-sized images (720px width)
-   # output/lowquality/   - Compressed images (480px width, 60% quality)
-   ```
+3. **Check your S3 bucket**:
+   - Images are stored in S3 with organized prefixes:
+   - `originals/` - Original uploaded images
+   - `desktop/` - Desktop-sized images (1920px width)
+   - `mobile/` - Mobile-sized images (720px width)
+   - `lowquality/` - Compressed images (480px width, 60% quality)
 
 ## API Reference
 
@@ -97,7 +103,8 @@ npm run dev
     "originalFilename": "image.jpg",
     "uniqueFilename": "image_1234567890.jpg",
     "format": "jpeg",
-    "originalPath": "output/original/image_1234567890.jpg",
+    "originalStorageKey": "originals/image_1234567890.jpg",
+    "originalUrl": "https://your-bucket.s3.us-east-1.amazonaws.com/originals/image_1234567890.jpg",
     "traceId": "uuid-trace-id",
     "uploadedAt": "2025-01-26T12:00:00.000Z"
   }
@@ -182,9 +189,24 @@ motia-image-resizer/
 
 ## Configuration
 
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+# Storage Configuration
+STORAGE_TYPE=s3
+
+# AWS S3 Configuration
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
+AWS_REGION=us-east-1
+AWS_S3_BUCKET_NAME=your-bucket-name
+```
+
 ### Resize Settings
 
-The resize configurations are defined in `shared/utils.ts`:
+The resize configurations are defined in `shared/storage-utils.ts`:
 
 ```typescript
 const RESIZE_CONFIGS = {
@@ -194,13 +216,22 @@ const RESIZE_CONFIGS = {
 }
 ```
 
-### Output Directories
+### Storage Structure
 
-Images are organized in the following structure:
-- `output/original/` - Original uploaded images
-- `output/desktop/` - Desktop-optimized images
-- `output/mobile/` - Mobile-optimized images  
-- `output/lowquality/` - Compressed low-quality images
+Images are organized in S3 with the following prefixes:
+- `originals/` - Original uploaded images
+- `desktop/` - Desktop-optimized images (1920px)
+- `mobile/` - Mobile-optimized images (720px)
+- `lowquality/` - Compressed low-quality images (480px)
+
+### Storage Adapters
+
+The application uses the adapter pattern for storage. Current adapters:
+
+- **S3StorageAdapter** (default) - AWS S3 compatible storage
+- **TODO**: SupabaseStorageAdapter, CloudflareR2Adapter, LocalFileSystemAdapter
+
+To implement a new storage adapter, implement the `StorageAdapter` interface in `shared/storage.ts`.
 
 ## Development
 

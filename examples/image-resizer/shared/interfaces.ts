@@ -9,7 +9,8 @@ export interface ImageMetadata {
   originalFilename: string;
   uniqueFilename: string;
   format: 'jpeg' | 'png' | 'webp';
-  originalPath: string;
+  originalStorageKey: string;
+  originalUrl: string;
   traceId: string;
   uploadedAt: Date;
 }
@@ -21,8 +22,8 @@ export interface ResizeTask {
   imageMetadata: ImageMetadata;
   targetWidth: number;
   quality?: number;
-  suffix: string;
-  outputPath: string;
+  resizeType: ResizeType;
+  outputStorageKey: string;
 }
 
 /**
@@ -30,11 +31,21 @@ export interface ResizeTask {
  */
 export interface ProcessingStatus {
   traceId: string;
-  originalImage: string;
+  originalStorageKey: string;
   desktopComplete: boolean;
   mobileComplete: boolean;
   lowqualityComplete: boolean;
   completedAt?: Date;
+}
+
+/**
+ * Resize completion data
+ */
+export interface ResizeCompletionData extends ImageMetadata {
+  resizeType: ResizeType;
+  outputStorageKey: string;
+  outputUrl: string;
+  completedAt: Date;
 }
 
 /**

@@ -1,18 +1,17 @@
 import { ApiRouteConfig, Handlers } from 'motia'
 import { z } from 'zod'
-import { writeFileSync } from 'fs'
-import { dirname } from 'path'
 import type { ImageMetadata } from '../shared/interfaces'
 import {
   generateUniqueFilename,
   isValidImageFormat,
   getImageFormat,
-  getOriginalImagePath,
-  ensureDirectoryExists,
+  generateStorageKeys,
+  saveImageToStorage,
+  getImageUrl,
   validateBase64ImageData,
   createSafeErrorMessage,
   buildLogContext
-} from '../shared/utils'
+} from '../shared/storage-utils'
 
 export const config: ApiRouteConfig = {
   type: 'api',
@@ -44,7 +43,8 @@ export const config: ApiRouteConfig = {
         originalFilename: z.string(),
         uniqueFilename: z.string(),
         format: z.enum(['jpeg', 'png', 'webp']),
-        originalPath: z.string(),
+        originalStorageKey: z.string(),
+        originalUrl: z.string(),
         traceId: z.string(),
         uploadedAt: z.string()
       })
@@ -208,67 +208,74 @@ export const handler: Handlers['UploadImage'] = async (req, { logger, emit, trac
       }
     }
 
-    // Generate unique filename and paths with enhanced error handling
+    // Generate unique filename and storage keys
     let uniqueFilename: string
-    let originalPath: string
+    let storageKeys: { original: string; desktop: string; mobile: string; lowquality: string }
     let format: 'jpeg' | 'png' | 'webp'
 
     try {
       uniqueFilename = generateUniqueFilename(filename)
-      originalPath = getOriginalImagePath(uniqueFilename)
+      storageKeys = generateStorageKeys(uniqueFilename)
       format = getImageFormat(filename)
 
-      const pathContext = buildLogContext(logContext, {
+      const keyContext = buildLogContext(logContext, {
         uniqueFilename,
-        originalPath,
+        originalStorageKey: storageKeys.original,
         format,
-        pathGeneration: 'success'
+        keyGeneration: 'success'
       })
-      logger.info('Upload Image Step – Generated unique filename and paths', pathContext)
+      logger.info('Upload Image Step – Generated unique filename and storage keys', keyContext)
 
-    } catch (pathError) {
-      const safeError = createSafeErrorMessage(pathError, 'Path generation failed')
+    } catch (keyError) {
+      const safeError = createSafeErrorMessage(keyError, 'Storage key generation failed')
       const errorContext = buildLogContext(logContext, {
-        pathError: safeError.message,
-        errorType: 'path_generation'
+        keyError: safeError.message,
+        errorType: 'key_generation'
       })
 
-      logger.error('Upload Image Step – Failed to generate file paths', errorContext)
+      logger.error('Upload Image Step – Failed to generate storage keys', errorContext)
 
       return {
         status: 500,
         body: {
-          error: 'Path generation failed',
-          details: safeError.details || 'Could not generate file paths'
+          error: 'Storage key generation failed',
+          details: safeError.details || 'Could not generate storage keys'
         }
       }
     }
 
-    // Ensure output directory exists with enhanced error handling
+    // Save image to storage
+    let originalStorageKey: string
+    let originalUrl: string
+
     try {
-      ensureDirectoryExists(dirname(originalPath))
+      originalStorageKey = await saveImageToStorage(imageBuffer, storageKeys.original)
+      originalUrl = getImageUrl(originalStorageKey)
 
-      const dirContext = buildLogContext(logContext, {
-        directory: dirname(originalPath),
-        directoryCreation: 'success'
+      const saveContext = buildLogContext(logContext, {
+        originalStorageKey,
+        originalUrl,
+        fileSize: imageBuffer.length,
+        storageSave: 'success'
       })
-      logger.info('Upload Image Step – Output directory verified/created', dirContext)
+      logger.info('Upload Image Step – Successfully saved image to storage', saveContext)
 
-    } catch (dirError) {
-      const safeError = createSafeErrorMessage(dirError, 'Directory creation failed')
+    } catch (saveError) {
+      const safeError = createSafeErrorMessage(saveError, 'Storage save failed')
       const errorContext = buildLogContext(logContext, {
-        directoryError: safeError.message,
-        errorType: 'directory_creation',
-        targetDirectory: dirname(originalPath)
+        saveError: safeError.message,
+        errorType: 'storage_save',
+        targetKey: storageKeys.original,
+        bufferSize: imageBuffer?.length || 0
       })
 
-      logger.error('Upload Image Step – Failed to create output directory', errorContext)
+      logger.error('Upload Image Step – Failed to save image to storage', errorContext)
 
       return {
         status: 500,
         body: {
-          error: 'Storage preparation failed',
-          details: safeError.details || 'Could not prepare storage directory'
+          error: 'Failed to save image',
+          details: safeError.message
         }
       }
     }
@@ -297,43 +304,15 @@ export const handler: Handlers['UploadImage'] = async (req, { logger, emit, trac
     })
     logger.info('Upload Image Step – Image buffer validation passed', bufferContext)
 
-    // Save the original image with enhanced error handling
-    try {
-      writeFileSync(originalPath, imageBuffer)
 
-      const saveContext = buildLogContext(logContext, {
-        originalPath,
-        fileSize: imageBuffer.length,
-        fileSave: 'success'
-      })
-      logger.info('Upload Image Step – Successfully saved original image', saveContext)
-
-    } catch (saveError) {
-      const safeError = createSafeErrorMessage(saveError, 'File save failed')
-      const errorContext = buildLogContext(logContext, {
-        saveError: safeError.message,
-        errorType: 'file_save',
-        targetPath: originalPath,
-        bufferSize: imageBuffer?.length || 0
-      })
-
-      logger.error('Upload Image Step – Failed to save image file', errorContext)
-
-      return {
-        status: 500,
-        body: {
-          error: 'Failed to save image',
-          details: safeError.message
-        }
-      }
-    }
 
     // Create image metadata with enhanced logging
     const imageMetadata: ImageMetadata = {
       originalFilename: filename,
       uniqueFilename,
       format,
-      originalPath,
+      originalStorageKey,
+      originalUrl,
       traceId,
       uploadedAt: new Date()
     }

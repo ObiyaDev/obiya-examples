@@ -10,14 +10,18 @@
     "clean": "rm -rf dist node_modules python_modules .motia .mermaid",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:s3": "node scripts/test-s3-connection.js"
   },
   "keywords": [
     "motia"
   ],
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.857.0",
+    "@aws-sdk/s3-request-presigner": "^3.857.0",
     "@types/multer": "^2.0.0",
     "autoprefixer": "^10.4.21",
+    "dotenv": "^17.2.1",
     "motia": "^0.5.2-beta.102-976525",
     "multer": "^2.0.2",
     "sharp": "^0.34.3",
