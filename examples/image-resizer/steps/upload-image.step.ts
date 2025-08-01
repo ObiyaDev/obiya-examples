@@ -6,9 +6,10 @@ import {
   isValidImageFormat,
   getImageFormat,
   generateStorageKeys,
-  saveImageToStorage,
+  saveImageBuffer,
   getImageUrl,
   validateBase64ImageData,
+  getContentTypeFromFilename,
   createSafeErrorMessage,
   buildLogContext
 } from '../shared/storage-utils'
@@ -244,13 +245,15 @@ export const handler: Handlers['UploadImage'] = async (req, { logger, emit, trac
       }
     }
 
-    // Save image to storage
+    // Save image to storage using stream
     let originalStorageKey: string
     let originalUrl: string
 
     try {
-      originalStorageKey = await saveImageToStorage(imageBuffer, storageKeys.original)
-      originalUrl = getImageUrl(originalStorageKey)
+      const contentType = getContentTypeFromFilename(filename)
+      
+      originalStorageKey = await saveImageBuffer(imageBuffer, storageKeys.original, contentType)
+      originalUrl = await getImageUrl(originalStorageKey)
 
       const saveContext = buildLogContext(logContext, {
         originalStorageKey,

@@ -4,6 +4,7 @@
 
 import { randomUUID } from 'crypto'
 import { extname } from 'path'
+import { Readable } from 'stream'
 import type { SupportedImageFormat, ResizeType, ImageMetadata } from './interfaces'
 import { getStorageAdapter } from './storage'
 
@@ -38,22 +39,41 @@ export function generateStorageKeys(uniqueFilename: string): {
 }
 
 /**
- * Save image buffer to storage and return the storage key
+ * Save image stream to storage and return the storage key
  */
-export async function saveImageToStorage(
-  buffer: Buffer, 
-  storageKey: string
+export async function saveImageStream(
+  stream: Readable, 
+  storageKey: string,
+  contentType?: string
 ): Promise<string> {
   const storage = getStorageAdapter()
-  return await storage.saveFile(buffer, storageKey)
+  return await storage.saveStream(stream, storageKey, contentType)
 }
 
 /**
- * Get image buffer from storage
+ * Save image buffer to storage (for upload scenarios)
  */
-export async function getImageFromStorage(storageKey: string): Promise<Buffer> {
+export async function saveImageBuffer(
+  buffer: Buffer,
+  storageKey: string,
+  contentType?: string
+): Promise<string> {
   const storage = getStorageAdapter()
-  return await storage.getFileBuffer(storageKey)
+  
+  // Add a special property to indicate this is a buffer-based stream
+  const stream = bufferToStream(buffer)
+  ;(stream as any)._isBufferStream = true
+  ;(stream as any)._bufferLength = buffer.length
+  
+  return await storage.saveStream(stream, storageKey, contentType)
+}
+
+/**
+ * Get image stream from storage
+ */
+export async function getImageStream(storageKey: string): Promise<Readable> {
+  const storage = getStorageAdapter()
+  return await storage.getStream(storageKey)
 }
 
 /**
@@ -61,15 +81,35 @@ export async function getImageFromStorage(storageKey: string): Promise<Buffer> {
  */
 export async function imageExistsInStorage(storageKey: string): Promise<boolean> {
   const storage = getStorageAdapter()
-  return await storage.fileExists(storageKey)
+  return await storage.exists(storageKey)
 }
 
 /**
  * Get public URL for image
  */
-export function getImageUrl(storageKey: string): string {
+export async function getImageUrl(storageKey: string): Promise<string> {
   const storage = getStorageAdapter()
-  return storage.getFileUrl(storageKey)
+  return await storage.getPublicUrl(storageKey)
+}
+
+/**
+ * Convert buffer to readable stream
+ */
+export function bufferToStream(buffer: Buffer): Readable {
+  return Readable.from(buffer)
+}
+
+/**
+ * Convert stream to buffer (for backwards compatibility)
+ */
+export async function streamToBuffer(stream: Readable): Promise<Buffer> {
+  const chunks: Buffer[] = []
+  
+  return new Promise((resolve, reject) => {
+    stream.on('data', (chunk: Buffer) => chunks.push(chunk))
+    stream.on('error', reject)
+    stream.on('end', () => resolve(Buffer.concat(chunks)))
+  })
 }
 
 /**
@@ -256,6 +296,20 @@ export function isImageMetadata(value: unknown): value is ImageMetadata {
     typeof obj.traceId === 'string' &&
     (obj.uploadedAt instanceof Date || typeof obj.uploadedAt === 'string')
   )
+}
+
+/**
+ * Get content type from filename
+ */
+export function getContentTypeFromFilename(filename: string): string {
+  const ext = extname(filename).toLowerCase()
+  const contentTypes: Record<string, string> = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+  }
+  return contentTypes[ext] || 'application/octet-stream'
 }
 
 /**

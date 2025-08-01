@@ -11,7 +11,7 @@
     "test": "vitest --run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:s3": "node scripts/test-s3-connection.js"
+    "test:storage": "node scripts/test-storage-connection.js"
   },
   "keywords": [
     "motia"

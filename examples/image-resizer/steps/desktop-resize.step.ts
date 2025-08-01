@@ -1,13 +1,15 @@
 import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
 import sharp from 'sharp'
+import { pipeline } from 'stream/promises'
 import type { ImageMetadata, ResizeCompletionData } from '../shared/interfaces'
 import {
   generateStorageKeys,
-  getImageFromStorage,
-  saveImageToStorage,
+  getImageStream,
+  saveImageStream,
   getImageUrl,
   getResizeConfig,
+  getContentTypeFromFilename,
   createSafeErrorMessage,
   buildLogContext
 } from '../shared/storage-utils'
@@ -51,33 +53,37 @@ export const handler: Handlers['DesktopResize'] = async (imageMetadata, { logger
     const storageKeys = generateStorageKeys(imageMetadata.uniqueFilename)
     const resizeConfig = getResizeConfig('desktop')
 
-    // Get original image from storage
-    const originalBuffer = await getImageFromStorage(imageMetadata.originalStorageKey)
+    // Get original image stream from storage
+    const originalStream = await getImageStream(imageMetadata.originalStorageKey)
     
-    logger.info('Desktop Resize Step – Retrieved original image from storage', {
-      ...logContext,
-      bufferSize: originalBuffer.length
-    })
+    logger.info('Desktop Resize Step – Retrieved original image stream from storage', logContext)
 
-    // Perform resize operation
-    const resizedBuffer = await sharp(originalBuffer)
+    // Create Sharp transform stream
+    const sharpTransform = sharp()
       .resize(resizeConfig.width, null, { 
         withoutEnlargement: true,
         fit: 'inside'
       })
       .jpeg({ quality: resizeConfig.quality || 90 })
-      .toBuffer()
+
+    // Process and save using streams
+    const contentType = getContentTypeFromFilename(imageMetadata.uniqueFilename)
+    
+    // Pipe original stream through Sharp transform
+    const resizedStream = originalStream.pipe(sharpTransform)
+    
+    const outputStorageKey = await saveImageStream(
+      resizedStream,
+      storageKeys.desktop,
+      contentType
+    )
+    const outputUrl = await getImageUrl(outputStorageKey)
 
     logger.info('Desktop Resize Step – Resize operation completed', {
       ...logContext,
-      originalSize: originalBuffer.length,
-      resizedSize: resizedBuffer.length,
-      targetWidth: resizeConfig.width
+      targetWidth: resizeConfig.width,
+      outputStorageKey
     })
-
-    // Save resized image to storage
-    const outputStorageKey = await saveImageToStorage(resizedBuffer, storageKeys.desktop)
-    const outputUrl = getImageUrl(outputStorageKey)
 
     // Create completion data
     const completionData: ResizeCompletionData = {

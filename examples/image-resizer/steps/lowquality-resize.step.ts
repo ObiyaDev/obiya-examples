@@ -4,10 +4,11 @@ import sharp from 'sharp'
 import type { ImageMetadata, ResizeCompletionData } from '../shared/interfaces'
 import {
   generateStorageKeys,
-  getImageFromStorage,
-  saveImageToStorage,
+  getImageStream,
+  saveImageStream,
   getImageUrl,
   getResizeConfig,
+  getContentTypeFromFilename,
   createSafeErrorMessage,
   buildLogContext
 } from '../shared/storage-utils'
@@ -51,34 +52,36 @@ export const handler: Handlers['LowQualityResize'] = async (imageMetadata, { log
     const storageKeys = generateStorageKeys(imageMetadata.uniqueFilename)
     const resizeConfig = getResizeConfig('lowquality')
 
-    // Get original image from storage
-    const originalBuffer = await getImageFromStorage(imageMetadata.originalStorageKey)
+    // Get original image stream from storage
+    const originalStream = await getImageStream(imageMetadata.originalStorageKey)
     
-    logger.info('Low-Quality Resize Step – Retrieved original image from storage', {
-      ...logContext,
-      bufferSize: originalBuffer.length
-    })
+    logger.info('Low-Quality Resize Step – Retrieved original image stream from storage', logContext)
 
-    // Perform resize operation with compression
-    const resizedBuffer = await sharp(originalBuffer)
+    // Create Sharp transform stream with compression
+    const sharpTransform = sharp()
       .resize(resizeConfig.width, null, { 
         withoutEnlargement: true,
         fit: 'inside'
       })
       .jpeg({ quality: resizeConfig.quality || 60 })
-      .toBuffer()
+
+    // Process and save using streams
+    const contentType = getContentTypeFromFilename(imageMetadata.uniqueFilename)
+    const resizedStream = originalStream.pipe(sharpTransform)
+    
+    const outputStorageKey = await saveImageStream(
+      resizedStream,
+      storageKeys.lowquality,
+      contentType
+    )
+    const outputUrl = await getImageUrl(outputStorageKey)
 
     logger.info('Low-Quality Resize Step – Resize operation completed', {
       ...logContext,
-      originalSize: originalBuffer.length,
-      resizedSize: resizedBuffer.length,
       targetWidth: resizeConfig.width,
-      quality: resizeConfig.quality
+      quality: resizeConfig.quality,
+      outputStorageKey
     })
-
-    // Save resized image to storage
-    const outputStorageKey = await saveImageToStorage(resizedBuffer, storageKeys.lowquality)
-    const outputUrl = getImageUrl(outputStorageKey)
 
     // Create completion data
     const completionData: ResizeCompletionData = {
