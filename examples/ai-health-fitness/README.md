@@ -251,6 +251,8 @@ What's the best time to exercise?
 How much water should I drink daily?
 ```
 
+![whatsapp-output](docs/images/whatsapp-output.png)
+
 ---
 
 ## 🏗️ Technical Architecture
