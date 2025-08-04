@@ -461,7 +461,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](../../LIC
 
 ## 📞 Support
 
-- **Documentation**: [Motia Docs](https://docs.motia.dev)
+- **Documentation**: [Motia Docs](https://motia.dev/docs)
 - **Community**: [Discord](https://discord.com/invite/nJFfsH5d6v)
 
 ---
