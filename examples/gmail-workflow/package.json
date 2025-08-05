@@ -21,7 +21,7 @@
     "gmail-api-parse-message-ts": "^2.2.33",
     "google-auth-library": "^9.15.1",
     "googleapis": "^146.0.0",
-    "motia": "^0.4.2-beta.95",
+    "motia": "^0.5.5-beta.113",
     "react": "^19.0.0",
     "zod": "^3.25.67"
   },
