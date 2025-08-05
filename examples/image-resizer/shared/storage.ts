@@ -1,4 +1,5 @@
-import { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { Upload } from '@aws-sdk/lib-storage'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { Readable } from 'stream'
 import { createReadStream, createWriteStream, existsSync, mkdirSync } from 'fs'
@@ -71,34 +72,41 @@ export class S3StorageAdapter implements StorageAdapter {
   }
 
   async saveStream(stream: Readable, key: string, contentType?: string): Promise<string> {
-    try {
-      // Check if this is a buffer-based stream (from upload)
-      const isBufferStream = (stream as any)._isBufferStream
-      const bufferLength = (stream as any)._bufferLength
-      
-      // For S3, we need to convert all streams to buffers to avoid content-length issues
-      // This is because S3 requires content-length for proper upload handling
-      const chunks: Buffer[] = []
-      
-      for await (const chunk of stream) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-      }
-      
-      const buffer = Buffer.concat(chunks)
-      
-      const command = new PutObjectCommand({
-        Bucket: this.bucketName,
-        Key: key,
-        Body: buffer,
-        ContentType: contentType || this.getContentType(key),
-        ContentLength: buffer.length,
+    return new Promise((resolve, reject) => {
+      // Handle stream errors
+      stream.on('error', (error) => {
+        reject(new Error(`Stream error: ${error.message}`))
       })
 
-      await this.s3Client.send(command)
-      return key
-    } catch (error) {
-      throw new Error(`Failed to save stream to S3: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
+      // Use AWS SDK's Upload class for proper streaming with multipart upload
+      const upload = new Upload({
+        client: this.s3Client,
+        params: {
+          Bucket: this.bucketName,
+          Key: key,
+          Body: stream,
+          ContentType: contentType || this.getContentType(key),
+        },
+        // Configure multipart upload for better performance with large files
+        partSize: 1024 * 1024 * 5, // 5MB parts
+        queueSize: 4, // Allow 4 concurrent uploads
+      })
+
+      // Handle upload progress (optional)
+      upload.on('httpUploadProgress', (progress) => {
+        // Optional: Log progress for debugging
+        // console.log(`Upload progress: ${progress.loaded}/${progress.total}`)
+      })
+
+      // Perform the upload
+      upload.done()
+        .then(() => {
+          resolve(key)
+        })
+        .catch((error) => {
+          reject(new Error(`Failed to save stream to S3: ${error.message}`))
+        })
+    })
   }
 
   async getStream(key: string): Promise<Readable> {
@@ -162,26 +170,39 @@ export class LocalStorageAdapter implements StorageAdapter {
   }
 
   async saveStream(stream: Readable, key: string, contentType?: string): Promise<string> {
-    try {
-      const filePath = `${this.basePath}/${key}`
+    return new Promise((resolve, reject) => {
+      try {
+        const filePath = `${this.basePath}/${key}`
+        
+        // Ensure directory exists
+        const dir = dirname(filePath)
+        if (!existsSync(dir)) {
+          mkdirSync(dir, { recursive: true })
+        }
 
-      // Ensure directory exists
-      const dir = dirname(filePath)
-      if (!existsSync(dir)) {
-        mkdirSync(dir, { recursive: true })
-      }
+        const writeStream = createWriteStream(filePath)
+        
+        // Handle stream errors properly
+        stream.on('error', (error) => {
+          writeStream.destroy()
+          reject(new Error(`Input stream error: ${error.message}`))
+        })
 
-      const writeStream = createWriteStream(filePath)
+        writeStream.on('error', (error) => {
+          reject(new Error(`Write stream error: ${error.message}`))
+        })
 
-      return new Promise((resolve, reject) => {
+        writeStream.on('finish', () => {
+          resolve(key)
+        })
+
+        // Pipe the stream
         stream.pipe(writeStream)
-        writeStream.on('finish', () => resolve(key))
-        writeStream.on('error', reject)
-        stream.on('error', reject)
-      })
-    } catch (error) {
-      throw new Error(`Failed to save stream to local storage: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
+        
+      } catch (error) {
+        reject(new Error(`Failed to save stream to local storage: ${error instanceof Error ? error.message : 'Unknown error'}`))
+      }
+    })
   }
 
   async getStream(key: string): Promise<Readable> {
