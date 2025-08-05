@@ -4,7 +4,7 @@ Welcome to the official examples repository for [Motia](https://motia.dev/) - a 
 
 ## 🤔 How it Works
 
-Motia uses **Steps** as its core building block. Steps can be:
+Motia uses **Steps** as its core primitive. Steps can be:
 - **API Steps** (`api`) - HTTP endpoints for REST/GraphQL APIs
 - **Event Steps** (`event`) - Background workers triggered by events
 - **Cron Steps** (`cron`) - Scheduled tasks that run automatically
