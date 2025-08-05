@@ -38,7 +38,7 @@ A powerful research assistant that performs comprehensive web research on any to
 
 A powerful event-driven financial analysis workflow built with Motia that combines web search, financial data, and AI analysis to provide comprehensive investment insights.
 
-![Finance Agent](examples/finance-agent/docs/finance-agent.png)
+![Finance Agent](examples/finance-agent/docs/finance-example.gif)
 
 **Key Features:**
 - Real-time Financial Analysis: Combines multiple data sources for comprehensive insights

@@ -1,42 +1,46 @@
-{
-  "finance-workflow": {
-    "steps/finance-data.step.ts": {
-      "x": -140.4404554249536,
-      "y": 151.73572674502785
-    },
-    "steps/query-api.step.ts": {
-      "x": 71.81990168760814,
-      "y": -148.0437127839301
-    },
-    "steps/web-search.step.ts": {
-      "x": 441.7986444248934,
-      "y": 160.0043970646082
-    },
-    "steps/response-coordinator.step.ts": {
-      "x": 117,
-      "y": 412
-    },
-    "steps/result-api.step.ts": {
-      "x": 756.4594576203167,
-      "y": 323.4567710695154
-    },
-    "steps/openai-analysis.step.ts": {
-      "x": 34.657504574538336,
-      "y": 660.1251877657294
-    },
-    "steps/save-result.step.ts": {
-      "x": 287.0923054985997,
-      "y": 942.0846317377112
-    },
-    "steps/start.step.ts": {
-      "x": 63.08973429888448,
-      "y": -597.1535536683457
-    }
-  },
-  "main-flow": {
-    "steps/start.step.ts": {
-      "x": 0,
-      "y": 0
+[
+  {
+    "id": "finance-workflow",
+    "config": {
+      "steps/web-search.step.ts": {
+        "x": -324,
+        "y": 633,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "left"
+      },
+      "steps/save-result.step.ts": {
+        "x": 885,
+        "y": 659,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "top"
+      },
+      "steps/result-api.step.ts": {
+        "x": 695,
+        "y": 305,
+        "sourceHandlePosition": "right"
+      },
+      "steps/response-coordinator.step.ts": {
+        "x": 220,
+        "y": 458,
+        "sourceHandlePosition": "bottom",
+        "targetHandlePosition": "left"
+      },
+      "steps/query-api.step.ts": {
+        "x": -861,
+        "y": 408,
+        "sourceHandlePosition": "right"
+      },
+      "steps/openai-analysis.step.ts": {
+        "x": 253,
+        "y": 735,
+        "sourceHandlePosition": "right"
+      },
+      "steps/finance-data.step.ts": {
+        "x": -326,
+        "y": 315,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "left"
+      }
     }
   }
-}
+]

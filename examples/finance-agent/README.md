@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
-[![Motia](https://img.shields.io/badge/Motia-Latest-green.svg)](https://motia.dev)
+[![Motia](https://img.shields.io/badge/Motia-v0.5.5--beta.113-green.svg)](https://motia.dev)
 
 A powerful event-driven financial analysis workflow built with Motia that combines web search, financial data, and AI analysis to provide comprehensive investment insights.
 
@@ -40,6 +40,8 @@ A powerful event-driven financial analysis workflow built with Motia that combin
    npm install
    ```
 
+   > **Note**: This project uses Motia v0.5.5-beta.113. If you encounter any compatibility issues, please check the [latest release notes](https://github.com/MotiaDev/motia/releases/tag/v0.5.5-beta.113).
+
 3. Configure environment variables:
    ```bash
    cp .env.example .env
@@ -56,7 +58,7 @@ A powerful event-driven financial analysis workflow built with Motia that combin
 
 The workflow consists of several specialized steps that work together to provide comprehensive financial analysis:
 
-![Finance Agent](./docs/finance-agent.png)
+![Finance Agent](./docs/finance-example.gif)
 
 
 ## 🚦 API Endpoints
