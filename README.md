@@ -101,22 +101,6 @@ Streamline development processes with an intelligent task progression agent for 
 
 [View Example →](examples/trello-flow)
 
-### Retrieval-Augmented Generation (RAG)
-
-A complete RAG agent implementation for building knowledge-based AI applications.
-
-![RAG Agent](examples/rag_example/docs/images/parse-embed-rag.png)
-
-**Key Features:**
-- Web page content extraction and parsing
-- Text chunking and embedding
-- Vector database integration
-- AI-powered question answering
-
-**Technologies:** Python, TypeScript, FAISS, Google's Generative AI
-
-[View Example →](examples/rag_example)
-
 ### AI Image Generation and Evaluation
 
 An agent that generates and evaluates AI images with feedback loops and quality metrics.
