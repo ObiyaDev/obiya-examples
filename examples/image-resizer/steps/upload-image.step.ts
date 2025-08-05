@@ -113,10 +113,8 @@ export const handler: Handlers['UploadImage'] = async (req, { logger, emit, trac
       }
     }
 
-    const logContext = buildLogContext({
-      step: 'UploadImage',
-      filename,
-      traceId,
+    const logContext = buildLogContext({ 
+      filename, 
       uploadType: isFileUpload ? 'file' : 'base64',
       fileSize: imageBuffer.length
     })

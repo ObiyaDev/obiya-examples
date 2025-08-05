@@ -38,12 +38,10 @@ export const handler: Handlers['LowQualityResize'] = async (imageMetadata, { log
   const startTime = Date.now()
 
   try {
-    const logContext = buildLogContext({ 
-      step: 'LowQualityResize',
+    const logContext = buildLogContext({  
       originalFilename: imageMetadata.originalFilename,
       uniqueFilename: imageMetadata.uniqueFilename,
-      originalStorageKey: imageMetadata.originalStorageKey,
-      traceId 
+      originalStorageKey: imageMetadata.originalStorageKey, 
     })
 
     logger.info('Low-Quality Resize Step – Starting low-quality resize operation', logContext)
@@ -117,10 +115,8 @@ export const handler: Handlers['LowQualityResize'] = async (imageMetadata, { log
     const safeError = createSafeErrorMessage(error, 'Low-quality resize failed')
     
     logger.error('Low-Quality Resize Step – Low-quality resize operation failed', {
-      ...buildLogContext({
-        step: 'LowQualityResize',
-        originalFilename: imageMetadata.originalFilename,
-        traceId,
+      ...buildLogContext({ 
+        originalFilename: imageMetadata.originalFilename, 
         processingTimeMs: totalTime,
         error: safeError.message
       })

@@ -76,38 +76,26 @@ export class S3StorageAdapter implements StorageAdapter {
       const isBufferStream = (stream as any)._isBufferStream
       const bufferLength = (stream as any)._bufferLength
       
-      if (isBufferStream && bufferLength) {
-        // For buffer-based streams, collect the data and upload as buffer
-        const chunks: Buffer[] = []
-        
-        for await (const chunk of stream) {
-          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-        }
-        
-        const buffer = Buffer.concat(chunks)
-        
-        const command = new PutObjectCommand({
-          Bucket: this.bucketName,
-          Key: key,
-          Body: buffer,
-          ContentType: contentType || this.getContentType(key),
-          ContentLength: buffer.length,
-        })
-
-        await this.s3Client.send(command)
-        return key
-      } else {
-        // For real streams (from file or Sharp transform), use stream directly
-        const command = new PutObjectCommand({
-          Bucket: this.bucketName,
-          Key: key,
-          Body: stream,
-          ContentType: contentType || this.getContentType(key),
-        })
-
-        await this.s3Client.send(command)
-        return key
+      // For S3, we need to convert all streams to buffers to avoid content-length issues
+      // This is because S3 requires content-length for proper upload handling
+      const chunks: Buffer[] = []
+      
+      for await (const chunk of stream) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
       }
+      
+      const buffer = Buffer.concat(chunks)
+      
+      const command = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType || this.getContentType(key),
+        ContentLength: buffer.length,
+      })
+
+      await this.s3Client.send(command)
+      return key
     } catch (error) {
       throw new Error(`Failed to save stream to S3: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }

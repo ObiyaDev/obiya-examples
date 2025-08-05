@@ -39,12 +39,10 @@ export const handler: Handlers['DesktopResize'] = async (imageMetadata, { logger
   const startTime = Date.now()
 
   try {
-    const logContext = buildLogContext({ 
-      step: 'DesktopResize',
+    const logContext = buildLogContext({  
       originalFilename: imageMetadata.originalFilename,
       uniqueFilename: imageMetadata.uniqueFilename,
-      originalStorageKey: imageMetadata.originalStorageKey,
-      traceId 
+      originalStorageKey: imageMetadata.originalStorageKey, 
     })
 
     logger.info('Desktop Resize Step – Starting desktop resize operation', logContext)
@@ -84,25 +82,20 @@ export const handler: Handlers['DesktopResize'] = async (imageMetadata, { logger
       targetWidth: resizeConfig.width,
       outputStorageKey
     })
-
-    // Create completion data
-    const completionData: ResizeCompletionData = {
-      ...imageMetadata,
-      resizeType: 'desktop',
-      outputStorageKey,
-      outputUrl,
-      completedAt: new Date()
-    }
+ 
 
     // Emit completion event
     await emit({
       topic: 'desktop-resize-complete',
       data: {
-        ...completionData,
-        uploadedAt: typeof completionData.uploadedAt === 'string' 
-          ? completionData.uploadedAt 
-          : completionData.uploadedAt.toISOString(),
-        completedAt: completionData.completedAt.toISOString()
+        ...imageMetadata,
+        resizeType: 'desktop',
+        outputStorageKey,
+        outputUrl,
+        uploadedAt: typeof imageMetadata.uploadedAt === 'string' 
+          ? imageMetadata.uploadedAt 
+          : imageMetadata.uploadedAt.toISOString(),
+        completedAt: new Date().toISOString()
       },
     })
 
@@ -119,10 +112,8 @@ export const handler: Handlers['DesktopResize'] = async (imageMetadata, { logger
     const safeError = createSafeErrorMessage(error, 'Desktop resize failed')
     
     logger.error('Desktop Resize Step – Desktop resize operation failed', {
-      ...buildLogContext({
-        step: 'DesktopResize',
-        originalFilename: imageMetadata.originalFilename,
-        traceId,
+      ...buildLogContext({ 
+        originalFilename: imageMetadata.originalFilename, 
         processingTimeMs: totalTime,
         error: safeError.message
       })

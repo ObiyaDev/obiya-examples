@@ -59,12 +59,7 @@ export async function saveImageBuffer(
   contentType?: string
 ): Promise<string> {
   const storage = getStorageAdapter()
-  
-  // Add a special property to indicate this is a buffer-based stream
   const stream = bufferToStream(buffer)
-  ;(stream as any)._isBufferStream = true
-  ;(stream as any)._bufferLength = buffer.length
-  
   return await storage.saveStream(stream, storageKey, contentType)
 }
 

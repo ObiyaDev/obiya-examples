@@ -38,12 +38,11 @@ export const handler: Handlers['MobileResize'] = async (imageMetadata, { logger,
   const startTime = Date.now()
 
   try {
-    const logContext = buildLogContext({ 
-      step: 'MobileResize',
+    const logContext = buildLogContext({  
       originalFilename: imageMetadata.originalFilename,
       uniqueFilename: imageMetadata.uniqueFilename,
       originalStorageKey: imageMetadata.originalStorageKey,
-      traceId 
+      
     })
 
     logger.info('Mobile Resize Step – Starting mobile resize operation', logContext)
@@ -116,10 +115,8 @@ export const handler: Handlers['MobileResize'] = async (imageMetadata, { logger,
     const safeError = createSafeErrorMessage(error, 'Mobile resize failed')
     
     logger.error('Mobile Resize Step – Mobile resize operation failed', {
-      ...buildLogContext({
-        step: 'MobileResize',
-        originalFilename: imageMetadata.originalFilename,
-        traceId,
+      ...buildLogContext({ 
+        originalFilename: imageMetadata.originalFilename, 
         processingTimeMs: totalTime,
         error: safeError.message
       })
