@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { GithubPREvent, GithubWebhookEndpoint } from '../../types/github-events'
-import type { ApiRouteConfig, StepHandler } from 'motia'
+import type { ApiRouteConfig, Handlers } from 'motia'
 
 const webhookSchema = z.object({
   action: z.string(),
@@ -54,7 +54,7 @@ export const config: ApiRouteConfig = {
   flows: ['github-pr-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (req, { emit, logger }) => {
+export const handler: Handlers['PR Webhook Handler'] = async (req, { emit, logger }) => {
   const { action, pull_request: pr, repository } = req.body
 
   logger.info('[PR Webhook] Received webhook', { action, prNumber: pr.number })

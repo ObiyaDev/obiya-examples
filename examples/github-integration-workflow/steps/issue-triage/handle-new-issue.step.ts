@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { GithubClient } from '../../services/github/GithubClient'
 import { GithubIssueEvent } from '../../types/github-events'
-import type { EventConfig, StepHandler } from 'motia'
+import type { EventConfig, Handlers } from 'motia'
 
 const issueSchema = z.object({
   issueNumber: z.number(),
@@ -11,7 +11,7 @@ const issueSchema = z.object({
   repo: z.string(),
 })
 
-export const config: EventConfig<typeof issueSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'New Issue Handler',
   description: 'Processes newly created issues by adding initial labels and welcome comment',
@@ -26,7 +26,7 @@ export const config: EventConfig<typeof issueSchema> = {
   flows: ['github-issue-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { emit, logger }) => {
+export const handler: Handlers['New Issue Handler'] = async (input, { emit, logger }) => {
   const github = new GithubClient()
 
   logger.info('[New Issue Handler] Processing new issue', {

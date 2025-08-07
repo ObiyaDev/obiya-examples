@@ -53,7 +53,7 @@ export class ServiceFactory {
    * @param defaultScope Default scope for state operations (typically traceId)
    * @returns StateService
    */
-  public static createStateService(state: IStateOperations, defaultScope: string): StateService {
+  public static createStateService(state: any, defaultScope: string): StateService {
     return new StateService(state, defaultScope);
   }
 

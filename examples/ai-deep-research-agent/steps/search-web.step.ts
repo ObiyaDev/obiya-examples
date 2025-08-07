@@ -1,4 +1,4 @@
-import { EventConfig, StepHandler } from 'motia'
+import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
 import { FirecrawlService } from '../services/firecrawl.service'
 
@@ -11,7 +11,7 @@ const inputSchema = z.object({
   depth: z.number().int()
 })
 
-export const config: EventConfig<Input> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Web Search',
   description: 'Perform web searches using Firecrawl',
@@ -24,7 +24,7 @@ export const config: EventConfig<Input> = {
   flows: ['research'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { traceId, logger, state, emit }) => {
+export const handler: Handlers['Web Search'] = async (input, { traceId, logger, state, emit }) => {
   logger.info('Performing web searches', { 
     numberOfQueries: input.searchQueries.length,
     depth: input.depth 

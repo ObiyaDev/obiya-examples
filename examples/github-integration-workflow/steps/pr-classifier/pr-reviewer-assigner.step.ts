@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { GithubClient } from '../../services/github/GithubClient'
 import { OpenAIClient } from '../../services/openai/OpenAIClient'
 import { GithubPREvent } from '../../types/github-events'
-import type { EventConfig, StepHandler } from 'motia'
+import type { EventConfig, Handlers } from 'motia'
 
 const TEAM_MEMBERS = [
   {
@@ -27,7 +27,7 @@ const classifiedPRSchema = z.object({
   }),
 })
 
-export const config: EventConfig<typeof classifiedPRSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'PR Reviewer Assigner',
   description: 'Assigns appropriate reviewers based on PR content and team expertise',
@@ -42,7 +42,7 @@ export const config: EventConfig<typeof classifiedPRSchema> = {
   flows: ['github-pr-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { emit, logger }) => {
+export const handler: Handlers['PR Reviewer Assigner'] = async (input, { emit, logger }) => {
   const github = new GithubClient()
   const openai = new OpenAIClient()
 

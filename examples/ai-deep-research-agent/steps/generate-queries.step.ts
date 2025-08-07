@@ -1,4 +1,4 @@
-import { EventConfig, StepHandler } from 'motia'
+import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
 import { OpenAIService } from '../services/openai.service'
 import { ResearchConfig } from './types/research-config'
@@ -12,7 +12,7 @@ const inputSchema = z.object({
   requestId: z.string()
 })
 
-export const config: EventConfig<Input> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Generate Search Queries',
   description: 'Generate search queries based on the research topic',
@@ -25,7 +25,7 @@ export const config: EventConfig<Input> = {
   flows: ['research'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { traceId, logger, state, emit }) => {
+export const handler: Handlers['Generate Search Queries'] = async (input, { traceId, logger, state, emit }) => {
   logger.info('Generating search queries for research topic', input)
 
   try {

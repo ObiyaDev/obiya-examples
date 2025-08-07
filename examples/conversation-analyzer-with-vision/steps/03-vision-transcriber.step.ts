@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import OpenAI from 'openai';
-import { EventConfig, StepHandler } from 'motia';
+import { EventConfig, Handlers } from 'motia';
 import { withMiddleware } from '../middlewares/withMiddleware';
 import { InternalServerError } from '../errors/InternalServerError';
 
@@ -20,7 +20,7 @@ type ImageData = {
   folderPath: string;
 };
 
-export const config: EventConfig<typeof inputSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Conversation Screenshot Transcriber',
   description: 'Transcribes conversation screenshots using OpenAI Vision',
@@ -30,7 +30,7 @@ export const config: EventConfig<typeof inputSchema> = {
   flows: ['default'],
 };
 
-export const handler: StepHandler<typeof config> = async (
+export const handler: Handlers['Conversation Screenshot Transcriber'] = async (
   input,
   { logger, emit, state, traceId }
 ) => {

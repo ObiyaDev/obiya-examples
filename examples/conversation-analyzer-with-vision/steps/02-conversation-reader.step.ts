@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
-import { EventConfig, FlowContext, StepHandler } from 'motia';
+import { EventConfig, FlowContext, Handlers } from 'motia';
 
 const ConversationReaderInputSchema = z.object({
   folderPath: z.string(),
   traceId: z.string(),
 });
 
-export const config: EventConfig<typeof ConversationReaderInputSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Conversation Screenshot Reader',
   description: 'Processes conversation screenshots from a folder as a background job',
@@ -18,7 +18,7 @@ export const config: EventConfig<typeof ConversationReaderInputSchema> = {
   flows: ['default'],
 };
 
-export const handler: StepHandler<typeof config> = async (
+export const handler: Handlers['Conversation Screenshot Reader'] = async (
   input,
   { logger, emit, state, traceId }: FlowContext
 ) => {

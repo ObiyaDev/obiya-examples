@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { GithubClient } from '../../services/github/GithubClient'
 import { GithubPREvent } from '../../types/github-events'
-import type { EventConfig, StepHandler } from 'motia'
+import type { EventConfig, Handlers } from 'motia'
 
 const classifiedPRSchema = z.object({
   prNumber: z.number(),
@@ -17,7 +17,7 @@ const classifiedPRSchema = z.object({
   }),
 })
 
-export const config: EventConfig<typeof classifiedPRSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'PR Label Assigner',
   description: 'Assigns labels to PRs based on LLM classification',
@@ -32,7 +32,7 @@ export const config: EventConfig<typeof classifiedPRSchema> = {
   flows: ['github-pr-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { emit, logger }) => {
+export const handler: Handlers['PR Label Assigner'] = async (input, { emit, logger }) => {
   const github = new GithubClient()
 
   logger.info('[PR Label Assigner] Assigning labels', {

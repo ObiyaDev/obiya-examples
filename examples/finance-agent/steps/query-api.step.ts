@@ -1,4 +1,4 @@
-import { ApiRouteConfig, StepHandler } from 'motia';
+import { ApiRouteConfig, Handlers } from 'motia';
 import { z } from 'zod';
 
 const bodySchema = z.object({
@@ -20,7 +20,7 @@ export const config: ApiRouteConfig = {
   flows: ['finance-workflow']
 };
 
-export const handler: StepHandler<typeof config> = async (req, { logger, emit, traceId }) => {
+export const handler: Handlers['FinanceQueryAPI'] = async (req, { logger, emit, traceId }) => {
   logger.info('Finance query received', { query: req.body.query, traceId });
   
   try {
@@ -28,8 +28,7 @@ export const handler: StepHandler<typeof config> = async (req, { logger, emit, t
     await emit({ 
       topic: 'query.received', 
       data: { 
-        query: req.body.query,
-        timestamp: new Date().toISOString()
+        query: req.body.query
       }
     });
     

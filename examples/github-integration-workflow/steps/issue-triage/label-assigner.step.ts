@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { GithubClient } from '../../services/github/GithubClient'
 import { GithubIssueEvent } from '../../types/github-events'
-import type { EventConfig, StepHandler } from 'motia'
+import type { EventConfig, Handlers } from 'motia'
 
 const classifiedIssueSchema = z.object({
   issueNumber: z.number(),
@@ -14,7 +14,7 @@ const classifiedIssueSchema = z.object({
   }),
 })
 
-export const config: EventConfig<typeof classifiedIssueSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Label Assigner',
   description: 'Assigns labels based on issue classification',
@@ -29,7 +29,7 @@ export const config: EventConfig<typeof classifiedIssueSchema> = {
   flows: ['github-issue-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { emit, logger }) => {
+export const handler: Handlers['Label Assigner'] = async (input, { emit, logger }) => {
   const github = new GithubClient()
 
   logger.info('[Label Assigner] Assigning labels', {
