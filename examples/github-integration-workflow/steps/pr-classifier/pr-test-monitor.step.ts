@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { GithubClient } from '../../services/github/GithubClient'
 import { GithubPREvent } from '../../types/github-events'
-import type { EventConfig, StepHandler } from 'motia'
+import type { EventConfig, Handlers } from 'motia'
 
 const prTestSchema = z.object({
   prNumber: z.number(),
@@ -10,7 +10,7 @@ const prTestSchema = z.object({
   commitSha: z.string(),
 })
 
-export const config: EventConfig<typeof prTestSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'PR Test Monitor',
   description: 'Monitors CI/CD test results and updates PR status',
@@ -25,7 +25,7 @@ export const config: EventConfig<typeof prTestSchema> = {
   flows: ['github-pr-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { emit, logger }) => {
+export const handler: Handlers['PR Test Monitor'] = async (input, { emit, logger }) => {
   const github = new GithubClient()
 
   logger.info('[PR Test Monitor] Checking test status', {

@@ -1,4 +1,4 @@
-import { EventConfig, StepHandler } from 'motia';
+import { EventConfig, Handlers } from 'motia';
 import { z } from 'zod';
 import { ServiceFactory } from '../services/ServiceFactory';
 
@@ -6,7 +6,7 @@ const inputSchema = z.object({
   query: z.string()
 });
 
-export const config: EventConfig<typeof inputSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'FinanceDataAgent',
   description: 'Retrieves financial data related to stocks and companies',
@@ -19,7 +19,7 @@ export const config: EventConfig<typeof inputSchema> = {
   flows: ['finance-workflow']
 };
 
-export const handler: StepHandler<typeof config> = async (input, { logger, emit, state, traceId }) => {
+export const handler: Handlers['FinanceDataAgent'] = async (input, { logger, emit, state, traceId }) => {
   logger.info('Finance data retrieval started', { query: input.query, traceId });
   
   try {

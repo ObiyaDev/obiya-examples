@@ -1,4 +1,4 @@
-import { ApiRouteConfig, StepHandler } from 'motia'
+import { ApiRouteConfig, Handlers } from 'motia'
 import { z } from 'zod'
 
 const inputSchema = z.object({
@@ -16,7 +16,7 @@ export const config: ApiRouteConfig = {
   flows: ['research'],
 }
 
-export const handler: StepHandler<typeof config> = async (req, { logger, state }) => {
+export const handler: Handlers['Research Report API'] = async (req, { logger, state }) => {
   const requestId = req.queryParams.requestId as string
   logger.info('Retrieving research report', { requestId })
 

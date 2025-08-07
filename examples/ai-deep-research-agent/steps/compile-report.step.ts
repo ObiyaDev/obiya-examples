@@ -1,4 +1,4 @@
-import { EventConfig, StepHandler } from 'motia'
+import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
 import { OpenAIService } from '../services/openai.service'
 
@@ -19,7 +19,7 @@ const inputSchema = z.object({
   isComplete: z.boolean()
 })
 
-export const config: EventConfig<Input> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Compile Research Report',
   description: 'Compile final research report with all findings',
@@ -32,7 +32,7 @@ export const config: EventConfig<Input> = {
   flows: ['research'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { traceId, logger, state, emit }) => {
+export const handler: Handlers['Compile Research Report'] = async (input, { traceId, logger, state, emit }) => {
   logger.info('Compiling final research report', {
     originalQuery: input.originalQuery,
     depth: input.depth,

@@ -1,4 +1,4 @@
-import { EventConfig, StepHandler } from 'motia'
+import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
 
 type Input = typeof inputSchema
@@ -18,7 +18,7 @@ const inputSchema = z.object({
   })
 })
 
-export const config: EventConfig<Input> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Follow-up Research',
   description: 'Process follow-up research queries for deeper investigation',
@@ -31,7 +31,7 @@ export const config: EventConfig<Input> = {
   flows: ['research'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { traceId, logger, state, emit }) => {
+export const handler: Handlers['Follow-up Research'] = async (input, { traceId, logger, state, emit }) => {
   logger.info('Processing follow-up research queries', {
     queriesCount: input.followUpQueries.length,
     depth: input.depth

@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { GithubClient } from '../../services/github/GithubClient'
 import { OpenAIClient } from '../../services/openai/OpenAIClient'
 import { GithubIssueEvent } from '../../types/github-events'
-import type { EventConfig, StepHandler } from 'motia'
+import type { EventConfig, Handlers } from 'motia'
 
 const TEAM_MEMBERS = [
   {
@@ -33,7 +33,7 @@ const labeledIssueSchema = z.object({
   labels: z.array(z.string()),
 })
 
-export const config: EventConfig<typeof labeledIssueSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Assignee Selector',
   description: 'Uses LLM to select appropriate assignees for issues',
@@ -48,7 +48,7 @@ export const config: EventConfig<typeof labeledIssueSchema> = {
   flows: ['github-issue-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { emit, logger }) => {
+export const handler: Handlers['Assignee Selector'] = async (input, { emit, logger }) => {
   const github = new GithubClient()
   const openai = new OpenAIClient()
 

@@ -1,10 +1,10 @@
-transformers==4.30.2
-torch==2.0.1
-numpy==1.24.3
-scikit-learn==1.2.2
-pandas==2.0.2
-python-dotenv==1.0.0
+transformers
+torch
+numpy
+scikit-learn
+pandas
+python-dotenv
 huggingface_hub>=0.29.1
 requests>=2.32.3
 pyyaml>=6.0.2
-tqdm>=4.67.1 
+tqdm>=4.67.1

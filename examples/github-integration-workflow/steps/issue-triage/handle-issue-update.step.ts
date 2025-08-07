@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { GithubClient } from '../../services/github/GithubClient'
 import { GithubIssueEvent } from '../../types/github-events'
-import type { EventConfig, StepHandler } from 'motia'
+import type { EventConfig, Handlers } from 'motia'
 
 const updateSchema = z.object({
   issueNumber: z.number(),
@@ -11,7 +11,7 @@ const updateSchema = z.object({
   repo: z.string(),
 })
 
-export const config: EventConfig<typeof updateSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Issue Update Handler',
   description: 'Handles issue updates by notifying reviewers of changes',
@@ -26,7 +26,7 @@ export const config: EventConfig<typeof updateSchema> = {
   flows: ['github-issue-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { emit, logger }) => {
+export const handler: Handlers['Issue Update Handler'] = async (input, { emit, logger }) => {
   const github = new GithubClient()
 
   logger.info('[Issue Update Handler] Processing issue update', {

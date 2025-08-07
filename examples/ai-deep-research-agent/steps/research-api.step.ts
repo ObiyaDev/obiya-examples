@@ -1,4 +1,4 @@
-import { ApiRouteConfig, StepHandler } from 'motia'
+import { ApiRouteConfig, Handlers } from 'motia'
 import { z } from 'zod'
 
 const inputSchema = z.object({
@@ -21,7 +21,7 @@ export const config: ApiRouteConfig = {
   flows: ['research'],
 }
 
-export const handler: StepHandler<typeof config> = async (req, { logger, emit, traceId }) => {
+export const handler: Handlers['Deep Research API'] = async (req, { logger, emit, traceId }) => {
   logger.info('Starting deep research process', { 
     query: req.body.query, 
     breadth: req.body.breadth, 

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { OpenAIClient } from '../../services/openai/OpenAIClient'
 import { GithubPREvent } from '../../types/github-events'
-import type { EventConfig, StepHandler } from 'motia'
+import type { EventConfig, Handlers } from 'motia'
 
 const prSchema = z.object({
   prNumber: z.number(),
@@ -15,7 +15,7 @@ const prSchema = z.object({
   commitSha: z.string(),
 })
 
-export const config: EventConfig<typeof prSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'PR Classifier',
   description: 'Uses LLM to classify PRs by type and impact',
@@ -30,7 +30,7 @@ export const config: EventConfig<typeof prSchema> = {
   flows: ['github-pr-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { emit, logger }) => {
+export const handler: Handlers['PR Classifier'] = async (input, { emit, logger }) => {
   const openai = new OpenAIClient()
 
   logger.info('[PR Classifier] Analyzing PR', {

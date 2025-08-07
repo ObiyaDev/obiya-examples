@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { GithubClient } from '../../services/github/GithubClient'
 import { GithubIssueEvent } from '../../types/github-events'
-import type { EventConfig, StepHandler } from 'motia'
+import type { EventConfig, Handlers } from 'motia'
 
 const closureSchema = z.object({
   issueNumber: z.number(),
@@ -9,7 +9,7 @@ const closureSchema = z.object({
   repo: z.string(),
 })
 
-export const config: EventConfig<typeof closureSchema> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Issue Closure Handler',
   description: 'Processes closed issues by adding closure labels and thank you comment',
@@ -24,7 +24,7 @@ export const config: EventConfig<typeof closureSchema> = {
   flows: ['github-issue-management'],
 }
 
-export const handler: StepHandler<typeof config> = async (input, { emit, logger }) => {
+export const handler: Handlers['Issue Closure Handler'] = async (input, { emit, logger }) => {
   const github = new GithubClient()
 
   logger.info('[Issue Closure Handler] Processing issue closure', {

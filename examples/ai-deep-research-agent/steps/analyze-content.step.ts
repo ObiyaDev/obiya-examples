@@ -1,4 +1,4 @@
-import { EventConfig, StepHandler } from 'motia'
+import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
 import { OpenAIService } from '../services/openai.service'
 import { ResearchConfig } from './types/research-config'
@@ -19,7 +19,7 @@ const inputSchema = z.object({
   depth: z.number().int()
 })
 
-export const config: EventConfig<Input> = {
+export const config: EventConfig = {
   type: 'event',
   name: 'Analyze Content',
   description: 'Analyze extracted content and generate research summary',
@@ -44,7 +44,7 @@ interface ResearchSummary {
   }[];
 }
 
-export const handler: StepHandler<typeof config> = async (input, { traceId, logger, state, emit }) => {
+export const handler: Handlers['Analyze Content'] = async (input, { traceId, logger, state, emit }) => {
   logger.info('Analyzing extracted content', {
     contentCount: input.extractedContents.length,
     depth: input.depth

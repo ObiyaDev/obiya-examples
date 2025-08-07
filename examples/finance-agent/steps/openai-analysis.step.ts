@@ -1,4 +1,4 @@
-import { EventConfig, StepHandler } from 'motia';
+import { EventConfig, Handlers } from 'motia';
 import { z } from 'zod';
 import { ServiceFactory } from '../services/ServiceFactory';
 import { AnalysisInput } from '../services/OpenAIService';
@@ -23,7 +23,7 @@ export const config: EventConfig<typeof inputSchema> = {
   flows: ['finance-workflow']
 };
 
-export const handler: StepHandler<typeof config> = async (input, { logger, emit, state, traceId }) => {
+export const handler: Handlers['OpenAIAnalysisHandler'] = async (input, { logger, emit, state, traceId }) => {
   logger.info('Starting OpenAI analysis', { traceId });
   
   try {
