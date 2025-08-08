@@ -52,7 +52,7 @@ graph TD
 ```bash
 # Clone the repository
 git clone https://github.com/MotiaDev/motia-examples.git
-cd motia-examples/motia-parallel-execution
+cd examples/motia-parallel-execution
 
 # Install dependencies
 npm install
@@ -76,11 +76,17 @@ curl -X POST http://localhost:3000/process-data \
     "id": "test-parallel"
   }'
 ```
+  Response includes a `streamId` you can use to watch progress in the Streams panel.
+
+  Example:
+  ```json
+  { "message": "Parallel processing started", "traceId": "<trace>", "streamId": "test-parallel" }
+  ```
 
 4. **Monitor Results**:
    - **Logs Tab**: See all three processors start simultaneously
    - **States Tab**: View aggregated results
-   - **Streams Tab**: Watch real-time progress updates
+    - **Streams Tab**: Watch real-time progress updates using the `streamId` as the group id
 
 ## 📁 Project Structure
 
@@ -140,7 +146,7 @@ export const config: EventConfig = {
 ### 3. **Real-Time Progress Streaming**
 ```typescript
 // From processing-progress.stream.ts
-export const config: StateStreamConfig = {
+export const config: StreamConfig = {
   name: 'processingProgress',
   schema: z.object({
     status: z.enum(['started', 'processing', 'completed', 'error']),
@@ -151,7 +157,9 @@ export const config: StateStreamConfig = {
       keywords: z.array(z.string()).optional(),
       summary: z.string().optional()
     })
-  })
+  }),
+  // Default storage enables real-time streaming and socket updates
+  baseConfig: { storageType: 'default' }
 }
 ```
 
@@ -305,3 +313,8 @@ This example showcases how **Motia transforms complex parallel processing** into
 ---
 
 **Built with ❤️ using [Motia Framework](https://github.com/MotiaDev/motia)**
+
+---
+
+### ❓ Troubleshooting
+- If you see an error like "stream is not a function", ensure your stream step uses `StreamConfig` with `baseConfig: { storageType: 'default' }`, then re-run `npm run generate-types` and restart `npm run dev`.

@@ -21,7 +21,7 @@ exports.handler = async (req, { logger, emit }) => {
   await emit({
     topic: 'get-topic-idea',
     data: {
-      name: 'Sumit'
+      name: 'motia'
     }
   })
   logger.info('after emit')
