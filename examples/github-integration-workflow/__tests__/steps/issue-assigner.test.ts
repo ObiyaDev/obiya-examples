@@ -15,6 +15,8 @@ describe('Issue Assigner Step', () => {
   let mockContext: ReturnType<typeof createMockContext>
   let mockGithubClient: jest.Mocked<GithubClient>
   let mockOpenAIClient: jest.Mocked<OpenAIClient>
+  type UpdateIssueReturn = Awaited<ReturnType<GithubClient['updateIssue']>>
+  type CreateCommentReturn = Awaited<ReturnType<GithubClient['createComment']>>
 
   beforeEach(() => {
     mockContext = createMockContext()
@@ -46,8 +48,8 @@ describe('Issue Assigner Step', () => {
   })
 
   it('should assign an issue and emit an event', async () => {
-    mockGithubClient.updateIssue.mockResolvedValueOnce({ id: 123 } as any)
-    mockGithubClient.createComment.mockResolvedValueOnce({ id: 456 } as any)
+    mockGithubClient.updateIssue.mockResolvedValueOnce({ id: 123 } as UpdateIssueReturn)
+    mockGithubClient.createComment.mockResolvedValueOnce({ id: 456 } as CreateCommentReturn)
 
     const event = {
       ...mockIssueAssignedEvent,
@@ -105,7 +107,7 @@ describe('Issue Assigner Step', () => {
   })
 
   it('should handle errors when creating a comment', async () => {
-    mockGithubClient.updateIssue.mockResolvedValueOnce({ id: 123 } as any)
+    mockGithubClient.updateIssue.mockResolvedValueOnce({ id: 123 } as UpdateIssueReturn)
     const mockError = new Error('Comment failed')
     mockGithubClient.createComment.mockRejectedValueOnce(mockError)
 
@@ -133,8 +135,8 @@ describe('Issue Assigner Step', () => {
       labels: ['bug', 'high-priority', 'moderate-complexity'],
     }
 
-    mockGithubClient.updateIssue.mockResolvedValueOnce({ id: 123 } as any)
-    mockGithubClient.createComment.mockResolvedValueOnce({ id: 456 } as any)
+    mockGithubClient.updateIssue.mockResolvedValueOnce({ id: 123 } as UpdateIssueReturn)
+    mockGithubClient.createComment.mockResolvedValueOnce({ id: 456 } as CreateCommentReturn)
 
     await handler(eventWithEmptyAssignees, mockContext)
 

@@ -43,7 +43,7 @@ describe('GithubClient', () => {
               listForRef: mockListForRef,
             },
           },
-        }) as any
+        }) as unknown as Octokit
     )
 
     githubClient = new GithubClient()

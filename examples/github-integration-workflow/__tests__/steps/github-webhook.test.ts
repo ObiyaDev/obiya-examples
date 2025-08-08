@@ -23,7 +23,7 @@ describe('GitHub Issue Webhook Step', () => {
     jest.clearAllMocks()
   })
 
-  const createApiRequest = (payload: any): ApiRequest => ({
+  const createApiRequest = (payload: unknown): ApiRequest => ({
     body: payload,
     pathParams: {},
     queryParams: {},

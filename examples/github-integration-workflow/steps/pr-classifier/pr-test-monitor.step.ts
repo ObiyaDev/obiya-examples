@@ -3,10 +3,15 @@ import { GithubClient } from '../../services/github/GithubClient'
 import { GithubPREvent } from '../../types/github-events'
 import type { EventConfig, Handlers } from 'motia'
 
-const prTestSchema = z.object({
+const prSchema = z.object({
   prNumber: z.number(),
+  title: z.string(),
+  body: z.string().optional(),
   owner: z.string(),
   repo: z.string(),
+  author: z.string(),
+  baseBranch: z.string(),
+  headBranch: z.string(),
   commitSha: z.string(),
 })
 
@@ -21,7 +26,7 @@ export const config: EventConfig = {
       label: 'Test results processed',
     },
   ],
-  input: prTestSchema,
+  input: prSchema,
   flows: ['github-pr-management'],
 }
 

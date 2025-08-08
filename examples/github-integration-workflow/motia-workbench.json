@@ -1,62 +1,83 @@
-{
-  "github-issue-management": {
-    "steps/issue-triage/assignee-selector.step.ts": {
-      "x": 559.5,
-      "y": 908
-    },
-    "steps/issue-triage/github-webhook.step.ts": {
-      "x": 266.5,
-      "y": 176
-    },
-    "steps/issue-triage/handle-issue-closure.step.ts": {
-      "x": -329.7722758794514,
-      "y": 377.03797356994505
-    },
-    "steps/issue-triage/handle-issue-update.step.ts": {
-      "x": 48.44849589790334,
-      "y": 552.0619872379216
-    },
-    "steps/issue-triage/handle-new-issue.step.ts": {
-      "x": 558,
-      "y": 380
-    },
-    "steps/issue-triage/issue-classifier.step.ts": {
-      "x": 351.5652401716595,
-      "y": 564.6971993674764
-    },
-    "steps/issue-triage/label-assigner.step.ts": {
-      "x": 570.5,
-      "y": 732
-    },
-    "steps/issue-triage/test-github-issue.step.ts": {
-      "x": 228.5,
-      "y": 0
+[
+  {
+    "id": "github-pr-management",
+    "config": {
+      "steps/pr-classifier/test-pr-webhook.step.ts": {
+        "x": -608,
+        "y": 248
+      },
+      "steps/pr-classifier/pr-webhook.step.ts": {
+        "x": -638,
+        "y": 570,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "top"
+      },
+      "steps/pr-classifier/pr-test-monitor.step.ts": {
+        "x": 6,
+        "y": 594,
+        "targetHandlePosition": "left"
+      },
+      "steps/pr-classifier/pr-reviewer-assigner.step.ts": {
+        "x": 677,
+        "y": 633,
+        "targetHandlePosition": "left"
+      },
+      "steps/pr-classifier/pr-label-assigner.step.ts": {
+        "x": 672,
+        "y": 324,
+        "targetHandlePosition": "left"
+      },
+      "steps/pr-classifier/pr-classifier.step.ts": {
+        "x": -18,
+        "y": 337,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "left"
+      }
     }
   },
-  "github-pr-management": {
-    "steps/pr-classifier/pr-classifier.step.ts": {
-      "x": 55.9017775752051,
-      "y": 556
-    },
-    "steps/pr-classifier/pr-label-assigner.step.ts": {
-      "x": -143.40929808568822,
-      "y": 747.8505013673655
-    },
-    "steps/pr-classifier/pr-reviewer-assigner.step.ts": {
-      "x": 493.26709206927984,
-      "y": 746.3409298085688
-    },
-    "steps/pr-classifier/pr-test-monitor.step.ts": {
-      "x": 508.88536918869636,
-      "y": 551.4712853236099
-    },
-    "steps/pr-classifier/pr-webhook.step.ts": {
-      "x": 169.75,
-      "y": 300
-    },
-    "steps/pr-classifier/test-pr-webhook.step.ts": {
-      "x": 202.75,
-      "y": 0
+  {
+    "id": "github-issue-management",
+    "config": {
+      "steps/issue-triage/test-github-issue.step.ts": {
+        "x": -1202,
+        "y": 61
+      },
+      "steps/issue-triage/label-assigner.step.ts": {
+        "x": 77,
+        "y": 321,
+        "targetHandlePosition": "left"
+      },
+      "steps/issue-triage/issue-classifier.step.ts": {
+        "x": -90,
+        "y": 65,
+        "sourceHandlePosition": "bottom",
+        "targetHandlePosition": "left"
+      },
+      "steps/issue-triage/handle-new-issue.step.ts": {
+        "x": -572,
+        "y": 502,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "left"
+      },
+      "steps/issue-triage/handle-issue-update.step.ts": {
+        "x": -566,
+        "y": 303,
+        "targetHandlePosition": "left"
+      },
+      "steps/issue-triage/handle-issue-closure.step.ts": {
+        "x": -595,
+        "y": 35,
+        "targetHandlePosition": "left"
+      },
+      "steps/issue-triage/github-webhook.step.ts": {
+        "x": -1178,
+        "y": 298,
+        "sourceHandlePosition": "right"
+      },
+      "steps/issue-triage/assignee-selector.step.ts": {
+        "x": 72,
+        "y": 531
+      }
     }
   }
-}
+]

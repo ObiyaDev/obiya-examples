@@ -30,7 +30,7 @@ describe('OpenAIClient', () => {
               create: mockCreateCompletion,
             },
           },
-        }) as any
+        } as unknown as OpenAI)
     )
 
     openaiClient = new OpenAIClient()
