@@ -38,6 +38,11 @@ export const config: ApiRouteConfig = {
     },
   ],
   bodySchema: webhookSchema,
+  responseSchema: {
+    200: z.object({
+      message: z.string(),
+    }),
+  },
   flows: ['github-issue-management'],
 }
 
@@ -49,18 +54,23 @@ export const handler: Handlers['GitHub Webhook Handler'] = async (req, { emit, l
     issueNumber: issue.number,
   })
 
-  await emit({
-    topic: `github.issue.${action}` as GithubIssueEvent,
-    data: {
-      issueNumber: issue.number,
-      title: issue.title,
-      body: issue.body,
-      state: issue.state,
-      labels: issue.labels.map((l: { name: string }) => l.name),
-      owner: repository.owner.login,
-      repo: repository.name,
-    },
-  })
+  const data = {
+    issueNumber: issue.number,
+    title: issue.title,
+    body: issue.body,
+    state: issue.state,
+    labels: issue.labels.map((l: { name: string }) => l.name),
+    owner: repository.owner.login,
+    repo: repository.name,
+  }
+
+  if (action === 'opened') {
+    await emit({ topic: GithubIssueEvent.Opened, data })
+  } else if (action === 'edited') {
+    await emit({ topic: GithubIssueEvent.Edited, data })
+  } else {
+    await emit({ topic: GithubIssueEvent.Closed, data })
+  }
 
   return {
     status: 200,

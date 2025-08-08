@@ -65,7 +65,7 @@ export const handler: Handlers['PR Reviewer Assigner'] = async (input, { emit, l
         input.owner,
         input.repo,
         input.prNumber,
-        `🔍 Based on the PR content and team expertise, I've requested reviews from: ${suggestedReviewers.map((r: any) => `@${r}`).join(', ')}`
+        `🔍 Based on the PR content and team expertise, I've requested reviews from: ${suggestedReviewers.map(r => `@${r}`).join(', ')}`
       )
 
       await emit({

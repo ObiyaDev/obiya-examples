@@ -16,13 +16,18 @@ const webhookSchema = z.object({
       repo: z.object({
         name: z.string(),
         owner: z.object({ login: z.string() }),
-      }),
+      }).optional(),
     }),
     head: z.object({
       ref: z.string(),
       sha: z.string(),
     }),
+    merged: z.boolean().optional(),
   }),
+  repository: z.object({
+    owner: z.object({ login: z.string() }),
+    name: z.string(),
+  }).optional(),
 })
 
 export const config: ApiRouteConfig = {
@@ -51,6 +56,11 @@ export const config: ApiRouteConfig = {
     },
   ],
   bodySchema: webhookSchema,
+  responseSchema: {
+    200: z.object({
+      message: z.string(),
+    }),
+  },
   flows: ['github-pr-management'],
 }
 
@@ -66,8 +76,8 @@ export const handler: Handlers['PR Webhook Handler'] = async (req, { emit, logge
     state: pr.state,
     labels: pr.labels ? pr.labels.map((l: { name: string }) => l.name) : [],
     author: pr.user.login,
-    owner: pr.base.repo?.owner?.login || repository.owner.login,
-    repo: pr.base.repo?.name || repository.name,
+    owner: (pr.base.repo?.owner?.login) || repository?.owner.login || '',
+    repo: (pr.base.repo?.name) || repository?.name || '',
     baseBranch: pr.base.ref,
     headBranch: pr.head.ref,
     commitSha: pr.head.sha,
