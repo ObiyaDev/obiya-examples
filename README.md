@@ -126,7 +126,7 @@ An LLM chat-like question-answering system with RAG (Retrieval-Augmented Generat
 The system leverages Docling to parse and intelligently chunk PDF documents, Weaviate as a vector database to store vectorized chunks, and OpenAI for embeddings and text generation.
 
 <div style="display: flex; gap: 10px;">
-  <img src="examples/rag-docling-weaviate-agent/docs/images/workbench.png" alt="PDF RAG Docling Weaviate Agent" />
+  <img src="examples/rag-docling-weaviate-agent/docs/images/rag-example.gif" alt="PDF RAG Docling Weaviate Agent" />
 </div>
 
 **Key Features:**
