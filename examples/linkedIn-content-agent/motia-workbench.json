@@ -12,32 +12,43 @@
     "id": "LinkedIn-content-agent",
     "config": {
       "steps/merge-everything.step.js": {
-        "x": 20,
-        "y": 708
+        "x": 688,
+        "y": 14,
+        "targetHandlePosition": "left"
       },
       "steps/generate-seo-keywords.step.js": {
-        "x": -416,
-        "y": 500
+        "x": 124,
+        "y": 275,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "left"
       },
       "steps/generate-image.step.js": {
-        "x": 434,
-        "y": 478
+        "x": 152,
+        "y": -139,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "left"
       },
       "steps/generate-content-using-idea.step.js": {
-        "x": 3,
-        "y": 208
+        "x": -401,
+        "y": 140,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "top"
       },
       "steps/final.step.js": {
-        "x": 95,
-        "y": 946
+        "x": 753,
+        "y": 241,
+        "targetHandlePosition": "top"
       },
       "steps/create-idea.step.js": {
-        "x": 14,
-        "y": 6
+        "x": -398,
+        "y": -180,
+        "sourceHandlePosition": "bottom",
+        "targetHandlePosition": "left"
       },
       "steps/api.step.js": {
-        "x": 3,
-        "y": -214
+        "x": -849,
+        "y": -224,
+        "sourceHandlePosition": "right"
       }
     }
   }
