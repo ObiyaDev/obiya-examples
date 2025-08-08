@@ -21,10 +21,10 @@ config = {
 }
 
 async def handler(input, context):
-    for file in input.files:
+    for file in input['files']:
         # Get file info from input
-        file_path = file.filePath
-        filename = file.fileName
+        file_path = file['filePath']
+        filename = file['fileName']
         
         context.logger.info(f"Processing PDF file: {filename}")
 

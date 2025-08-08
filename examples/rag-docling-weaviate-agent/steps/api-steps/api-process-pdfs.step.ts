@@ -1,4 +1,4 @@
-import { ApiRequest, ApiRouteConfig, FlowContext, StepHandler } from 'motia';
+import { ApiRouteConfig, Handlers } from 'motia';
 import { z } from 'zod';
 
 export const config: ApiRouteConfig = {
@@ -13,9 +13,9 @@ export const config: ApiRouteConfig = {
   }),
 };
 
-export const handler: StepHandler<typeof config> = async (
-  req: ApiRequest,
-  { emit, logger }: FlowContext
+export const handler: Handlers['api-process-pdfs'] = async (
+  req,
+  { emit, logger }
 ) => {
   const { folderPath } = req.body;
 

@@ -1,7 +1,7 @@
 import weaviate from 'weaviate-client';
-import { DocumentChunkType } from '../../types';
+import { DocumentChunkType } from '../../types/index';
 import { z } from 'zod';
-import { EventConfig, StepHandler, FlowContext } from 'motia';
+import { EventConfig, Handlers } from 'motia';
 
 const InputSchema = z.object({
   stateKey: z.string(),
@@ -16,9 +16,9 @@ export const config: EventConfig = {
   input: InputSchema,
 };
 
-export const handler: StepHandler<typeof config> = async (
-  input: z.infer<typeof InputSchema>,
-  { emit, logger, state }: FlowContext
+export const handler: Handlers['load-weaviate'] = async (
+  input,
+  { emit, logger, state }
 ) => {
   // Get chunks from state
   const chunks = await state.get<DocumentChunkType[]>('rag-workflow', input.stateKey);

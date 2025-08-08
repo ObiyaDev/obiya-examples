@@ -1,35 +1,36 @@
-# PDF RAG Agent using Motia, Docling and Weaviate
+# PDF RAG Agent (Motia + Docling + Weaviate)
 
-An LLM chat-like question-answering system built with Motia Framework that uses RAG (Retrieval-Augmented Generation) to provide accurate answers from PDF documents.
-The system leverages Docling to parse and intelligently chunk PDF documents, Weaviate as a vector database to store vectorized chunks, and OpenAI for embeddings and text generation.
+This example builds a retrieval‑augmented pipeline: it ingests PDFs, chunks them with Docling, stores the chunks in Weaviate, and answers questions using Motia’s event‑driven workflow.
 
-## Features
+![rag-example](docs/images/rag-example.gif)
+
+## Key Features
 
 - PDF document processing and chunking
-- Built with Motia Framework for event-driven workflows
-- Vector storage using Weaviate
-- Docling for PDF parsing and hybrid chunking
+- Built with [Motia Framework](https://github.com/motiadev/motia) for event-driven Architecture
+- Vector storage using [Weaviate](https://weaviate.io/)
+- [Docling](https://github.com/docling-project/docling) for PDF parsing and hybrid chunking
 - Question answering using RAG pattern
-- OpenAI integration for embeddings and text generation
+- [OpenAI](https://openai.com/) integration for embeddings and text generation
 
 ## Prerequisites
 
 - Node.js 18+
-- Python 3.x
-- Weaviate instance
-- OpenAI API key
+- Python 3.10+
+- [Weaviate instance](https://weaviate.io/docs/installation.html)
+- [OpenAI API key](https://openai.com/api/)
 
 ## Setup
 
 1. Initialize the Node.js and Python dependencies:
 ```bash
-pnpm install
+npm install
 ```
 
-1. Create a `.env` file in the root directory with the following variables:
+2. Create a `.env` file in the root directory with the following variables:
 ```env
 OPENAI_API_KEY=your_openai_api_key
-WEAVIATE_URL=your_weaviate_instance_url
+WEAVIATE_URL=https://<cluster>.weaviate.cloud
 WEAVIATE_API_KEY=your_weaviate_api_key
 ```
 
@@ -37,43 +38,12 @@ WEAVIATE_API_KEY=your_weaviate_api_key
 
 Start the development server:
 ```bash
-pnpm dev
-```
-
-For debug mode:
-```bash
-pnpm dev:debug
-```
-
-## Building
-
-Build the project:
-```bash
-pnpm build
-```
-
-## Testing
-
-Run tests:
-```bash
-pnpm test
-```
-
-## Code Quality
-
-Lint code:
-```bash
-pnpm lint
-```
-
-Format code:
-```bash
-pnpm format
+npm run dev
 ```
 
 ## Project Structure
 ```
-src/
+rag-docling-weaviate-agent/
 ├── steps/
 │   ├── api-steps/          # API endpoints for PDF processing and querying
 │   │   ├── api-process-pdfs.step.ts
@@ -81,7 +51,7 @@ src/
 │   └── event-steps/        # Background processing steps
 │       ├── init-weaviate.step.ts
 │       ├── load-weaviate.step.ts
-│       └── process-pdfs.step.py
+│       ├── process-pdfs.step.py
 │       └── read-pdfs.step.ts
 ├── types/               # TypeScript type definitions
 ```
@@ -98,8 +68,8 @@ The project follows a modular structure aligned with Motia Framework conventions
 
 ## How it Works
 
-1. **Document Processing**: The system processes the PDF using Docling and uses Hybrind Chunking to split it into chunks
-1. **Vector Storage**: Text chunks are embedded using Open AI and stored in Weaviate
+1. **Document Processing**: The system processes the PDF using Docling and HybridChunker to split it into chunks
+1. **Vector Storage**: Text chunks are stored in Weaviate with OpenAI text2vec/generative
 1. **Query Processing**: User queries are processed using RAG:
    - Query is embedded and similar chunks are retrieved from Weaviate
    - Retrieved context and query are sent to OpenAI for answer generation
@@ -109,6 +79,29 @@ The project follows a modular structure aligned with Motia Framework conventions
 
 - `POST /api/rag/process-pdfs`: Start processing PDF documents
 - `POST /api/rag/query`: Submit questions about the documents
+
+### Example calls
+From this directory, the ingestion step accepts relative or absolute folder paths. Both of these work:
+```bash
+curl -X POST http://localhost:3000/api/rag/process-pdfs \
+  -H "Content-Type: application/json" \
+  -d '{"folderPath":"docs/pdfs"}'
+
+curl -X POST http://localhost:3000/api/rag/process-pdfs \
+  -H "Content-Type: application/json" \
+  -d '{"folderPath":"/absolute/path/to/rag-docling-weaviate-agent/docs/pdfs"}'
+```
+
+Query after you see batch insert logs:
+```bash
+curl -X POST http://localhost:3000/api/rag/query \
+  -H "Content-Type: application/json" \
+  -d '{"query":"What are these pdfs about?","limit":3}'
+```
+
+![query-output](docs/images/query-output.png)
+
+If you paste a repo‑relative path like `examples/rag-docling-weaviate-agent/docs/pdfs` while you are already inside this example, the step automatically normalizes it to avoid ENOENT errors.
 
 ## License
 
