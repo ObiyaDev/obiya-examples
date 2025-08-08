@@ -1,6 +1,6 @@
-import { ApiRouteConfig, StepHandler, ApiRequest } from 'motia';
+import { ApiRouteConfig, Handlers } from 'motia';
 import weaviate from 'weaviate-client';
-import { RAGResponseType } from '../../types';
+import { RAGResponse } from '../../types/index';
 import { z } from 'zod';
 
 export const config: ApiRouteConfig = {
@@ -16,7 +16,7 @@ export const config: ApiRouteConfig = {
   }),
 };
 
-export const handler: StepHandler<typeof config> = async (req: ApiRequest, { logger, emit }) => {
+export const handler: Handlers['api-query-rag'] = async (req, { logger, emit }) => {
   const { query, limit } = req.body;
 
   logger.info('Processing RAG query', { query, limit });
@@ -35,38 +35,44 @@ export const handler: StepHandler<typeof config> = async (req: ApiRequest, { log
     const documentCollection = client.collections.get('Books');
 
     // Query using v3 syntax
-    const result = await documentCollection.generate.nearText(
-      query,
-      {
-        singlePrompt: `Answer the following question using only the provided context: ${query}`,
-      },
-      {
+    // Prefer alpha.hosted.withNearText.generate where available, fallback to generate.nearText
+    let result: any;
+    try {
+      // v3 hosted alpha API shape
+      result = await (documentCollection as any).alpha.hosted.withNearText.generate({
+        query,
         limit: limit,
-        returnProperties: ['text', 'title', 'source', 'page'],
-        returnMetadata: ['distance'],
-      }
-    );
+        singlePrompt: `Answer the following question using only the provided context: ${query}`,
+        fields: ['text', 'title', 'source', 'page'],
+        // metadata: ['distance'],
+      });
+    } catch {
+      // fallback to stable API
+      result = await (documentCollection as any).generate.nearText(
+        query,
+        { singlePrompt: `Answer the following question using only the provided context: ${query}` },
+        { limit, returnProperties: ['text', 'title', 'source', 'page'], returnMetadata: ['distance'] }
+      );
+    }
 
-    const chunks = result.objects.map((doc) => ({
-      text: doc.properties.text as string,
-      title: doc.properties.title as string,
+    const objects = (result?.objects ?? result?.data ?? result ?? []);
+    const chunks = objects.map((doc: any) => ({
+      text: (doc.properties?.text ?? doc.text ?? '') as string,
+      title: (doc.properties?.title ?? doc.title ?? 'Unknown') as string,
       metadata: {
-        source: doc.properties.source as string,
-        page: doc.properties.page as number,
+        source: (doc.properties?.source ?? doc.source ?? 'unknown') as string,
+        page: Number(doc.properties?.page ?? doc.page ?? 1),
       },
     }));
 
-    const answer = result.objects[0]?.generated || 'No answer generated';
+    const answer = (objects[0]?.generated ?? result?.generated ?? 'No answer generated') as string;
 
-    const response: RAGResponseType = {
-      query,
-      answer,
-      chunks,
-    };
+    const response = RAGResponse.parse({ query, answer, chunks });
 
     await emit({
-      topic: 'rag.query.completed',
-      data: response,
+      // cast to any since generated types for this example do not declare this topic contract
+      topic: 'rag.query.completed' as any,
+      data: response as any,
     });
 
     return {
@@ -74,7 +80,12 @@ export const handler: StepHandler<typeof config> = async (req: ApiRequest, { log
       body: response,
     };
   } catch (error) {
-    logger.error('Error querying Weaviate', { error });
+    logger.error('Error querying Weaviate', {
+      error,
+      url: process.env.WEAVIATE_URL,
+      collection: 'Books',
+      hint: 'Ensure the Books collection exists and data is loaded via /api/rag/process-pdfs before querying.'
+    });
     return {
       status: 500,
       body: {
@@ -82,5 +93,7 @@ export const handler: StepHandler<typeof config> = async (req: ApiRequest, { log
         message: error instanceof Error ? error.message : 'Unknown error',
       },
     };
+  } finally {
+    try { await client.close(); } catch {}
   }
 };

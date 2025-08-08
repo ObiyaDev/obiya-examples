@@ -1,6 +1,6 @@
 import { readdir } from 'fs/promises';
-import { join } from 'path';
-import { EventConfig, FlowContext, StepHandler } from 'motia';
+import { join, resolve, isAbsolute } from 'path';
+import { EventConfig, Handlers } from 'motia';
 import { z } from 'zod';
 
 const InputSchema = z.object({
@@ -16,22 +16,34 @@ export const config: EventConfig = {
   input: InputSchema,
 };
 
-export const handler: StepHandler<typeof config> = async (
-  input: z.infer<typeof InputSchema>,
-  { emit, logger }: FlowContext
+export const handler: Handlers['read-pdfs'] = async (
+  input,
+  { emit, logger }
 ) => {
   const { folderPath } = input;
-  logger.info(`Reading PDFs from folder: ${folderPath}`);
+  const cwd = process.cwd();
+  const currentDirName = resolve(cwd).split('/').pop() ?? '';
+  // Normalize common cases where users paste repo-relative paths like
+  // "examples/rag-docling-weaviate-agent/docs/pdfs" while already in that example dir
+  let normalizedPath = folderPath;
+  if (!isAbsolute(folderPath) && folderPath.includes(`${currentDirName}/`)) {
+    const parts = folderPath.split(`${currentDirName}/`);
+    normalizedPath = parts[parts.length - 1]; // e.g., "docs/pdfs"
+  }
+  const absoluteFolderPath = isAbsolute(normalizedPath)
+    ? normalizedPath
+    : resolve(cwd, normalizedPath);
+  logger.info(`Reading PDFs from folder: ${folderPath}`, { absoluteFolderPath });
 
   // Read all files in the directory
-  const files = await readdir(folderPath);
+  const files = await readdir(absoluteFolderPath);
   const pdfFiles = files.filter((file) => file.endsWith('.pdf'));
 
   logger.info(`Found ${pdfFiles.length} PDF files`);
 
   const filesInfo = await Promise.all(
     pdfFiles.map(async (pdfFile) => {
-      const filePath = join(folderPath, pdfFile);
+      const filePath = join(absoluteFolderPath, pdfFile);
       return {
         filePath,
         fileName: pdfFile,
