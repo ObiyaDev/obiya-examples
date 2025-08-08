@@ -4,18 +4,18 @@
  * 
  * Consider adding this file to .prettierignore and eslint ignore.
  */
-import { EventHandler, ApiRouteHandler, ApiResponse, IStateStream } from 'motia'
+import { EventHandler, ApiRouteHandler, ApiResponse, MotiaStream, CronHandler } from 'motia'
 
 declare module 'motia' {
   interface FlowContextStateStreams {
-    'processingProgress': IStateStream<{ status: string; progress: number; results: { wordCount?: number; sentiment?: string; keywords?: string[]; summary?: string } }>
+    'processingProgress': MotiaStream<{ status: 'started' | 'processing' | 'completed' | 'error'; progress: number; results: { wordCount?: number; sentiment?: string; keywords?: string[]; summary?: string } }>
   }
 
   type Handlers = {
-    'WordCountProcessor': EventHandler<{ text: string; processingId: string }, { topic: 'processing-result'; data: { type: string; result: unknown; processingId: string } }>
-    'SentimentAnalyzer': EventHandler<{ text: string; processingId: string }, { topic: 'processing-result'; data: { type: string; result: unknown; processingId: string } }>
-    'KeywordExtractor': EventHandler<{ text: string; processingId: string }, { topic: 'processing-result'; data: { type: string; result: unknown; processingId: string } }>
+    'WordCountProcessor': EventHandler<{ text: string; processingId: string }, { topic: 'processing-result'; data: { type: 'wordCount' | 'sentiment' | 'keywords'; result: unknown; processingId: string } }>
+    'SentimentAnalyzer': EventHandler<{ text: string; processingId: string }, { topic: 'processing-result'; data: { type: 'wordCount' | 'sentiment' | 'keywords'; result: unknown; processingId: string } }>
+    'KeywordExtractor': EventHandler<{ text: string; processingId: string }, { topic: 'processing-result'; data: { type: 'wordCount' | 'sentiment' | 'keywords'; result: unknown; processingId: string } }>
     'DataProcessingApi': ApiRouteHandler<{ text: string; id?: string }, ApiResponse<200, { message: string; traceId: string; streamId: string }>, { topic: 'parallel-processing'; data: { text: string; processingId: string } }>
-    'DataAggregator': EventHandler<{ type: string; result: unknown; processingId: string }, never>
+    'DataAggregator': EventHandler<{ type: 'wordCount' | 'sentiment' | 'keywords'; result: unknown; processingId: string }, never>
   }
 }
