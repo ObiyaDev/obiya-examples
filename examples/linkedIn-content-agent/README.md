@@ -10,7 +10,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat&logo=opensourceinitiative&logoColor=white&labelColor=000000)](LICENSE)
 
 [![GitHub Stars](https://img.shields.io/github/stars/MotiaDev/motia?style=flat&logo=github&logoColor=white&color=yellow&labelColor=000000)](https://github.com/MotiaDev/motia)
-[![Discord](https://img.shields.io/discord/1322278831184281721?style=flat&logo=discord&logoColor=white&color=5865F2&label=Discord&labelColor=000000)](https://discord.gg/EnfDRFYW)
+[![Discord](https://img.shields.io/discord/1322278831184281721?style=flat&logo=discord&logoColor=white&color=5865F2&label=Discord&labelColor=000000)](https://discord.gg/motia)
 [![Twitter Follow](https://img.shields.io/badge/Follow-@motiadev-1DA1F2?style=flat&logo=twitter&logoColor=white&labelColor=000000)](https://twitter.com/motiadev)
 
 ---
@@ -157,6 +157,7 @@ backup-linkedIn-content-agent/
 # Start the development server
 npm run dev
 ```
+
 2. Trigger content generation via API. You can trigger APIs from the Motia Workbench that was fired up in the previous step.
 
 
@@ -273,13 +274,13 @@ Error: Failed to upload image
 ## 📞 Support
 
 - 📖 [Documentation](https://motia.dev/docs)
-- 💬 [Discord Community](https://discord.gg/9szwmbED)
+- 💬 [Discord Community](https://discord.gg/motia)
 
 ---
 
 <div align="center">
 
-**[⭐ Star this repo](https://github.com/yourusername/backup-linkedIn-content-agent)** if you found it helpful!
+**[⭐ Star this repo](https://github.com/motiadev/motia-examples)** if you found it helpful!
 
 Built with ❤️ using [Motia](https://github.com/MotiaDev/motia)
 
