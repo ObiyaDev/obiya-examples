@@ -29,11 +29,6 @@ export async function handler(context) {
 
       // Simple, direct emit call
       await context.emit({ topic: 'check.requested', data: { url: url } });
-      // await emit({
-      //   topic: 'check.requested',
-      //   'url':url
-      // })
-
       context.logger.info(`Successfully emitted for: ${url}`);
     }
 
