@@ -1,0 +1,50 @@
+[
+  {
+    "id": "default",
+    "config": {
+      "steps/00-noop.step.ts": {
+        "x": -507,
+        "y": 111,
+        "sourceHandlePosition": "right"
+      },
+      "steps/01-api.step.ts": {
+        "x": -281,
+        "y": 94,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "left"
+      },
+      "steps/02-test-state.step.ts": {
+        "x": 60,
+        "y": 36,
+        "sourceHandlePosition": "bottom",
+        "targetHandlePosition": "left"
+      },
+      "steps/03-check-state-change.step.ts": {
+        "x": 78,
+        "y": 199,
+        "targetHandlePosition": "top"
+      }
+    }
+  },
+  {
+    "id": "sentiment-demo",
+    "config": {
+      "steps/openAiAnalyzeSentiment.step.ts": {
+        "x": 163,
+        "y": 284
+      },
+      "steps/handlePositive.step.ts": {
+        "x": 0,
+        "y": 500
+      },
+      "steps/handleNegative.step.ts": {
+        "x": 367,
+        "y": 500
+      },
+      "steps/analyzeSentimentApi.step.ts": {
+        "x": 163,
+        "y": 0
+      }
+    }
+  }
+]
