@@ -30,24 +30,24 @@
     "id": "uptime-monitoring",
     "config": {
       "steps/health.step.js": {
-        "x": 0,
-        "y": 0
-      },
-      "steps/dashboard.step.js": {
-        "x": 840,
-        "y": 530
+        "x": 18,
+        "y": 19
       },
       "steps/cron.step.js": {
-        "x": 372,
-        "y": 28
+        "x": -464,
+        "y": 220,
+        "sourceHandlePosition": "right"
       },
       "steps/checker.step.js": {
-        "x": 313,
-        "y": 264
+        "x": 19,
+        "y": 217,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "left"
       },
       "steps/alerter.step.js": {
-        "x": 0,
-        "y": 216
+        "x": 427,
+        "y": 217,
+        "targetHandlePosition": "left"
       }
     }
   }

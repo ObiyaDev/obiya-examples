@@ -4,7 +4,7 @@
  * 
  * Consider adding this file to .prettierignore and eslint ignore.
  */
-import { EventHandler, ApiRouteHandler, ApiResponse, MotiaStream } from 'motia'
+import { EventHandler, ApiRouteHandler, ApiResponse, MotiaStream, CronHandler } from 'motia'
 
 declare module 'motia' {
   interface FlowContextStateStreams {
@@ -13,7 +13,6 @@ declare module 'motia' {
 
   type Handlers = {
     'HealthCheck': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { status: string; sitesConfigured: number; lastKnown: unknown; now: string }>, never>
-    'StatusDashboard': EventHandler<never, never>
     'UptimeCronTrigger': CronHandler<{ topic: 'check.requested'; data: { url: string } }>
     'WebsiteChecker': EventHandler<{ url: string }, { topic: 'check.result'; data: { url: string; status: 'UP' | 'DOWN'; code: unknown; responseTime: number; checkedAt: string; error: unknown } }>
     'DiscordAlerter': EventHandler<{ url: string; status: 'UP' | 'DOWN'; code: unknown; responseTime: number; checkedAt: string; error: unknown }, never>
