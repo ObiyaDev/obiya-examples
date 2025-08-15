@@ -16,6 +16,14 @@ Each Step has access to:
 
 A single Motia app can replace multiple tools like Nest.js, Temporal, and Celery/BullMQ - it's all just steps and events.
 
+## 📖 Documentation & Guided Tours
+
+For detailed tutorials and guided walkthroughs of these examples, visit our comprehensive documentation:
+
+- **[Examples Documentation](https://www.motia.dev/docs/examples)** - Step-by-step guides with code explanations
+- **[Getting Started](https://www.motia.dev/docs/getting-started)** - Quick start guide for Motia
+- **[Core Concepts](https://www.motia.dev/docs/concepts)** - Understanding Steps, Events, and Flows
+
 ## 🗂 Examples
 
 ### AI Deep Research Agent
@@ -85,40 +93,7 @@ An intelligent Gmail agent that monitors, analyzes, and automatically responds t
 
 [View Example →](examples/gmail-workflow)
 
-### Trello Task Automation
 
-Streamline development processes with an intelligent task progression agent for Trello boards.
-
-![Trello Agent](examples/trello-flow/docs/images/trello-manager.png)
-
-**Key Features:**
-- Automated card movement between lists
-- Task validation and requirement checking
-- AI-generated task summaries
-- Slack integration for notifications
-
-**Technologies:** TypeScript, Trello API, OpenAI, Slack
-
-[View Example →](examples/trello-flow)
-
-### AI Image Generation and Evaluation
-
-An agent that generates and evaluates AI images with feedback loops and quality metrics.
-
-<div style="display: flex; gap: 10px;">
-  <img src="examples/vision-example/docs/images/generate-image.png" width="49%" alt="Vision Agent" />
-  <img src="examples/vision-example/docs/images/eval-agent.png" width="49%" alt="Evaluation Results" />
-</div>
-
-**Key Features:**
-- Prompt enhancement with AI
-- Image generation with Flux
-- Evaluation of generated images
-- Dataset reports with quality metrics
-
-**Technologies:** TypeScript, Python, Claude, Flux, OpenAI
-
-[View Example →](examples/vision-example)
 
 ### PDF RAG Agent using Motia, Docling and Weaviate
 
@@ -140,6 +115,138 @@ The system leverages Docling to parse and intelligently chunk PDF documents, Wea
 
 [View Example →](examples/rag-docling-weaviate-agent)
 
+### Real-Time Uptime Monitor
+
+A production-ready website monitoring system that continuously checks site availability, sends intelligent Discord alerts, and provides comprehensive health reporting.
+
+![Uptime Monitor](examples/motia-uptime-monitor/docs/images/uptime-monitor-architecture.png)
+
+**Key Features:**
+- Configurable cron-based website checking
+- Smart Discord notifications with rate limiting
+- Status change detection to prevent spam
+- Built-in health check endpoint
+- In-memory status storage with persistence
+- Comprehensive error handling and logging
+
+**Technologies:** JavaScript, Discord Webhooks, Cron Scheduling
+
+[View Example →](examples/motia-uptime-monitor)
+
+### Sentiment Analysis Workflow
+
+A dynamic sentiment analysis application that uses an LLM to determine workflow routing, demonstrating event-driven decision making.
+
+![Sentiment Analysis](examples/sentimental-analysis/docs/images/sentimental-analyzer-workbench.gif)
+
+**Key Features:**
+- Dynamic workflow routing based on sentiment
+- OpenAI-powered sentiment analysis
+- Event-driven architecture with conditional flows
+- Real-time processing and response handling
+
+**Technologies:** TypeScript, OpenAI
+
+[View Example →](examples/sentimental-analysis)
+
+### AI Health & Fitness Agent
+
+An intelligent health and fitness assistant that analyzes user activity, provides personalized recommendations, and tracks wellness goals.
+
+<div style="display: flex; gap: 10px;">
+  <img src="examples/ai-health-fitness/docs/images/image.png" width="49%" alt="Health Fitness Agent" />
+  <img src="examples/ai-health-fitness/docs/images/whatsapp-output.png" width="49%" alt="Health Analytics" />
+</div>
+
+**Key Features:**
+- Activity tracking and analysis
+- Personalized fitness recommendations
+- Health goal monitoring
+- AI-powered insights and coaching
+
+**Technologies:** TypeScript, Health APIs, AI Analysis
+
+[View Example →](examples/ai-health-fitness)
+
+### Blog to Tweet Automation
+
+An automated content distribution system that transforms blog posts into engaging social media content.
+
+<div style="display: flex; gap: 10px;">
+  <img src="examples/blog-to-tweet/assets/architecture.gif" alt="Blog to Tweet Architecture" />
+</div>
+
+**Key Features:**
+- Automatic blog content extraction
+- AI-powered tweet generation
+- Social media scheduling
+- Content optimization for platforms
+
+**Technologies:** JavaScript, Social Media APIs, Content Processing
+
+[View Example →](examples/blog-to-tweet)
+
+### LinkedIn Content Agent
+
+An intelligent content creation and management system for LinkedIn professional networking.
+
+<div style="display: flex; gap: 10px;">
+  <img src="examples/linkedIn-content-agent/assets/output.gif" alt="LinkedIn Content Agent" />
+</div>
+
+**Key Features:**
+- Professional content generation
+- LinkedIn API integration
+- Engagement tracking and optimization
+- Automated posting schedules
+
+**Technologies:** JavaScript, LinkedIn API, Content Generation
+
+[View Example →](examples/linkedIn-content-agent)
+
+### Image Resizer Service
+
+A high-performance image processing service that handles multiple formats and optimization strategies.
+
+**Key Features:**
+- Multiple image format support
+- Batch processing capabilities
+- Quality optimization
+- Storage integration
+- API-driven resizing operations
+
+**Technologies:** TypeScript, Image Processing Libraries, Storage APIs
+
+[View Example →](examples/image-resizer)
+
+### Spamurai PR Agent
+
+An intelligent GitHub PR management system that automatically detects and handles spam pull requests.
+
+**Key Features:**
+- Automated spam detection
+- PR quality analysis
+- Repository protection
+- Intelligent filtering and classification
+
+**Technologies:** TypeScript, GitHub API, Machine Learning
+
+[View Example →](examples/Spamurai-pr-agent)
+
+### Motia Docker Integration
+
+A comprehensive example demonstrating how to containerize and deploy Motia applications with Docker.
+
+**Key Features:**
+- Docker containerization
+- Multi-stage builds
+- Production deployment configurations
+- Container orchestration examples
+
+**Technologies:** Docker, TypeScript, Deployment Tools
+
+[View Example →](examples/motia-docker)
+
 ### Real-Time Chat Application
 
 A comprehensive demonstration of real-time chat functionality with asynchronous message processing using the Motia Framework.
@@ -157,23 +264,7 @@ A comprehensive demonstration of real-time chat functionality with asynchronous 
 
 [View Example →](examples/chat-agent)
 
-### Real time Chat Implementation
 
-A real-time chat agent implementation showcasing interactive conversational capabilities.
-
-<div style="display: flex; gap: 10px;">
-  <img src="examples/chat-agent/docs/images/chat-agent.gif" alt="Chat Agent" />
-</div>
-
-**Key Features:**
-- Real-time chat interactions
-- Natural language processing
-- Context-aware responses
-- Customizable conversation flows
-
-**Technologies:** TypeScript, OpenAI
-
-[View Example →](examples/chat-agent)
 
 ### Motia Parallel Execution
 
@@ -247,6 +338,41 @@ An advanced agent that analyzes conversations with both text and visual understa
 
 [View Example →](examples/conversation-analyzer-with-vision)
 
+### Trello Task Automation
+
+Streamline development processes with an intelligent task progression agent for Trello boards.
+
+![Trello Agent](examples/trello-flow/docs/images/trello-manager.png)
+
+**Key Features:**
+- Automated card movement between lists
+- Task validation and requirement checking
+- AI-generated task summaries
+- Slack integration for notifications
+
+**Technologies:** TypeScript, Trello API, OpenAI, Slack
+
+[View Example →](examples/trello-flow)
+
+### AI Image Generation and Evaluation
+
+An agent that generates and evaluates AI images with feedback loops and quality metrics.
+
+<div style="display: flex; gap: 10px;">
+  <img src="examples/vision-example/docs/images/generate-image.png" width="49%" alt="Vision Agent" />
+  <img src="examples/vision-example/docs/images/eval-agent.png" width="49%" alt="Evaluation Results" />
+</div>
+
+**Key Features:**
+- Prompt enhancement with AI
+- Image generation with Flux
+- Evaluation of generated images
+- Dataset reports with quality metrics
+
+**Technologies:** TypeScript, Python, Claude, Flux, OpenAI
+
+[View Example →](examples/vision-example)
+
 ## 🚀 Getting Started
 
 Each example includes its own README with detailed setup instructions. Generally, you'll need:
@@ -267,5 +393,8 @@ This repository and its contents are licensed under the MIT License - see the [L
 
 ## 📚 Learn More
 
-- [Motia Documentation](https://motia.dev/docs)
-- [Motia Tutorials](https://blog.motia.dev)
+- **[Motia Documentation](https://motia.dev/docs)** - Complete framework documentation
+- **[Examples Documentation](https://www.motia.dev/docs/examples)** - Detailed tutorials for each example
+- **[Getting Started Guide](https://www.motia.dev/docs/getting-started)** - Quick start tutorial
+- **[Core Concepts](https://www.motia.dev/docs/concepts)** - Understanding Steps, Events, and Flows
+- **[Deployment Guide](https://www.motia.dev/docs/deployment)** - Production deployment strategies
