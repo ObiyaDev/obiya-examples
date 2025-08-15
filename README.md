@@ -2,20 +2,6 @@
 
 Welcome to the official examples repository for [Motia](https://motia.dev/) - a modern backend framework for building event-driven applications with built-in observability and state management.
 
-## 🤔 How it Works
-
-Motia uses **Steps** as its core primitive. Steps can be:
-- **API Steps** (`api`) - HTTP endpoints for REST/GraphQL APIs
-- **Event Steps** (`event`) - Background workers triggered by events
-- **Cron Steps** (`cron`) - Scheduled tasks that run automatically
-
-Each Step has access to:
-- **State Management** - Traced key-value store shared across steps
-- **Event System** - Emit and subscribe to decouple your logic
-- **Observability** - Built-in tracing and structured logging
-
-A single Motia app can replace multiple tools like Nest.js, Temporal, and Celery/BullMQ - it's all just steps and events.
-
 ## 📖 Documentation & Guided Tours
 
 For detailed tutorials and guided walkthroughs of these examples, visit our comprehensive documentation:
