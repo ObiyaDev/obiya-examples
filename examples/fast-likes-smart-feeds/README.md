@@ -479,32 +479,6 @@ npm run dev:debug
 - **Testing**: Maintain >90% test coverage
 - **Logging**: Use structured logging with context
 
-## 📸 Adding Screenshots
-
-To add screenshots to this project:
-
-1. **Create screenshots directory:**
-   ```bash
-   mkdir screenshots
-   ```
-
-2. **Add your screenshots:**
-   - `screenshots/api-response.png` - API testing with curl/Postman
-   - `screenshots/event-logs.png` - Console logs showing event flow
-   - `screenshots/firebase-notifications.png` - Firebase console/testing
-   - `screenshots/architecture-overview.png` - System diagram
-
-3. **Screenshot recommendations:**
-   - Use high-resolution images (at least 1200px wide)
-   - Include terminal/console outputs for technical demos
-   - Show both success and error scenarios
-   - Add annotations or highlights for key features
-
-4. **Optimize images:**
-   ```bash
-   # Compress images to reduce file size
-   # Use tools like ImageOptim, TinyPNG, or similar
-   ```
 
 ## 📄 License
 
@@ -521,12 +495,6 @@ cd micro-actions-like-feed
 # Or using SSH
 git clone git@github.com:your-username/micro-actions-like-feed.git
 ```
-
-### Quick Links
-- **Live Demo**: [https://your-demo-url.com](https://your-demo-url.com)
-- **Documentation**: [https://your-docs-url.com](https://your-docs-url.com)
-- **Issues**: [GitHub Issues](https://github.com/your-username/micro-actions-like-feed/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/micro-actions-like-feed/discussions)
 
 ### Related Documentation
 - [Motia Framework Documentation](https://motia.dev)
