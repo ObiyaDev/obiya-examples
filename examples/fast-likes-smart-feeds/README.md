@@ -2,9 +2,8 @@
 
 A fast-response, event-driven like system built with Motia framework, demonstrating mixed TypeScript/Python microservices architecture with immediate API responses and asynchronous background processing.
 
-## 📸 Screenshots
-
-### API Response Demo
+ 
+### Event flow 
 ![Event flow ](https://github.com/user-attachments/assets/f0344f68-c5ad-4417-8dd0-9d2ccf86c611)
 *Fast API response with immediate like confirmation*
 
@@ -13,8 +12,11 @@ A fast-response, event-driven like system built with Motia framework, demonstrat
 *Complete event flow from API to background processing*
 
 ### System Architecture
-![Architecture Diagram](https://github.com/user-attachments/assets/53275bbd-8a46-43a8-9aed-e0c23e385a74)
 *Visual representation of the micro-actions pattern*
+
+![Architecture Diagram](https://github.com/user-attachments/assets/53275bbd-8a46-43a8-9aed-e0c23e385a74)
+
+
 
 ## 🏗️ Architecture Overview
 
