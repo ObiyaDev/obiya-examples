@@ -83,8 +83,8 @@ async def handler(event: Dict[str, Any], context: Any) -> None:
             ('like:database-sync', 'Local database sync (fallback)')
         ]
         
-        # Prepare event data
-        event_data = {
+        # Prepare event data for emission
+        emission_data = {
             'postId': post_id,
             'userId': user_id,
             'timestamp': timestamp,
@@ -96,7 +96,7 @@ async def handler(event: Dict[str, Any], context: Any) -> None:
             try:
                 await context.emit({
                     'topic': topic,
-                    'data': event_data
+                    'data': emission_data
                 })
                 
                 context.logger.info(
@@ -135,7 +135,7 @@ async def handler(event: Dict[str, Any], context: Any) -> None:
             'Error in side effects orchestration',
             {
                 'error': str(e),
-                'eventData': event.get('data', {}),
-                'traceId': event.get('data', {}).get('traceId')
+                'eventData': event,
+                'traceId': trace_id
             }
         )
