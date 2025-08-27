@@ -1,4 +1,4 @@
-# Motia Examples 🚀
+# Obiya Examples 🚀
 
 Welcome to the official examples repository for [Obiya](#) - a modern backend framework for building event-driven applications with built-in observability and state management.
 
