@@ -1,13 +1,13 @@
 # Motia Examples 🚀
 
-Welcome to the official examples repository for [Motia](https://motia.dev/) - a modern backend framework for building event-driven applications with built-in observability and state management.
+Welcome to the official examples repository for [Obiya](#) - a modern backend framework for building event-driven applications with built-in observability and state management.
 
 ## 📖 Documentation & Guided Tours
 
 For detailed tutorials and guided walkthroughs of these examples, visit our comprehensive documentation:
 
 - **[Examples Documentation](https://www.motia.dev/docs/examples)** - Step-by-step guides with code explanations
-- **[Getting Started](https://www.motia.dev/docs/getting-started)** - Quick start guide for Motia
+- **[Getting Started](https://www.motia.dev/docs/getting-started)** - Quick start guide for Obiya
 - **[Core Concepts](https://www.motia.dev/docs/concepts)** - Understanding Steps, Events, and Flows
 
 ## 🗂 Examples
@@ -30,7 +30,7 @@ A powerful research assistant that performs comprehensive web research on any to
 
 ### Finance Agent
 
-A powerful event-driven financial analysis workflow built with Motia that combines web search, financial data, and AI analysis to provide comprehensive investment insights.
+A powerful event-driven financial analysis workflow built with Obiya that combines web search, financial data, and AI analysis to provide comprehensive investment insights.
 
 ![Finance Agent](examples/finance-agent/docs/finance-example.gif)
 
@@ -81,7 +81,7 @@ An intelligent Gmail agent that monitors, analyzes, and automatically responds t
 
 
 
-### PDF RAG Agent using Motia, Docling and Weaviate
+### PDF RAG Agent using Obiya, Docling and Weaviate
 
 An LLM chat-like question-answering system with RAG (Retrieval-Augmented Generation) to provide accurate answers from PDF documents.
 The system leverages Docling to parse and intelligently chunk PDF documents, Weaviate as a vector database to store vectorized chunks, and OpenAI for embeddings and text generation.
@@ -219,9 +219,9 @@ An intelligent GitHub PR management system that automatically detects and handle
 
 [View Example →](examples/Spamurai-pr-agent)
 
-### Motia Docker Integration
+### Obiya Docker Integration
 
-A comprehensive example demonstrating how to containerize and deploy Motia applications with Docker.
+A comprehensive example demonstrating how to containerize and deploy Obiya applications with Docker.
 
 **Key Features:**
 - Docker containerization
@@ -235,7 +235,7 @@ A comprehensive example demonstrating how to containerize and deploy Motia appli
 
 ### Real-Time Chat Application
 
-A comprehensive demonstration of real-time chat functionality with asynchronous message processing using the Motia Framework.
+A comprehensive demonstration of real-time chat functionality with asynchronous message processing using the Obiya Framework.
 
 ![Chat Agent](examples/chat-agent/docs/images/chat-agent.png)
 
@@ -246,18 +246,18 @@ A comprehensive demonstration of real-time chat functionality with asynchronous 
 - Type-safe message handling with Zod validation
 - Live chat state updates and message aggregation
 
-**Technologies:** TypeScript, Motia Streams, Event System
+**Technologies:** TypeScript, Obiya Streams, Event System
 
 [View Example →](examples/chat-agent)
 
 
 
-### Motia Parallel Execution
+### Obiya Parallel Execution
 
-A demonstration of parallel task execution capabilities in Motia agents.
+A demonstration of parallel task execution capabilities in Obiya agents.
 
 <div style="display: flex; gap: 10px;">
-  <img src="examples/motia-parallel-execution/docs/images/motia-parallel-exec.gif" alt="Motia Parallel Execution" />
+  <img src="examples/motia-parallel-execution/docs/images/motia-parallel-exec.gif" alt="Obiya Parallel Execution" />
 </div>
 
 **Key Features:**
@@ -367,27 +367,27 @@ Each example includes its own README with detailed setup instructions. Generally
 2. Navigate to the example directory
 3. Install dependencies
 4. Configure environment variables
-5. Run the agent with Motia
+5. Run the agent with Obiya
 
 ### Meeting Transcription Example
 
-A comprehensive example demonstrating local, privacy-friendly meeting audio processing using Motia, Whisper, and Streamlit.
+A comprehensive example demonstrating local, privacy-friendly meeting audio processing using Obiya, Whisper, and Streamlit.
 
 **Key Features:**
 
-- Complete Motia workflow from audio input to structured output
+- Complete Obiya workflow from audio input to structured output
 - Local AI processing with privacy-first approach
 - Multiple step types (API, Event, Custom)
 - Real-world meeting transcription with action item extraction
 - Cross-platform UI with Streamlit
 
-**Technologies:** TypeScript, Python, Whisper, Streamlit, Motia
+**Technologies:** TypeScript, Python, Whisper, Streamlit, Obiya
 
 [View Example →](examples/meeting-transcription/)
 
 ## 🤝 Contributing
 
-We welcome contributions! If you've built an interesting agent with Motia, please share it by following our [contribution guidelines](CONTRIBUTING.md).
+We welcome contributions! If you've built an interesting agent with Obiya, please share it by following our [contribution guidelines](CONTRIBUTING.md).
 
 ## 📝 License
 
