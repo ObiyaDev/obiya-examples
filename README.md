@@ -16,7 +16,7 @@ For detailed tutorials and guided walkthroughs of these examples, visit our comp
 
 A powerful research assistant that performs comprehensive web research on any topic or question, providing in-depth analysis and reports.
 
-![Finance Agent](examples/ai-deep-research-agent/docs/deep-research.png)
+![Finance Agent](https://github.com/ObiyaDev/obiya-examples/blob/main/deepresearch.png)
 
 **Key Features:**
 - Deep Web Research: Searches the web, extracts content, and synthesizes findings
@@ -49,8 +49,8 @@ A powerful event-driven financial analysis workflow built with Obiya that combin
 A comprehensive agent for automating GitHub issue and pull request management using AI-powered classification and routing.
 
 <div style="display: flex; gap: 10px;">
-  <img src="examples/github-integration-workflow/docs/images/github-pr-management.png" width="49%" alt="GitHub PR Integration Agent" />
-  <img src="examples/github-integration-workflow/docs/images/github-issue-management.png" width="49%" alt="GitHub Issue Integration Agent" />
+  <img src="https://github.com/ObiyaDev/obiya-examples/blob/main/pr-management.png" width="49%" alt="GitHub PR Integration Agent" />
+  <img src="https://github.com/ObiyaDev/obiya-examples/blob/main/issue-management.png" width="49%" alt="GitHub Issue Integration Agent" />
 </div>
 
 **Key Features:**
