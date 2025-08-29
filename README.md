@@ -32,7 +32,7 @@ A powerful research assistant that performs comprehensive web research on any to
 
 A powerful event-driven financial analysis workflow built with Obiya that combines web search, financial data, and AI analysis to provide comprehensive investment insights.
 
-![Finance Agent](examples/finance-agent/docs/finance-example.gif)
+![Finance Agent](https://github.com/ObiyaDev/obiya-examples/blob/main/finance-example.gif)
 
 **Key Features:**
 - Real-time Financial Analysis: Combines multiple data sources for comprehensive insights
@@ -87,7 +87,7 @@ An LLM chat-like question-answering system with RAG (Retrieval-Augmented Generat
 The system leverages Docling to parse and intelligently chunk PDF documents, Weaviate as a vector database to store vectorized chunks, and OpenAI for embeddings and text generation.
 
 <div style="display: flex; gap: 10px;">
-  <img src="examples/rag-docling-weaviate-agent/docs/images/rag-example.gif" alt="PDF RAG Docling Weaviate Agent" />
+  <img src="https://github.com/ObiyaDev/obiya-examples/blob/main/rag-example.gif" alt="PDF RAG Docling Weaviate Agent" />
 </div>
 
 **Key Features:**
@@ -123,7 +123,7 @@ A production-ready website monitoring system that continuously checks site avail
 
 A dynamic sentiment analysis application that uses an LLM to determine workflow routing, demonstrating event-driven decision making.
 
-![Sentiment Analysis](examples/sentimental-analysis/docs/images/sentimental-analyzer-workbench.gif)
+![Sentiment Analysis](https://github.com/ObiyaDev/obiya-examples/blob/main/sentimental-analyzer-workbench.gif)
 
 **Key Features:**
 - Dynamic workflow routing based on sentiment
@@ -257,7 +257,7 @@ A comprehensive demonstration of real-time chat functionality with asynchronous 
 A demonstration of parallel task execution capabilities in Obiya agents.
 
 <div style="display: flex; gap: 10px;">
-  <img src="examples/motia-parallel-execution/docs/images/motia-parallel-exec.gif" alt="Obiya Parallel Execution" />
+  <img src="https://github.com/ObiyaDev/obiya-examples/blob/main/motia-parallel-exec.gif" alt="Obiya Parallel Execution" />
 </div>
 
 **Key Features:**
@@ -293,7 +293,7 @@ An intelligent research assistant that helps gather and analyze information.
 A real-time streaming chatbot implementation with AI capabilities.
 
 <div style="display: flex; gap: 10px;">
-  <img src="examples/streaming-ai-chatbot/docs/images/streaming-ai-chatbot.gif" alt="Streaming AI Chatbot" />
+  <img src="https://github.com/ObiyaDev/obiya-examples/blob/main/streaming-ai-chatbot.gif" alt="Streaming AI Chatbot" />
 </div>
 
 **Key Features:**
