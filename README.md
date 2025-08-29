@@ -67,7 +67,7 @@ A comprehensive agent for automating GitHub issue and pull request management us
 
 An intelligent Gmail agent that monitors, analyzes, and automatically responds to incoming emails.
 
-![Gmail Agent](examples/gmail-workflow/docs/images/gmail-flow.png)
+![Gmail Agent](https://github.com/ObiyaDev/obiya-examples/blob/main/gmail_manager.png)
 
 **Key Features:**
 - Email classification and urgency detection
@@ -105,7 +105,7 @@ The system leverages Docling to parse and intelligently chunk PDF documents, Wea
 
 A production-ready website monitoring system that continuously checks site availability, sends intelligent Discord alerts, and provides comprehensive health reporting.
 
-![Uptime Monitor](examples/motia-uptime-monitor/docs/images/uptime-monitor-architecture.png)
+![Uptime Monitor](https://github.com/ObiyaDev/obiya-examples/blob/main/realtime_uptime_monitor.png)
 
 **Key Features:**
 - Configurable cron-based website checking
@@ -140,7 +140,7 @@ A dynamic sentiment analysis application that uses an LLM to determine workflow 
 An intelligent health and fitness assistant that analyzes user activity, provides personalized recommendations, and tracks wellness goals.
 
 <div style="display: flex; gap: 10px;">
-  <img src="examples/ai-health-fitness/docs/images/image.png" width="49%" alt="Health Fitness Agent" />
+  <img src="https://github.com/ObiyaDev/obiya-examples/blob/main/ai_health.png" width="49%" alt="Health Fitness Agent" />
   <img src="examples/ai-health-fitness/docs/images/whatsapp-output.png" width="49%" alt="Health Analytics" />
 </div>
 
@@ -237,7 +237,7 @@ A comprehensive example demonstrating how to containerize and deploy Obiya appli
 
 A comprehensive demonstration of real-time chat functionality with asynchronous message processing using the Obiya Framework.
 
-![Chat Agent](examples/chat-agent/docs/images/chat-agent.png)
+![Chat Agent](https://github.com/ObiyaDev/obiya-examples/blob/main/realtime_chat.png)
 
 **Key Features:**
 - Real-time messaging with WebSocket streaming
@@ -311,7 +311,7 @@ A real-time streaming chatbot implementation with AI capabilities.
 An advanced agent that analyzes conversations with both text and visual understanding capabilities.
 
 <div style="display: flex; gap: 10px;">
-  <img src="examples/conversation-analyzer-with-vision/docs/images/conversation-analyzer-with-vision.png" alt="Conversation Analyzer with Vision" />
+  <img src="https://github.com/ObiyaDev/obiya-examples/blob/main/conversation_analyzer.png" alt="Conversation Analyzer with Vision" />
 </div>
 
 **Key Features:**
